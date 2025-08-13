@@ -5,10 +5,12 @@ A modern TypeScript project built with Vite, featuring strict type safety, compr
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Node.js** 20+
 - **pnpm** (recommended) or npm
 
 ### Installation & Setup
+
 ```bash
 # Clone the repository
 git clone <your-repo-url>
@@ -26,11 +28,13 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 ## 📚 Available Scripts
 
 ### Development
+
 - `pnpm dev` - Start development server with hot reload
 - `pnpm build` - Build for production
 - `pnpm preview` - Preview production build locally
 
 ### Quality Assurance
+
 - `pnpm typecheck` - Run TypeScript type checking
 - `pnpm lint` - Run ESLint on all files (✅ 100% passing)
 - `pnpm lint:fix` - Auto-fix ESLint issues
@@ -38,6 +42,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 - `pnpm format:check` - Check code formatting
 
 ### Testing
+
 - `pnpm test` - Run test suite once
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
@@ -82,9 +87,11 @@ town-econ/
 ## 🎮 Core Features
 
 ### Immutable State Management (`src/core/stateApi.ts`)
+
 A comprehensive set of immutable state manipulation functions for the town economy simulation:
 
 #### Town Operations
+
 - **`getTown(state, townId)`** - Safe town lookup with error handling
 - **`setResource(town, goodId, amount)`** - Set resource amount (clamps to ≥0, validates integers)
 - **`incResource(town, goodId, delta)`** - Increment/decrement resources (floors at 0)
@@ -94,9 +101,11 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **`addMilitary(town, delta)`** - Update military raw value (preserves tier info)
 
 #### Game State Operations
+
 - **`advanceTurn(state)`** - Increment game turn (shallow copy with turn+1)
 
 #### Key Features
+
 - **100% Immutability**: All functions return new objects, never modify originals
 - **Type Safety**: Full TypeScript support with strict validation
 - **Data Integrity**: Automatic clamping, integer validation, and good ID verification
@@ -104,6 +113,7 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Comprehensive Testing**: 113 tests covering all edge cases and invariants
 
 ### Data Validation System
+
 - **JSON Schema Validation**: Robust validation of game state structure
 - **Type-Safe Deserialization**: Safe loading of game data with detailed error reporting
 - **Comprehensive Coverage**: All data structures validated with specific error paths
@@ -111,6 +121,7 @@ A comprehensive set of immutable state manipulation functions for the town econo
 ## 🔧 Development Workflow
 
 ### Code Quality Gates
+
 This project enforces strict quality standards through automated checks:
 
 1. **Pre-commit Hook**: Automatically fixes ESLint issues and formats code
@@ -119,11 +130,14 @@ This project enforces strict quality standards through automated checks:
 4. **100% Linting Compliance**: All ESLint rules passing with zero errors
 
 ### Git Hooks
+
 - **Pre-commit**: Runs `lint-staged` to fix and format staged TypeScript files
 - **Pre-push**: Runs `pnpm typecheck` and `pnpm test` to ensure quality
 
 ### Commit Message Convention
+
 Use clear, descriptive commit messages:
+
 ```
 feat: add immutable state API for town economy simulation
 fix: resolve memory leak in data processing
@@ -134,28 +148,33 @@ test: add comprehensive test suite for stateApi (113 tests)
 ## 🎯 TypeScript Configuration
 
 ### Strict Mode Enabled
+
 - **No implicit any**: All types must be explicit
 - **Strict equality**: `===` required, `==` forbidden
 - **Unused variables**: Caught at compile time
 - **Indexed access**: Requires explicit bounds checking
 
 ### Path Aliases
+
 - `@/*` → `src/*` for clean imports
 
 ## 🧪 Testing Strategy
 
 ### Test Framework
+
 - **Vitest**: Fast, modern testing framework
 - **Coverage**: V8 coverage provider with HTML reports
 - **Thresholds**: Enforced minimum coverage (85% lines/functions, 75% branches)
 
 ### Comprehensive Test Suite
+
 - **113 Tests**: Covering all state API functions and edge cases
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All state API functions fully tested
 
 ### Running Tests
+
 ```bash
 # Run all tests
 pnpm test
@@ -173,12 +192,14 @@ pnpm coverage
 ## 📝 Code Style
 
 ### ESLint Rules
+
 - **TypeScript**: Strict type checking and best practices
 - **Import/Export**: Organized imports with alphabetical sorting
 - **Code Quality**: No unused variables, consistent formatting
 - **100% Compliance**: All linting rules passing with zero errors
 
 ### Prettier Configuration
+
 - **Single quotes**: `'string'` instead of `"string"`
 - **Trailing commas**: Always enabled for cleaner diffs
 - **Line length**: 100 characters maximum
@@ -187,11 +208,13 @@ pnpm coverage
 ## 🌍 Environment & Compatibility
 
 ### Operating Systems
+
 - **Windows**: Full support with Git Bash
 - **macOS**: Native support
 - **Linux**: Native support
 
 ### Line Endings
+
 - **Git**: Automatically converts CRLF to LF
 - **Editor**: Configured for LF line endings
 - **CI**: Runs on Ubuntu with LF endings
@@ -201,6 +224,7 @@ pnpm coverage
 ### Common Issues
 
 #### "Command not found: pnpm"
+
 ```bash
 # Install pnpm globally
 npm install -g pnpm
@@ -211,6 +235,7 @@ npm run dev
 ```
 
 #### TypeScript errors
+
 ```bash
 # Check for type issues
 pnpm typecheck
@@ -220,6 +245,7 @@ pnpm install
 ```
 
 #### Linting errors
+
 ```bash
 # Auto-fix issues
 pnpm lint:fix
@@ -229,6 +255,7 @@ pnpm format
 ```
 
 #### Test failures
+
 ```bash
 # Run tests with verbose output
 pnpm test --reporter=verbose
@@ -248,6 +275,7 @@ pnpm coverage
 7. **Create** a pull request
 
 ### Development Standards
+
 - **100% Test Coverage**: All new functions must have comprehensive tests
 - **Zero Linting Errors**: All code must pass ESLint without warnings
 - **Type Safety**: Full TypeScript compliance with strict mode
@@ -260,6 +288,7 @@ pnpm coverage
 ## 🆘 Support
 
 For questions or issues:
+
 - Check the troubleshooting section above
 - Review the CI logs for build errors
 - Ensure your environment matches the prerequisites

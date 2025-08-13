@@ -98,11 +98,17 @@ describe('GameState round-trip', () => {
     expect(s2.goods.ore).toStrictEqual(s1.goods.ore);
 
     // Verify goods effects
-    expect(s2.goods.fish.effects.prosperityDelta).toStrictEqual(s1.goods.fish.effects.prosperityDelta);
+    expect(s2.goods.fish.effects.prosperityDelta).toStrictEqual(
+      s1.goods.fish.effects.prosperityDelta,
+    );
     expect(s2.goods.fish.effects.militaryDelta).toStrictEqual(s1.goods.fish.effects.militaryDelta);
-    expect(s2.goods.wood.effects.prosperityDelta).toStrictEqual(s1.goods.wood.effects.prosperityDelta);
+    expect(s2.goods.wood.effects.prosperityDelta).toStrictEqual(
+      s1.goods.wood.effects.prosperityDelta,
+    );
     expect(s2.goods.wood.effects.militaryDelta).toStrictEqual(s1.goods.wood.effects.militaryDelta);
-    expect(s2.goods.ore.effects.prosperityDelta).toStrictEqual(s1.goods.ore.effects.prosperityDelta);
+    expect(s2.goods.ore.effects.prosperityDelta).toStrictEqual(
+      s1.goods.ore.effects.prosperityDelta,
+    );
     expect(s2.goods.ore.effects.militaryDelta).toStrictEqual(s1.goods.ore.effects.militaryDelta);
   });
 });

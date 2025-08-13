@@ -21,8 +21,8 @@ describe('Goods Types', () => {
       name: 'Fresh Fish',
       effects: {
         prosperityDelta: 2,
-        militaryDelta: -1
-      }
+        militaryDelta: -1,
+      },
     };
 
     expect(validConfig.id).toBe('fish');
@@ -39,8 +39,8 @@ describe('Goods Types', () => {
       name: 'Timber',
       effects: {
         prosperityDelta: 1.5, // Note: TypeScript allows this, but JSDoc specifies integer
-        militaryDelta: -0.5
-      }
+        militaryDelta: -0.5,
+      },
     };
 
     // In practice, you might want to add runtime validation or use branded types
@@ -54,19 +54,19 @@ describe('Goods Types', () => {
     const fishConfig: GoodConfig = {
       id: 'fish',
       name: 'Fresh Fish',
-      effects: { prosperityDelta: 1, militaryDelta: 0 }
+      effects: { prosperityDelta: 1, militaryDelta: 0 },
     };
 
     const woodConfig: GoodConfig = {
       id: 'wood',
       name: 'Timber',
-      effects: { prosperityDelta: 0, militaryDelta: 1 }
+      effects: { prosperityDelta: 0, militaryDelta: 1 },
     };
 
     const oreConfig: GoodConfig = {
       id: 'ore',
       name: 'Iron Ore',
-      effects: { prosperityDelta: -1, militaryDelta: 2 }
+      effects: { prosperityDelta: -1, militaryDelta: 2 },
     };
 
     expect(fishConfig.id).toBe('fish');

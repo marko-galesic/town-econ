@@ -13,11 +13,8 @@ type DeepInvalidGameState = Partial<GameState> & Record<string, unknown>;
 
 // Helper type for deeply modifiable objects
 type DeepModifiable<T> = {
-  [P in keyof T]?: T[P] extends object
-    ? DeepModifiable<T[P]> & Record<string, unknown>
-    : unknown;
+  [P in keyof T]?: T[P] extends object ? DeepModifiable<T[P]> & Record<string, unknown> : unknown;
 } & Record<string, unknown>;
-
 
 describe('validateGameState', () => {
   const validGameState: GameState = {
@@ -35,9 +32,9 @@ describe('validateGameState', () => {
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
-          lastUpdatedTurn: 0
-        }
-      }
+          lastUpdatedTurn: 0,
+        },
+      },
     ],
     goods: {
       fish: {
@@ -45,26 +42,26 @@ describe('validateGameState', () => {
         name: 'Fish',
         effects: {
           prosperityDelta: 1,
-          militaryDelta: 0
-        }
+          militaryDelta: 0,
+        },
       },
       wood: {
         id: 'wood',
         name: 'Wood',
         effects: {
           prosperityDelta: 0,
-          militaryDelta: 1
-        }
+          militaryDelta: 1,
+        },
       },
       ore: {
         id: 'ore',
         name: 'Ore',
         effects: {
           prosperityDelta: 2,
-          militaryDelta: 2
-        }
-      }
-    }
+          militaryDelta: 2,
+        },
+      },
+    },
   };
 
   it('should validate a correct GameState without throwing', () => {
@@ -155,9 +152,9 @@ describe('validateGameState', () => {
   });
 
   describe('bad numbers (NaN/Infinity/float)', () => {
-         it('should throw with path when turn is NaN', () => {
-       const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
-       invalidState.turn = NaN;
+    it('should throw with path when turn is NaN', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      invalidState.turn = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -169,9 +166,9 @@ describe('validateGameState', () => {
       }
     });
 
-         it('should throw with path when turn is Infinity', () => {
-       const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
-       invalidState.turn = Infinity;
+    it('should throw with path when turn is Infinity', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      invalidState.turn = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -276,7 +273,8 @@ describe('validateGameState', () => {
     it('should throw with path when town resources contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.towns?.[0]) {
-        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.resources!.fish = Infinity;
+        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.resources!.fish =
+          Infinity;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -452,7 +450,9 @@ describe('validateGameState', () => {
     it('should throw with path when town lastUpdatedTurn contains NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.towns?.[0]) {
-        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.revealed!.lastUpdatedTurn = NaN;
+        (invalidState.towns[0] as DeepModifiable<
+          GameState['towns'][0]
+        >)!.revealed!.lastUpdatedTurn = NaN;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -468,7 +468,9 @@ describe('validateGameState', () => {
     it('should throw with path when town lastUpdatedTurn contains Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.towns?.[0]) {
-        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.revealed!.lastUpdatedTurn = Infinity;
+        (invalidState.towns[0] as DeepModifiable<
+          GameState['towns'][0]
+        >)!.revealed!.lastUpdatedTurn = Infinity;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -484,7 +486,9 @@ describe('validateGameState', () => {
     it('should throw with path when town lastUpdatedTurn contains float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.towns?.[0]) {
-        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.revealed!.lastUpdatedTurn = 0.5;
+        (invalidState.towns[0] as DeepModifiable<
+          GameState['towns'][0]
+        >)!.revealed!.lastUpdatedTurn = 0.5;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -500,7 +504,9 @@ describe('validateGameState', () => {
     it('should throw with path when town lastUpdatedTurn contains negative value', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.towns?.[0]) {
-        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.revealed!.lastUpdatedTurn = -1;
+        (invalidState.towns[0] as DeepModifiable<
+          GameState['towns'][0]
+        >)!.revealed!.lastUpdatedTurn = -1;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -516,7 +522,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.prosperityDelta = Infinity;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.prosperityDelta = Infinity;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -532,7 +540,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.prosperityDelta = NaN;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.prosperityDelta = NaN;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -548,7 +558,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.prosperityDelta = 1.5;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.prosperityDelta = 1.5;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -564,7 +576,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain float in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.militaryDelta = 2.7;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.militaryDelta = 2.7;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -580,7 +594,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain Infinity in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.militaryDelta = Infinity;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.militaryDelta = Infinity;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -596,7 +612,9 @@ describe('validateGameState', () => {
     it('should throw with path when good effects contain NaN in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.militaryDelta = NaN;
+        (invalidState.goods.fish as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.militaryDelta = NaN;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -612,7 +630,9 @@ describe('validateGameState', () => {
     it('should throw with path when wood good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.wood) {
-        (invalidState.goods.wood as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.prosperityDelta = 0.5;
+        (invalidState.goods.wood as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.prosperityDelta = 0.5;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -628,7 +648,9 @@ describe('validateGameState', () => {
     it('should throw with path when wood good effects contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.wood) {
-        (invalidState.goods.wood as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.militaryDelta = Infinity;
+        (invalidState.goods.wood as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.militaryDelta = Infinity;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -644,7 +666,9 @@ describe('validateGameState', () => {
     it('should throw with path when ore good effects contain NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.ore) {
-        (invalidState.goods.ore as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.prosperityDelta = NaN;
+        (invalidState.goods.ore as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.prosperityDelta = NaN;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -660,7 +684,9 @@ describe('validateGameState', () => {
     it('should throw with path when ore good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.ore) {
-        (invalidState.goods.ore as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects!.militaryDelta = 2.3;
+        (invalidState.goods.ore as DeepModifiable<
+          import('../types/Goods').GoodConfig
+        >)!.effects!.militaryDelta = 2.3;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();
@@ -868,7 +894,8 @@ describe('validateGameState', () => {
     it('should throw with path when good effects object is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
       if (invalidState.goods?.fish) {
-        delete (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!.effects;
+        delete (invalidState.goods.fish as DeepModifiable<import('../types/Goods').GoodConfig>)!
+          .effects;
       }
 
       expect(() => validateGameState(invalidState)).toThrow();

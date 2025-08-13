@@ -18,7 +18,7 @@ describe('towns.json', () => {
   it('should match Town interface for all entries', () => {
     const towns = townsData as Town[];
 
-    towns.forEach((town) => {
+    towns.forEach(town => {
       // Check required properties exist
       expect(town).toHaveProperty('id');
       expect(town).toHaveProperty('name');
@@ -50,8 +50,8 @@ describe('towns.json', () => {
     const towns = townsData as Town[];
     const expectedGoodIds: GoodId[] = ['fish', 'wood', 'ore'];
 
-    towns.forEach((town) => {
-      expectedGoodIds.forEach((goodId) => {
+    towns.forEach(town => {
+      expectedGoodIds.forEach(goodId => {
         expect(town.resources).toHaveProperty(goodId);
         expect(town.prices).toHaveProperty(goodId);
       });
@@ -61,15 +61,15 @@ describe('towns.json', () => {
   it('should have nonnegative integers for all resources and prices', () => {
     const towns = townsData as Town[];
 
-    towns.forEach((town) => {
+    towns.forEach(town => {
       // Check resources
-      Object.values(town.resources).forEach((value) => {
+      Object.values(town.resources).forEach(value => {
         expect(Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(0);
       });
 
       // Check prices
-      Object.values(town.prices).forEach((value) => {
+      Object.values(town.prices).forEach(value => {
         expect(Number.isInteger(value)).toBe(true);
         expect(value).toBeGreaterThanOrEqual(0);
       });
@@ -81,7 +81,7 @@ describe('towns.json', () => {
     const validMilitaryTiers = ['militia', 'garrison', 'formidable', 'host'];
     const validProsperityTiers = ['struggling', 'modest', 'prosperous', 'opulent'];
 
-    towns.forEach((town) => {
+    towns.forEach(town => {
       expect(validMilitaryTiers).toContain(town.revealed.militaryTier);
       expect(validProsperityTiers).toContain(town.revealed.prosperityTier);
     });
@@ -90,7 +90,7 @@ describe('towns.json', () => {
   it('should have lastUpdatedTurn set to 0 for all towns', () => {
     const towns = townsData as Town[];
 
-    towns.forEach((town) => {
+    towns.forEach(town => {
       expect(town.revealed.lastUpdatedTurn).toBe(0);
     });
   });

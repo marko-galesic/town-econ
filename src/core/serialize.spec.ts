@@ -17,26 +17,26 @@ describe('serializeGameState', () => {
           name: 'Fish',
           effects: {
             prosperityDelta: 1,
-            militaryDelta: 0
-          }
+            militaryDelta: 0,
+          },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
           effects: {
             prosperityDelta: 0,
-            militaryDelta: 1
-          }
+            militaryDelta: 1,
+          },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
           effects: {
             prosperityDelta: 2,
-            militaryDelta: 2
-          }
-        }
-      }
+            militaryDelta: 2,
+          },
+        },
+      },
     };
 
     const result = serializeGameState(mockGameState);
@@ -59,9 +59,9 @@ describe('serializeGameState', () => {
           revealed: {
             militaryTier: 'formidable',
             prosperityTier: 'prosperous',
-            lastUpdatedTurn: 5
-          }
-        }
+            lastUpdatedTurn: 5,
+          },
+        },
       ],
       goods: {
         fish: {
@@ -69,26 +69,26 @@ describe('serializeGameState', () => {
           name: 'Fish',
           effects: {
             prosperityDelta: 1,
-            militaryDelta: 0
-          }
+            militaryDelta: 0,
+          },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
           effects: {
             prosperityDelta: 0,
-            militaryDelta: 1
-          }
+            militaryDelta: 1,
+          },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
           effects: {
             prosperityDelta: 2,
-            militaryDelta: 2
-          }
-        }
-      }
+            militaryDelta: 2,
+          },
+        },
+      },
     };
 
     const serialized = serializeGameState(mockGameState);

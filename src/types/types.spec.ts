@@ -11,18 +11,18 @@ describe('Type smoke tests', () => {
       fish: {
         id: 'fish',
         name: 'Fish',
-        effects: { prosperityDelta: 1, militaryDelta: 0 }
+        effects: { prosperityDelta: 1, militaryDelta: 0 },
       },
       wood: {
         id: 'wood',
         name: 'Wood',
-        effects: { prosperityDelta: 0, militaryDelta: 1 }
+        effects: { prosperityDelta: 0, militaryDelta: 1 },
       },
       ore: {
         id: 'ore',
         name: 'Ore',
-        effects: { prosperityDelta: 2, militaryDelta: 2 }
-      }
+        effects: { prosperityDelta: 2, militaryDelta: 2 },
+      },
     };
 
     expectTypeOf(goods).toMatchTypeOf<Record<GoodId, GoodConfig>>();
@@ -45,8 +45,8 @@ describe('Type smoke tests', () => {
       revealed: {
         militaryTier,
         prosperityTier,
-        lastUpdatedTurn: 1
-      }
+        lastUpdatedTurn: 1,
+      },
     };
 
     expectTypeOf(town.militaryRaw).toMatchTypeOf<number>();
@@ -69,8 +69,8 @@ describe('Type smoke tests', () => {
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
-          lastUpdatedTurn: 0
-        }
+          lastUpdatedTurn: 0,
+        },
       },
       {
         id: 'town-2',
@@ -82,8 +82,8 @@ describe('Type smoke tests', () => {
         revealed: {
           militaryTier: 'garrison',
           prosperityTier: 'modest',
-          lastUpdatedTurn: 0
-        }
+          lastUpdatedTurn: 0,
+        },
       },
       {
         id: 'town-3',
@@ -95,27 +95,27 @@ describe('Type smoke tests', () => {
         revealed: {
           militaryTier: 'host',
           prosperityTier: 'prosperous',
-          lastUpdatedTurn: 0
-        }
-      }
+          lastUpdatedTurn: 0,
+        },
+      },
     ];
 
     const goods: Record<GoodId, GoodConfig> = {
       fish: {
         id: 'fish',
         name: 'Fresh Fish',
-        effects: { prosperityDelta: 1, militaryDelta: 0 }
+        effects: { prosperityDelta: 1, militaryDelta: 0 },
       },
       wood: {
         id: 'wood',
         name: 'Quality Wood',
-        effects: { prosperityDelta: 0, militaryDelta: 1 }
+        effects: { prosperityDelta: 0, militaryDelta: 1 },
       },
       ore: {
         id: 'ore',
         name: 'Rich Ore',
-        effects: { prosperityDelta: 2, militaryDelta: 2 }
-      }
+        effects: { prosperityDelta: 2, militaryDelta: 2 },
+      },
     };
 
     const gameState: GameState = {
@@ -123,7 +123,7 @@ describe('Type smoke tests', () => {
       version: 1,
       rngSeed: 'smoke-test-seed-12345',
       towns,
-      goods
+      goods,
     };
 
     // Verify GameState shape
@@ -160,9 +160,9 @@ describe('Type smoke tests', () => {
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
+        lastUpdatedTurn: 0,
       },
-      aiProfileId: 'ai-profile-123'
+      aiProfileId: 'ai-profile-123',
     };
 
     expectTypeOf(townWithAI.aiProfileId).toMatchTypeOf<string | undefined>();

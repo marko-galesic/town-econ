@@ -5,8 +5,8 @@ vi.mock('../data/goods.json', () => ({
   default: [
     { id: 'fish', name: 'Fish', effects: { prosperityDelta: 1, militaryDelta: 1 } },
     { id: 'wood', name: 'Wood', effects: { prosperityDelta: 1, militaryDelta: 1 } },
-    { id: 'ore', name: 'Ore', effects: { prosperityDelta: 1, militaryDelta: 1 } }
-  ]
+    { id: 'ore', name: 'Ore', effects: { prosperityDelta: 1, militaryDelta: 1 } },
+  ],
 }));
 
 vi.mock('../data/towns.json', () => ({
@@ -21,10 +21,10 @@ vi.mock('../data/towns.json', () => ({
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'modest',
-        lastUpdatedTurn: 0
-      }
-    }
-  ]
+        lastUpdatedTurn: 0,
+      },
+    },
+  ],
 }));
 
 describe('initGameState validation - missing keys', () => {
@@ -46,10 +46,10 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
-        }
-      ]
+            lastUpdatedTurn: 0,
+          },
+        },
+      ],
     }));
 
     const { initGameState } = await import('./initGameState');
@@ -72,10 +72,10 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
-        }
-      ]
+            lastUpdatedTurn: 0,
+          },
+        },
+      ],
     }));
 
     const { initGameState } = await import('./initGameState');
@@ -98,8 +98,8 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
+            lastUpdatedTurn: 0,
+          },
         },
         {
           id: 'town2',
@@ -111,10 +111,10 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
-        }
-      ]
+            lastUpdatedTurn: 0,
+          },
+        },
+      ],
     }));
 
     const { initGameState } = await import('./initGameState');
@@ -137,10 +137,10 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
-        }
-      ]
+            lastUpdatedTurn: 0,
+          },
+        },
+      ],
     }));
 
     const { initGameState } = await import('./initGameState');
@@ -164,10 +164,10 @@ describe('initGameState validation - missing keys', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 0
-          }
-        }
-      ]
+            lastUpdatedTurn: 0,
+          },
+        },
+      ],
     }));
 
     const { initGameState } = await import('./initGameState');

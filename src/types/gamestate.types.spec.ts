@@ -15,26 +15,26 @@ describe('GameState types', () => {
           name: 'Fish',
           effects: {
             prosperityDelta: 1,
-            militaryDelta: 0
-          }
+            militaryDelta: 0,
+          },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
           effects: {
             prosperityDelta: 0,
-            militaryDelta: 1
-          }
+            militaryDelta: 1,
+          },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
           effects: {
             prosperityDelta: 2,
-            militaryDelta: 2
-          }
-        }
-      }
+            militaryDelta: 2,
+          },
+        },
+      },
     };
 
     expect(validGameState.turn).toBe(0);
@@ -56,19 +56,19 @@ describe('GameState types', () => {
         fish: {
           id: 'fish',
           name: 'Fish',
-          effects: { prosperityDelta: 1, militaryDelta: 0 }
+          effects: { prosperityDelta: 1, militaryDelta: 0 },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
-          effects: { prosperityDelta: 0, militaryDelta: 1 }
+          effects: { prosperityDelta: 0, militaryDelta: 1 },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
-          effects: { prosperityDelta: 2, militaryDelta: 2 }
-        }
-      }
+          effects: { prosperityDelta: 2, militaryDelta: 2 },
+        },
+      },
     };
 
     expect(gameState.version).toBeGreaterThanOrEqual(1);

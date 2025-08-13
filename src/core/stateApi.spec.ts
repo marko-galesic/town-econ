@@ -3,7 +3,16 @@ import { describe, it, expect } from 'vitest';
 import type { GameState } from '../types/GameState';
 import type { Town } from '../types/Town';
 
-import { getTown, setResource, incResource, setPrice, incPrice, addProsperity, addMilitary, advanceTurn } from './stateApi';
+import {
+  getTown,
+  setResource,
+  incResource,
+  setPrice,
+  incPrice,
+  addProsperity,
+  addMilitary,
+  advanceTurn,
+} from './stateApi';
 
 // Deep freeze utility to catch accidental mutations
 function deepFreeze<T>(obj: T): T {
@@ -32,8 +41,8 @@ describe('stateApi', () => {
     revealed: {
       militaryTier: 'garrison',
       prosperityTier: 'modest',
-      lastUpdatedTurn: 3
-    }
+      lastUpdatedTurn: 3,
+    },
   };
 
   const baseState: GameState = {
@@ -44,21 +53,29 @@ describe('stateApi', () => {
     goods: {
       fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 2, militaryDelta: 1 } },
       wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 1, militaryDelta: 2 } },
-      ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } }
-    }
+      ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } },
+    },
   };
 
   describe('Invariant Tests - Table Driven', () => {
     describe('Good ID Validation', () => {
       const invalidGoodIds = ['unknown', 'invalid', 'bad', 'test', 'random'];
 
-      it.each(invalidGoodIds)('should reject invalid good ID: %s', (invalidId) => {
+      it.each(invalidGoodIds)('should reject invalid good ID: %s', invalidId => {
         const frozenTown = deepFreeze({ ...baseTown });
 
-        expect(() => setResource(frozenTown, invalidId, 10)).toThrow(`Unknown good ID: '${invalidId}'`);
-        expect(() => incResource(frozenTown, invalidId, 10)).toThrow(`Unknown good ID: '${invalidId}'`);
-        expect(() => setPrice(frozenTown, invalidId, 10)).toThrow(`Unknown good ID: '${invalidId}'`);
-        expect(() => incPrice(frozenTown, invalidId, 10)).toThrow(`Unknown good ID: '${invalidId}'`);
+        expect(() => setResource(frozenTown, invalidId, 10)).toThrow(
+          `Unknown good ID: '${invalidId}'`,
+        );
+        expect(() => incResource(frozenTown, invalidId, 10)).toThrow(
+          `Unknown good ID: '${invalidId}'`,
+        );
+        expect(() => setPrice(frozenTown, invalidId, 10)).toThrow(
+          `Unknown good ID: '${invalidId}'`,
+        );
+        expect(() => incPrice(frozenTown, invalidId, 10)).toThrow(
+          `Unknown good ID: '${invalidId}'`,
+        );
       });
 
       it('should accept valid good IDs', () => {
@@ -81,24 +98,42 @@ describe('stateApi', () => {
         { value: Infinity, description: 'Infinity' },
         { value: -Infinity, description: 'negative Infinity' },
         { value: 1.1, description: 'small decimal' },
-        { value: -2.7, description: 'negative decimal' }
+        { value: -2.7, description: 'negative decimal' },
       ];
 
-      it.each(nonIntegerValues)('should reject non-integer amount: $description ($value)', ({ value }) => {
-        const frozenTown = deepFreeze({ ...baseTown });
+      it.each(nonIntegerValues)(
+        'should reject non-integer amount: $description ($value)',
+        ({ value }) => {
+          const frozenTown = deepFreeze({ ...baseTown });
 
-        expect(() => setResource(frozenTown, 'fish', value)).toThrow(`Amount must be an integer, got: ${value}`);
-        expect(() => setPrice(frozenTown, 'fish', value)).toThrow(`Price must be an integer, got: ${value}`);
-      });
+          expect(() => setResource(frozenTown, 'fish', value)).toThrow(
+            `Amount must be an integer, got: ${value}`,
+          );
+          expect(() => setPrice(frozenTown, 'fish', value)).toThrow(
+            `Price must be an integer, got: ${value}`,
+          );
+        },
+      );
 
-      it.each(nonIntegerValues)('should reject non-integer delta: $description ($value)', ({ value }) => {
-        const frozenTown = deepFreeze({ ...baseTown });
+      it.each(nonIntegerValues)(
+        'should reject non-integer delta: $description ($value)',
+        ({ value }) => {
+          const frozenTown = deepFreeze({ ...baseTown });
 
-        expect(() => incResource(frozenTown, 'fish', value)).toThrow(`Delta must be an integer, got: ${value}`);
-        expect(() => incPrice(frozenTown, 'fish', value)).toThrow(`Delta must be an integer, got: ${value}`);
-        expect(() => addProsperity(frozenTown, value)).toThrow(`Delta must be an integer, got: ${value}`);
-        expect(() => addMilitary(frozenTown, value)).toThrow(`Delta must be an integer, got: ${value}`);
-      });
+          expect(() => incResource(frozenTown, 'fish', value)).toThrow(
+            `Delta must be an integer, got: ${value}`,
+          );
+          expect(() => incPrice(frozenTown, 'fish', value)).toThrow(
+            `Delta must be an integer, got: ${value}`,
+          );
+          expect(() => addProsperity(frozenTown, value)).toThrow(
+            `Delta must be an integer, got: ${value}`,
+          );
+          expect(() => addMilitary(frozenTown, value)).toThrow(
+            `Delta must be an integer, got: ${value}`,
+          );
+        },
+      );
 
       it('should accept integer values', () => {
         const frozenTown = deepFreeze({ ...baseTown });
@@ -123,26 +158,32 @@ describe('stateApi', () => {
         { input: 0, expected: 0, description: 'zero' },
         { input: 1, expected: 1, description: 'small positive' },
         { input: 50, expected: 50, description: 'medium positive' },
-        { input: 100, expected: 100, description: 'large positive' }
+        { input: 100, expected: 100, description: 'large positive' },
       ];
 
-      it.each(clampingTestCases)('setResource should clamp $description ($input → $expected)', ({ input, expected }) => {
-        const frozenTown = deepFreeze({ ...baseTown });
-        const result = setResource(frozenTown, 'fish', input);
+      it.each(clampingTestCases)(
+        'setResource should clamp $description ($input → $expected)',
+        ({ input, expected }) => {
+          const frozenTown = deepFreeze({ ...baseTown });
+          const result = setResource(frozenTown, 'fish', input);
 
-        expect(result.resources.fish).toBe(expected);
-        expect(result).not.toBe(frozenTown);
-        expect(frozenTown.resources.fish).toBe(10); // Original unchanged
-      });
+          expect(result.resources.fish).toBe(expected);
+          expect(result).not.toBe(frozenTown);
+          expect(frozenTown.resources.fish).toBe(10); // Original unchanged
+        },
+      );
 
-      it.each(clampingTestCases)('setPrice should clamp $description ($input → $expected)', ({ input, expected }) => {
-        const frozenTown = deepFreeze({ ...baseTown });
-        const result = setPrice(frozenTown, 'fish', input);
+      it.each(clampingTestCases)(
+        'setPrice should clamp $description ($input → $expected)',
+        ({ input, expected }) => {
+          const frozenTown = deepFreeze({ ...baseTown });
+          const result = setPrice(frozenTown, 'fish', input);
 
-        expect(result.prices.fish).toBe(expected);
-        expect(result).not.toBe(frozenTown);
-        expect(frozenTown.prices.fish).toBe(2); // Original unchanged
-      });
+          expect(result.prices.fish).toBe(expected);
+          expect(result).not.toBe(frozenTown);
+          expect(frozenTown.prices.fish).toBe(2); // Original unchanged
+        },
+      );
 
       it('incResource should floor at 0', () => {
         const frozenTown = deepFreeze({ ...baseTown });
@@ -276,13 +317,13 @@ describe('stateApi', () => {
           resources: {
             fish: 0,
             wood: 0,
-            ore: 0
+            ore: 0,
           },
           prices: {
             fish: 0,
             wood: 0,
-            ore: 0
-          }
+            ore: 0,
+          },
         };
         const emptyState: GameState = {
           ...baseState,
@@ -290,8 +331,8 @@ describe('stateApi', () => {
           goods: {
             fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 0, militaryDelta: 0 } },
             wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 0 } },
-            ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 0, militaryDelta: 0 } }
-          }
+            ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 0, militaryDelta: 0 } },
+          },
         };
 
         const frozenEmptyTown = deepFreeze(emptyTown);
@@ -327,13 +368,13 @@ describe('stateApi', () => {
           resources: {
             fish: 10,
             wood: 0,
-            ore: 0
+            ore: 0,
           },
           prices: {
             fish: 2,
             wood: 0,
-            ore: 0
-          }
+            ore: 0,
+          },
         };
 
         const frozenTown = deepFreeze(townWithMissingKeys);
@@ -343,7 +384,7 @@ describe('stateApi', () => {
         const priceResult = incPrice(frozenTown, 'ore', 20);
 
         expect(resourceResult.resources.wood).toBe(15); // 0 + 15
-        expect(priceResult.prices.ore).toBe(20);       // 0 + 20
+        expect(priceResult.prices.ore).toBe(20); // 0 + 20
       });
     });
   });
@@ -356,20 +397,20 @@ describe('stateApi', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
-      }
+        lastUpdatedTurn: 0,
+      },
     };
 
     const mockState: GameState = {
@@ -380,8 +421,8 @@ describe('stateApi', () => {
       goods: {
         fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 2, militaryDelta: 1 } },
         wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 1, militaryDelta: 2 } },
-        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } }
-      }
+        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } },
+      },
     };
 
     it('should return town when found', () => {
@@ -405,7 +446,7 @@ describe('stateApi', () => {
     it('should throw error with empty towns array', () => {
       const emptyState: GameState = {
         ...mockState,
-        towns: []
+        towns: [],
       };
 
       expect(() => getTown(emptyState, 'any-town')).toThrow();
@@ -427,20 +468,20 @@ describe('stateApi', () => {
       resources: {
         fish: 5,
         wood: 10,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
-      }
+        lastUpdatedTurn: 0,
+      },
     };
 
     it('should set positive integer amount correctly', () => {
@@ -519,8 +560,8 @@ describe('stateApi', () => {
         resources: {
           fish: 0,
           wood: 0,
-          ore: 0
-        }
+          ore: 0,
+        },
       };
 
       const result = setResource(townWithMinimalResources, 'fish', 25);
@@ -552,20 +593,20 @@ describe('stateApi', () => {
       resources: {
         fish: 10,
         wood: 5,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
-      }
+        lastUpdatedTurn: 0,
+      },
     };
 
     it('should increment positive delta correctly', () => {
@@ -674,8 +715,8 @@ describe('stateApi', () => {
         resources: {
           fish: 10,
           wood: 0,
-          ore: 0
-        }
+          ore: 0,
+        },
       };
 
       const result = incResource(townWithMissingResources, 'wood', 8);
@@ -707,20 +748,20 @@ describe('stateApi', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 5,
         wood: 10,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
-      }
+        lastUpdatedTurn: 0,
+      },
     };
 
     it('should set positive integer price correctly', () => {
@@ -799,8 +840,8 @@ describe('stateApi', () => {
         prices: {
           fish: 0,
           wood: 0,
-          ore: 0
-        }
+          ore: 0,
+        },
       };
 
       const result = setPrice(townWithMinimalPrices, 'fish', 25);
@@ -832,20 +873,20 @@ describe('stateApi', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 10,
         wood: 5,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
-      }
+        lastUpdatedTurn: 0,
+      },
     };
 
     it('should increment positive delta correctly', () => {
@@ -954,8 +995,8 @@ describe('stateApi', () => {
         prices: {
           fish: 10,
           wood: 0,
-          ore: 0
-        }
+          ore: 0,
+        },
       };
 
       const result = incPrice(townWithMissingPrices, 'wood', 8);
@@ -987,20 +1028,20 @@ describe('stateApi', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 5,
       prosperityRaw: 10,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 3
-      }
+        lastUpdatedTurn: 3,
+      },
     };
 
     it('should increment positive delta correctly', () => {
@@ -1087,7 +1128,7 @@ describe('stateApi', () => {
     it('should handle town with negative prosperity', () => {
       const townWithNegativeProsperity: Town = {
         ...mockTown,
-        prosperityRaw: -5
+        prosperityRaw: -5,
       };
 
       const result = addProsperity(townWithNegativeProsperity, 10);
@@ -1117,20 +1158,20 @@ describe('stateApi', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       militaryRaw: 5,
       prosperityRaw: 10,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 3
-      }
+        lastUpdatedTurn: 3,
+      },
     };
 
     it('should increment positive delta correctly', () => {
@@ -1217,7 +1258,7 @@ describe('stateApi', () => {
     it('should handle town with negative military', () => {
       const townWithNegativeMilitary: Town = {
         ...mockTown,
-        militaryRaw: -5
+        militaryRaw: -5,
       };
 
       const result = addMilitary(townWithNegativeMilitary, 10);
@@ -1256,8 +1297,8 @@ describe('stateApi', () => {
           revealed: {
             militaryTier: 'garrison',
             prosperityTier: 'modest',
-            lastUpdatedTurn: 3
-          }
+            lastUpdatedTurn: 3,
+          },
         },
         {
           id: 'town-2',
@@ -1269,15 +1310,15 @@ describe('stateApi', () => {
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'struggling',
-            lastUpdatedTurn: 1
-          }
-        }
+            lastUpdatedTurn: 1,
+          },
+        },
       ],
       goods: {
         fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 2, militaryDelta: 1 } },
         wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 1, militaryDelta: 2 } },
-        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } }
-      }
+        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 3, militaryDelta: 3 } },
+      },
     };
 
     it('should increment turn by 1', () => {
@@ -1327,7 +1368,7 @@ describe('stateApi', () => {
     it('should handle turn 0 correctly', () => {
       const stateAtTurn0: GameState = {
         ...mockState,
-        turn: 0
+        turn: 0,
       };
 
       const result = advanceTurn(stateAtTurn0);
@@ -1342,7 +1383,7 @@ describe('stateApi', () => {
     it('should handle large turn numbers correctly', () => {
       const stateAtLargeTurn: GameState = {
         ...mockState,
-        turn: 999
+        turn: 999,
       };
 
       const result = advanceTurn(stateAtLargeTurn);
@@ -1357,7 +1398,7 @@ describe('stateApi', () => {
     it('should handle negative turn numbers correctly', () => {
       const stateAtNegativeTurn: GameState = {
         ...mockState,
-        turn: -5
+        turn: -5,
       };
 
       const result = advanceTurn(stateAtNegativeTurn);
@@ -1390,7 +1431,7 @@ describe('stateApi', () => {
     it('should work with empty towns array', () => {
       const stateWithNoTowns: GameState = {
         ...mockState,
-        towns: []
+        towns: [],
       };
 
       const result = advanceTurn(stateWithNoTowns);
@@ -1412,8 +1453,8 @@ describe('stateApi', () => {
         goods: {
           fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 0, militaryDelta: 0 } },
           wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 0 } },
-          ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 0, militaryDelta: 0 } }
-        }
+          ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 0, militaryDelta: 0 } },
+        },
       };
 
       const result = advanceTurn(minimalState);

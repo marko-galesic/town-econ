@@ -9,7 +9,16 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       reportsDirectory: 'coverage',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['node_modules/', 'dist/', 'coverage/', '**/*.d.ts', '**/*.config.*', '**/*.spec.ts', '**/*.test.ts', 'src/main.ts'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'coverage/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        'src/main.ts',
+      ],
       thresholds: {
         lines: 85,
         functions: 85,

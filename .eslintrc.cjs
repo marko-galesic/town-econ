@@ -27,25 +27,18 @@ module.exports = {
       { prefer: 'type-imports', disallowTypeAnnotations: false },
     ],
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    
+
     // General rules
-    'eqeqeq': ['error', 'always'],
+    eqeqeq: ['error', 'always'],
     'prefer-const': 'error',
     'no-var': 'error',
-    
+
     // Import rules
     'import/no-unresolved': 'error',
     'import/order': [
       'error',
       {
-        groups: [
-          'builtin',
-          'external',
-          'internal',
-          'parent',
-          'sibling',
-          'index',
-        ],
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc',
@@ -63,4 +56,4 @@ module.exports = {
       },
     },
   },
-}
+};

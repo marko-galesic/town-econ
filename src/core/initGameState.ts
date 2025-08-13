@@ -62,7 +62,7 @@ export function initGameState(opts: InitGameStateOptions = {}): GameState {
   // Deep clone towns data to avoid shared references
   const towns = deepClone(townsData) as Town[];
 
-    // Transform goods data from array to Record<GoodId, GoodConfig>
+  // Transform goods data from array to Record<GoodId, GoodConfig>
   const goods: Record<GoodId, GoodConfig> = {} as Record<GoodId, GoodConfig>;
   goodsData.forEach(good => {
     goods[good.id as GoodId] = deepClone(good) as GoodConfig;
@@ -92,6 +92,6 @@ export function initGameState(opts: InitGameStateOptions = {}): GameState {
     version: 1,
     rngSeed,
     towns,
-    goods
+    goods,
   };
 }

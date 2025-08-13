@@ -123,10 +123,16 @@ function validateGoodConfig(value: unknown, path: string, expectedId: GoodId): G
 
   // Check all required effects fields exist first
   if (!('prosperityDelta' in effects)) {
-    throw { path: `${path}.effects.prosperityDelta`, message: 'Missing required field: prosperityDelta' };
+    throw {
+      path: `${path}.effects.prosperityDelta`,
+      message: 'Missing required field: prosperityDelta',
+    };
   }
   if (!('militaryDelta' in effects)) {
-    throw { path: `${path}.effects.militaryDelta`, message: 'Missing required field: militaryDelta' };
+    throw {
+      path: `${path}.effects.militaryDelta`,
+      message: 'Missing required field: militaryDelta',
+    };
   }
 
   // Validate prosperityDelta (integer, can be negative)
@@ -183,7 +189,10 @@ function validateTown(value: unknown, path: string, goodIds: GoodId[]): Town {
   const resources = validateObject(obj.resources, `${path}.resources`);
   goodIds.forEach(goodId => {
     if (!(goodId in resources)) {
-      throw { path: `${path}.resources`, message: `Missing required good '${goodId}' in resources` };
+      throw {
+        path: `${path}.resources`,
+        message: `Missing required good '${goodId}' in resources`,
+      };
     }
     validateInteger(resources[goodId], `${path}.resources.${goodId}`, 0);
   });
@@ -208,25 +217,40 @@ function validateTown(value: unknown, path: string, goodIds: GoodId[]): Town {
 
   // Check all required revealed fields exist first
   if (!('militaryTier' in revealed)) {
-    throw { path: `${path}.revealed.militaryTier`, message: 'Missing required field: militaryTier' };
+    throw {
+      path: `${path}.revealed.militaryTier`,
+      message: 'Missing required field: militaryTier',
+    };
   }
   if (!('prosperityTier' in revealed)) {
-    throw { path: `${path}.revealed.prosperityTier`, message: 'Missing required field: prosperityTier' };
+    throw {
+      path: `${path}.revealed.prosperityTier`,
+      message: 'Missing required field: prosperityTier',
+    };
   }
   if (!('lastUpdatedTurn' in revealed)) {
-    throw { path: `${path}.revealed.lastUpdatedTurn`, message: 'Missing required field: lastUpdatedTurn' };
+    throw {
+      path: `${path}.revealed.lastUpdatedTurn`,
+      message: 'Missing required field: lastUpdatedTurn',
+    };
   }
 
   // Validate militaryTier
   const militaryTier = validateString(revealed.militaryTier, `${path}.revealed.militaryTier`);
   if (!['militia', 'garrison', 'formidable', 'host'].includes(militaryTier)) {
-    throw { path: `${path}.revealed.militaryTier`, message: `Invalid military tier: ${militaryTier}` };
+    throw {
+      path: `${path}.revealed.militaryTier`,
+      message: `Invalid military tier: ${militaryTier}`,
+    };
   }
 
   // Validate prosperityTier
   const prosperityTier = validateString(revealed.prosperityTier, `${path}.revealed.prosperityTier`);
   if (!['struggling', 'modest', 'prosperous', 'opulent'].includes(prosperityTier)) {
-    throw { path: `${path}.revealed.prosperityTier`, message: `Invalid prosperity tier: ${prosperityTier}` };
+    throw {
+      path: `${path}.revealed.prosperityTier`,
+      message: `Invalid prosperity tier: ${prosperityTier}`,
+    };
   }
 
   // Validate lastUpdatedTurn (nonnegative integer)

@@ -59,13 +59,13 @@ export function setResource(town: Town, goodId: string, amount: number): Town {
   // Create new resources object with updated value
   const updatedResources = {
     ...town.resources,
-    [goodId]: clampedAmount
+    [goodId]: clampedAmount,
   };
 
   // Return new Town object with updated resources
   return {
     ...town,
-    resources: updatedResources
+    resources: updatedResources,
   };
 }
 
@@ -99,13 +99,13 @@ export function incResource(town: Town, goodId: string, delta: number): Town {
   // Create new resources object with updated value
   const updatedResources = {
     ...town.resources,
-    [goodId]: newAmount
+    [goodId]: newAmount,
   };
 
   // Return new Town object with updated resources
   return {
     ...town,
-    resources: updatedResources
+    resources: updatedResources,
   };
 }
 
@@ -135,13 +135,13 @@ export function setPrice(town: Town, goodId: string, price: number): Town {
   // Create new prices object with updated value
   const updatedPrices = {
     ...town.prices,
-    [goodId]: clampedPrice
+    [goodId]: clampedPrice,
   };
 
   // Return new Town object with updated prices
   return {
     ...town,
-    prices: updatedPrices
+    prices: updatedPrices,
   };
 }
 
@@ -175,13 +175,13 @@ export function incPrice(town: Town, goodId: string, delta: number): Town {
   // Create new prices object with updated value
   const updatedPrices = {
     ...town.prices,
-    [goodId]: newPrice
+    [goodId]: newPrice,
   };
 
   // Return new Town object with updated prices
   return {
     ...town,
-    prices: updatedPrices
+    prices: updatedPrices,
   };
 }
 
@@ -208,7 +208,7 @@ export function addProsperity(town: Town, delta: number): Town {
   // Return new Town object with updated prosperityRaw only
   return {
     ...town,
-    prosperityRaw: newProsperityRaw
+    prosperityRaw: newProsperityRaw,
   };
 }
 
@@ -235,7 +235,7 @@ export function addMilitary(town: Town, delta: number): Town {
   // Return new Town object with updated militaryRaw only
   return {
     ...town,
-    militaryRaw: newMilitaryRaw
+    militaryRaw: newMilitaryRaw,
   };
 }
 
@@ -251,6 +251,6 @@ export function advanceTurn(state: GameState): GameState {
   // Return new GameState with turn incremented by 1
   return {
     ...state,
-    turn: state.turn + 1
+    turn: state.turn + 1,
   };
 }

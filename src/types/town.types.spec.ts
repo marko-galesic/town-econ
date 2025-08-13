@@ -10,20 +10,20 @@ describe('Town types', () => {
       resources: {
         fish: 10,
         wood: 20,
-        ore: 5
+        ore: 5,
       },
       prices: {
         fish: 5,
         wood: 3,
-        ore: 8
+        ore: 8,
       },
       militaryRaw: 15,
       prosperityRaw: 25,
       revealed: {
         militaryTier: 'garrison',
         prosperityTier: 'modest',
-        lastUpdatedTurn: 1
-      }
+        lastUpdatedTurn: 1,
+      },
     };
 
     expect(validTown.id).toBe('town-1');
@@ -44,21 +44,21 @@ describe('Town types', () => {
       resources: {
         fish: 0,
         wood: 0,
-        ore: 0
+        ore: 0,
       },
       prices: {
         fish: 1,
         wood: 1,
-        ore: 1
+        ore: 1,
       },
       militaryRaw: 0,
       prosperityRaw: 0,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
-        lastUpdatedTurn: 0
+        lastUpdatedTurn: 0,
       },
-      aiProfileId: 'ai-profile-1'
+      aiProfileId: 'ai-profile-1',
     };
 
     expect(townWithAI.aiProfileId).toBe('ai-profile-1');

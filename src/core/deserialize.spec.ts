@@ -21,9 +21,9 @@ describe('deserializeGameState', () => {
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
-          lastUpdatedTurn: 0
-        }
-      }
+          lastUpdatedTurn: 0,
+        },
+      },
     ],
     goods: {
       fish: {
@@ -31,26 +31,26 @@ describe('deserializeGameState', () => {
         name: 'Fish',
         effects: {
           prosperityDelta: 1,
-          militaryDelta: 0
-        }
+          militaryDelta: 0,
+        },
       },
       wood: {
         id: 'wood',
         name: 'Wood',
         effects: {
           prosperityDelta: 0,
-          militaryDelta: 1
-        }
+          militaryDelta: 1,
+        },
       },
       ore: {
         id: 'ore',
         name: 'Ore',
         effects: {
           prosperityDelta: 2,
-          militaryDelta: 2
-        }
-      }
-    }
+          militaryDelta: 2,
+        },
+      },
+    },
   };
 
   describe('happy path', () => {
@@ -101,7 +101,8 @@ describe('deserializeGameState', () => {
 
     it('should throw error mentioning JSON parse when JSON has invalid syntax', () => {
       // This JSON is actually valid, so let's use a truly invalid one
-      const invalidJson = '{ "turn": 0, "version": 1, "rngSeed": "abc", "towns": [], "goods": { "fish": { "id": "fish", "name": "Fish", "effects": { "prosperityDelta": 1, "militaryDelta": 0 } } } } }';
+      const invalidJson =
+        '{ "turn": 0, "version": 1, "rngSeed": "abc", "towns": [], "goods": { "fish": { "id": "fish", "name": "Fish", "effects": { "prosperityDelta": 1, "militaryDelta": 0 } } } } }';
 
       expect(() => deserializeGameState(invalidJson)).toThrow();
 
@@ -127,11 +128,11 @@ describe('deserializeGameState', () => {
             name: 'Fish',
             effects: {
               prosperityDelta: 1,
-              militaryDelta: 0
-            }
-          }
+              militaryDelta: 0,
+            },
+          },
           // Missing wood and ore goods
-        }
+        },
       };
 
       const json = JSON.stringify(invalidStructure);
@@ -165,9 +166,9 @@ describe('deserializeGameState', () => {
             revealed: {
               militaryTier: 'formidable',
               prosperityTier: 'prosperous',
-              lastUpdatedTurn: 0
-            }
-          }
+              lastUpdatedTurn: 0,
+            },
+          },
         ],
         goods: {
           fish: {
@@ -175,26 +176,26 @@ describe('deserializeGameState', () => {
             name: 'Fish',
             effects: {
               prosperityDelta: 1,
-              militaryDelta: 0
-            }
+              militaryDelta: 0,
+            },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
             effects: {
               prosperityDelta: 0,
-              militaryDelta: 1
-            }
+              militaryDelta: 1,
+            },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
             effects: {
               prosperityDelta: 2,
-              militaryDelta: 2
-            }
-          }
-        }
+              militaryDelta: 2,
+            },
+          },
+        },
       };
 
       const json = JSON.stringify(invalidStructure);
@@ -226,9 +227,9 @@ describe('deserializeGameState', () => {
             revealed: {
               militaryTier: 'formidable',
               prosperityTier: 'prosperous',
-              lastUpdatedTurn: 0
-            }
-          }
+              lastUpdatedTurn: 0,
+            },
+          },
         ],
         goods: {
           fish: {
@@ -236,26 +237,26 @@ describe('deserializeGameState', () => {
             name: 'Fish',
             effects: {
               prosperityDelta: 1,
-              militaryDelta: 0
-            }
+              militaryDelta: 0,
+            },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
             effects: {
               prosperityDelta: 0,
-              militaryDelta: 1
-            }
+              militaryDelta: 1,
+            },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
             effects: {
               prosperityDelta: 2,
-              militaryDelta: 2
-            }
-          }
-        }
+              militaryDelta: 2,
+            },
+          },
+        },
       };
 
       const json = JSON.stringify(invalidStructure);
@@ -276,7 +277,7 @@ describe('deserializeGameState', () => {
     it('should handle empty towns array', () => {
       const emptyTownsState = {
         ...validGameState,
-        towns: []
+        towns: [],
       };
 
       const json = JSON.stringify(emptyTownsState);
@@ -301,10 +302,10 @@ describe('deserializeGameState', () => {
             revealed: {
               militaryTier: 'garrison',
               prosperityTier: 'modest',
-              lastUpdatedTurn: 0
-            }
-          }
-        ]
+              lastUpdatedTurn: 0,
+            },
+          },
+        ],
       };
 
       const json = JSON.stringify(multiTownState);

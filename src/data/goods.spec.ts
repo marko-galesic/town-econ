@@ -17,7 +17,7 @@ describe('goods.json', () => {
   it('should match GoodConfig interface for all entries', () => {
     const goods = goodsData as GoodConfig[];
 
-    goods.forEach((good) => {
+    goods.forEach(good => {
       // Check required properties exist
       expect(good).toHaveProperty('id');
       expect(good).toHaveProperty('name');
