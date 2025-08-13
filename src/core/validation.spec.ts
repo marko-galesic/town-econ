@@ -1,6 +1,30 @@
 import { describe, it, expect } from 'vitest';
-import { validateGameState, ValidationError } from './validation';
+
 import type { GameState } from '../types/GameState';
+
+import type { ValidationError } from './validation';
+import { validateGameState } from './validation';
+
+// Type for invalid game state that can have missing or invalid properties
+type InvalidGameState = Partial<GameState> & Record<string, unknown>;
+
+// Type for deep modification of GameState properties
+type DeepInvalidGameState = {
+  [K in keyof GameState]?: K extends 'towns'
+    ? Array<{
+        [P in keyof GameState['towns'][0]]?: P extends 'resources' | 'prices'
+          ? Record<string, unknown>
+          : P extends 'revealed'
+          ? Partial<GameState['towns'][0]['revealed']> & Record<string, unknown>
+          : unknown;
+      } & Record<string, unknown>>
+    : K extends 'goods'
+    ? {
+        [G in keyof GameState['goods']]?: Partial<GameState['goods'][G]> & Record<string, unknown>;
+      } & Record<string, unknown>
+    : unknown;
+} & Record<string, unknown>;
+
 
 describe('validateGameState', () => {
   const validGameState: GameState = {
@@ -67,8 +91,8 @@ describe('validateGameState', () => {
 
   describe('missing keys', () => {
     it('should throw with path when turn is missing', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).turn;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      delete invalidState.turn;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -81,8 +105,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when version is missing', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).version;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      delete invalidState.version;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -95,8 +119,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when rngSeed is missing', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).rngSeed;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      delete invalidState.rngSeed;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -109,8 +133,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when towns is missing', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).towns;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      delete invalidState.towns;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -123,8 +147,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when goods is missing', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).goods;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
+      delete invalidState.goods;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -139,8 +163,8 @@ describe('validateGameState', () => {
 
   describe('bad numbers (NaN/Infinity/float)', () => {
     it('should throw with path when turn is NaN', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).turn = NaN;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      invalidState.turn = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -153,8 +177,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when turn is Infinity', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).turn = Infinity;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      invalidState.turn = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -167,8 +191,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when turn is a float', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).turn = 1.5;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      invalidState.turn = 1.5;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -181,8 +205,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when turn is negative', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).turn = -1;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      invalidState.turn = -1;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -195,8 +219,8 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when version is less than 1', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).version = 0;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      invalidState.version = 0;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -209,8 +233,10 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when town resources contain NaN', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).resources.fish = NaN;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepInvalidGameState).resources.fish = NaN;
+      }
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -223,8 +249,10 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when town prices contain float', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prices.wood = 1.5;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepInvalidGameState).prices.wood = 1.5;
+      }
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -237,8 +265,10 @@ describe('validateGameState', () => {
     });
 
     it('should throw with path when town prices contain negative value', () => {
-      const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prices.ore = -1;
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepInvalidGameState).prices.ore = -1;
+      }
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -252,7 +282,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town resources contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).resources.fish = Infinity;
+      (invalidState.towns[0] as DeepInvalidGameState).resources.fish = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -266,7 +296,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town resources contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).resources.wood = 5.5;
+      (invalidState.towns[0] as DeepInvalidGameState).resources.wood = 5.5;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -280,7 +310,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town resources contain negative value', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).resources.ore = -3;
+      (invalidState.towns[0] as DeepInvalidGameState).resources.ore = -3;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -294,7 +324,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prices contain NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prices.fish = NaN;
+      (invalidState.towns[0] as DeepInvalidGameState).prices.fish = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -308,7 +338,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prices contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prices.wood = Infinity;
+      (invalidState.towns[0] as DeepInvalidGameState).prices.wood = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -322,7 +352,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town militaryRaw contains NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).militaryRaw = NaN;
+      (invalidState.towns[0] as DeepInvalidGameState).militaryRaw = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -336,7 +366,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town militaryRaw contains Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).militaryRaw = Infinity;
+      (invalidState.towns[0] as DeepInvalidGameState).militaryRaw = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -350,7 +380,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town militaryRaw contains float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).militaryRaw = 15.7;
+      (invalidState.towns[0] as DeepInvalidGameState).militaryRaw = 15.7;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -364,7 +394,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prosperityRaw contains NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prosperityRaw = NaN;
+      (invalidState.towns[0] as DeepInvalidGameState).prosperityRaw = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -378,7 +408,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prosperityRaw contains Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prosperityRaw = Infinity;
+      (invalidState.towns[0] as DeepInvalidGameState).prosperityRaw = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -392,7 +422,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prosperityRaw contains float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).prosperityRaw = 20.3;
+      (invalidState.towns[0] as DeepInvalidGameState).prosperityRaw = 20.3;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -406,7 +436,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town lastUpdatedTurn contains NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).revealed.lastUpdatedTurn = NaN;
+      (invalidState.towns[0] as DeepInvalidGameState).revealed.lastUpdatedTurn = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -420,7 +450,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town lastUpdatedTurn contains Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).revealed.lastUpdatedTurn = Infinity;
+      (invalidState.towns[0] as DeepInvalidGameState).revealed.lastUpdatedTurn = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -434,7 +464,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town lastUpdatedTurn contains float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).revealed.lastUpdatedTurn = 0.5;
+      (invalidState.towns[0] as DeepInvalidGameState).revealed.lastUpdatedTurn = 0.5;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -448,7 +478,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town lastUpdatedTurn contains negative value', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.towns[0] as any).revealed.lastUpdatedTurn = -1;
+      (invalidState.towns[0] as DeepInvalidGameState).revealed.lastUpdatedTurn = -1;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -462,7 +492,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.prosperityDelta = Infinity;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.prosperityDelta = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -476,7 +506,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.prosperityDelta = NaN;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.prosperityDelta = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -490,7 +520,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.prosperityDelta = 1.5;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.prosperityDelta = 1.5;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -504,7 +534,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain float in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.militaryDelta = 2.7;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.militaryDelta = 2.7;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -518,7 +548,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain Infinity in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.militaryDelta = Infinity;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.militaryDelta = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -532,7 +562,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects contain NaN in militaryDelta', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.fish as any).effects.militaryDelta = NaN;
+      (invalidState.goods.fish as DeepInvalidGameState).effects.militaryDelta = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -546,7 +576,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when wood good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.wood as any).effects.prosperityDelta = 0.5;
+      (invalidState.goods.wood as DeepInvalidGameState).effects.prosperityDelta = 0.5;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -560,7 +590,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when wood good effects contain Infinity', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.wood as any).effects.militaryDelta = Infinity;
+      (invalidState.goods.wood as DeepInvalidGameState).effects.militaryDelta = Infinity;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -574,7 +604,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when ore good effects contain NaN', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.ore as any).effects.prosperityDelta = NaN;
+      (invalidState.goods.ore as DeepInvalidGameState).effects.prosperityDelta = NaN;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -588,7 +618,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when ore good effects contain float', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState.goods.ore as any).effects.militaryDelta = 2.3;
+      (invalidState.goods.ore as DeepInvalidGameState).effects.militaryDelta = 2.3;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -604,7 +634,7 @@ describe('validateGameState', () => {
   describe('unknown good ID in town maps', () => {
     it('should throw with path when town resources missing fish', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.towns[0] as any).resources.fish;
+      delete (invalidState.towns[0] as DeepInvalidGameState).resources.fish;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -618,7 +648,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town prices missing wood', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.towns[0] as any).prices.wood;
+      delete (invalidState.towns[0] as DeepInvalidGameState).prices.wood;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -632,7 +662,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town resources missing ore', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.towns[0] as any).resources.ore;
+      delete (invalidState.towns[0] as DeepInvalidGameState).resources.ore;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -648,7 +678,7 @@ describe('validateGameState', () => {
   describe('missing required goods', () => {
     it('should throw with path when fish good is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).goods.fish;
+      delete (invalidState as DeepInvalidGameState).goods.fish;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -662,7 +692,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when wood good is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).goods.wood;
+      delete (invalidState as DeepInvalidGameState).goods.wood;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -676,7 +706,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when ore good is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState as any).goods.ore;
+      delete (invalidState as DeepInvalidGameState).goods.ore;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -692,7 +722,7 @@ describe('validateGameState', () => {
   describe('type validation', () => {
     it('should throw with path when turn is string', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).turn = '0' as any;
+      (invalidState as DeepInvalidGameState).turn = '0' as DeepInvalidGameState;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -706,7 +736,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when rngSeed is number', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).rngSeed = 123 as any;
+      (invalidState as DeepInvalidGameState).rngSeed = 123 as DeepInvalidGameState;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -720,7 +750,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when towns is not array', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).towns = {} as any;
+      (invalidState as DeepInvalidGameState).towns = {} as DeepInvalidGameState;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -734,7 +764,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when goods is not object', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      (invalidState as any).goods = [] as any;
+      (invalidState as DeepInvalidGameState).goods = [] as DeepInvalidGameState;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -750,7 +780,7 @@ describe('validateGameState', () => {
   describe('nested validation', () => {
     it('should throw with path when town id is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.towns[0] as any).id;
+      delete (invalidState.towns[0] as DeepInvalidGameState).id;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -764,7 +794,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when town revealed object is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.towns[0] as any).revealed;
+      delete (invalidState.towns[0] as DeepInvalidGameState).revealed;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {
@@ -778,7 +808,7 @@ describe('validateGameState', () => {
 
     it('should throw with path when good effects object is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState));
-      delete (invalidState.goods.fish as any).effects;
+      delete (invalidState.goods.fish as DeepInvalidGameState).effects;
 
       expect(() => validateGameState(invalidState)).toThrow();
       try {

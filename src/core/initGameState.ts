@@ -1,8 +1,8 @@
+import goodsData from '../data/goods.json';
+import townsData from '../data/towns.json';
 import type { GameState } from '../types/GameState';
 import type { GoodId, GoodConfig } from '../types/Goods';
 import type { Town } from '../types/Town';
-import goodsData from '../data/goods.json';
-import townsData from '../data/towns.json';
 
 /**
  * Options for initializing the game state.
@@ -16,9 +16,9 @@ export interface InitGameStateOptions {
  * Generates a default RNG seed using crypto if available, or falls back to a static seed.
  */
 function generateDefaultSeed(): string {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
     const array = new Uint8Array(8);
-    crypto.getRandomValues(array);
+    globalThis.crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   }
   return 'default-seed-12345';
@@ -38,7 +38,7 @@ function deepClone<T>(obj: T): T {
 
   const cloned = {} as T;
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       cloned[key] = deepClone(obj[key]);
     }
   }

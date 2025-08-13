@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { serializeGameState } from './serialize';
+
 import type { GameState } from '../types/GameState';
+
+import { serializeGameState } from './serialize';
 
 describe('serializeGameState', () => {
   it('returns a string', () => {

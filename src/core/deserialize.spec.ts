@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { deserializeGameState } from './deserialize';
-import { ValidationError } from './validation';
+
 import type { GameState } from '../types/GameState';
+
+import { deserializeGameState } from './deserialize';
+import type { ValidationError } from './validation';
 
 describe('deserializeGameState', () => {
   const validGameState: GameState = {
@@ -98,8 +100,6 @@ describe('deserializeGameState', () => {
     });
 
     it('should throw error mentioning JSON parse when JSON has invalid syntax', () => {
-      const badJson = '{ "turn": 0, "version": 1, "rngSeed": "abc", "towns": [], "goods": { "fish": { "id": "fish", "name": "Fish", "effects": { "prosperityDelta": 1, "militaryDelta": 0 } } } }';
-
       // This JSON is actually valid, so let's use a truly invalid one
       const invalidJson = '{ "turn": 0, "version": 1, "rngSeed": "abc", "towns": [], "goods": { "fish": { "id": "fish", "name": "Fish", "effects": { "prosperityDelta": 1, "militaryDelta": 0 } } } } }';
 

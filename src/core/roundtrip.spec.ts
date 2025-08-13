@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
+
+import type { GameState } from '../types/GameState';
+
+import { deserializeGameState } from './deserialize';
 import { initGameState } from './initGameState';
 import { serializeGameState } from './serialize';
-import { deserializeGameState } from './deserialize';
-import type { GameState } from '../types/GameState';
 
 describe('GameState round-trip', () => {
   it('should preserve exact GameState through serialize/deserialize cycle', () => {

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { GoodConfig } from '../types/Goods';
+
+import type { GoodConfig } from '../types/Goods';
+
 import goodsData from './goods.json';
 
 describe('goods.json', () => {

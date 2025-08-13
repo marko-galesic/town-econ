@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 
+import type { GameState } from './GameState';
 import type { GoodId, GoodConfig } from './Goods';
 import type { MilitaryTier, ProsperityTier } from './Tiers';
 import type { Town } from './Town';
-import type { GameState } from './GameState';
 
 describe('Type smoke tests', () => {
   it('should align GoodId with GoodConfig', () => {

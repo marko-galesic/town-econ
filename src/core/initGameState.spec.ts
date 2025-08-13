@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { initGameState } from './initGameState';
+
 import type { GoodId } from '../types/Goods';
+
+import { initGameState } from './initGameState';
 
 describe('initGameState', () => {
   describe('Basic Structure', () => {

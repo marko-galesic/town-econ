@@ -1,5 +1,6 @@
-import { validateGameState } from './validation';
 import type { GameState } from '../types/GameState';
+
+import { validateGameState } from './validation';
 
 /**
  * Deserializes a JSON string into a validated GameState object.
@@ -25,12 +26,7 @@ export function deserializeGameState(json: string): GameState {
   }
 
   // JSON parsing succeeded, now validate the structure
-  try {
-    validateGameState(parsed);
-  } catch (error) {
-    // Validation failed - re-throw the ValidationError as-is
-    throw error;
-  }
+  validateGameState(parsed);
 
   // Both parsing and validation succeeded, return the typed object
   return parsed as GameState;

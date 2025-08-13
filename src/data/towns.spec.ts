@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Town } from '../types/Town';
-import { GoodId } from '../types/Goods';
+
+import type { GoodId } from '../types/Goods';
+import type { Town } from '../types/Town';
+
 import townsData from './towns.json';
 
 describe('towns.json', () => {
