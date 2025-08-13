@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fish",
+    "name": "Fish",
+    "effects": {
+      "prosperityDelta": 2,
+      "militaryDelta": 1
+    }
+  },
+  {
+    "id": "wood",
+    "name": "Wood",
+    "effects": {
+      "prosperityDelta": 1,
+      "militaryDelta": 2
+    }
+  },
+  {
+    "id": "ore",
+    "name": "Ore",
+    "effects": {
+      "prosperityDelta": 3,
+      "militaryDelta": 3
+    }
+  }
+]

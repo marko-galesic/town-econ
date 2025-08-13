@@ -1,0 +1,65 @@
+[
+  {
+    "id": "riverdale",
+    "name": "Riverdale",
+    "resources": {
+      "fish": 15,
+      "wood": 8,
+      "ore": 3
+    },
+    "prices": {
+      "fish": 2,
+      "wood": 3,
+      "ore": 5
+    },
+    "militaryRaw": 5,
+    "prosperityRaw": 8,
+    "revealed": {
+      "militaryTier": "militia",
+      "prosperityTier": "modest",
+      "lastUpdatedTurn": 0
+    }
+  },
+  {
+    "id": "forestburg",
+    "name": "Forestburg",
+    "resources": {
+      "fish": 6,
+      "wood": 20,
+      "ore": 4
+    },
+    "prices": {
+      "fish": 4,
+      "wood": 1,
+      "ore": 6
+    },
+    "militaryRaw": 12,
+    "prosperityRaw": 15,
+    "revealed": {
+      "militaryTier": "garrison",
+      "prosperityTier": "prosperous",
+      "lastUpdatedTurn": 0
+    }
+  },
+  {
+    "id": "ironforge",
+    "name": "Ironforge",
+    "resources": {
+      "fish": 2,
+      "wood": 5,
+      "ore": 25
+    },
+    "prices": {
+      "fish": 6,
+      "wood": 4,
+      "ore": 2
+    },
+    "militaryRaw": 18,
+    "prosperityRaw": 22,
+    "revealed": {
+      "militaryTier": "formidable",
+      "prosperityTier": "opulent",
+      "lastUpdatedTurn": 0
+    }
+  }
+]
