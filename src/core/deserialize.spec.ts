@@ -64,7 +64,7 @@ describe('deserializeGameState', () => {
       // Should be properly typed
       expect(result.turn).toBe(0);
       expect(result.towns).toHaveLength(1);
-      expect(result.towns[0].id).toBe('town1');
+      expect(result.towns[0]?.id).toBe('town1');
       expect(result.goods.fish.name).toBe('Fish');
     });
   });
@@ -311,8 +311,8 @@ describe('deserializeGameState', () => {
       const result = deserializeGameState(json);
 
       expect(result.towns).toHaveLength(2);
-      expect(result.towns[1].id).toBe('town2');
-      expect(result.towns[1].name).toBe('Second Town');
+      expect(result.towns[1]?.id).toBe('town2');
+      expect(result.towns[1]?.name).toBe('Second Town');
     });
   });
 });

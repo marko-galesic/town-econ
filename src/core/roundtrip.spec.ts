@@ -44,13 +44,13 @@ describe('GameState round-trip', () => {
       const town1 = s1.towns[0];
       const town2 = s2.towns[0];
 
-      expect(town2.id).toStrictEqual(town1.id);
-      expect(town2.name).toStrictEqual(town1.name);
-      expect(town2.resources).toStrictEqual(town1.resources);
-      expect(town2.prices).toStrictEqual(town1.prices);
-      expect(town2.militaryRaw).toStrictEqual(town1.militaryRaw);
-      expect(town2.prosperityRaw).toStrictEqual(town1.prosperityRaw);
-      expect(town2.revealed).toStrictEqual(town1.revealed);
+      expect(town2?.id).toStrictEqual(town1?.id);
+      expect(town2?.name).toStrictEqual(town1?.name);
+      expect(town2?.resources).toStrictEqual(town1?.resources);
+      expect(town2?.prices).toStrictEqual(town1?.prices);
+      expect(town2?.militaryRaw).toStrictEqual(town1?.militaryRaw);
+      expect(town2?.prosperityRaw).toStrictEqual(town1?.prosperityRaw);
+      expect(town2?.revealed).toStrictEqual(town1?.revealed);
     }
 
     if (s1.goods.fish) {

@@ -1,4 +1,6 @@
-import type { GameState, GoodId, GoodConfig, Town } from '../types/GameState';
+import type { GameState } from '../types/GameState';
+import type { GoodId, GoodConfig } from '../types/Goods';
+import type { Town } from '../types/Town';
 
 /**
  * Represents a validation error with a precise path to the problematic field.

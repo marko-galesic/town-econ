@@ -57,7 +57,7 @@ describe('serializeGameState', () => {
           militaryRaw: 15,
           prosperityRaw: 20,
           revealed: {
-            militaryTier: 'strong',
+            militaryTier: 'formidable',
             prosperityTier: 'prosperous',
             lastUpdatedTurn: 5
           }
