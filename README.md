@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 266 tests passing)
+- `pnpm test` - Run test suite once (✅ 276 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -66,14 +66,17 @@ town-econ/
 │   │       ├── TurnController.ts # Turn orchestration and phase sequencing
 │   │       ├── PlayerAction.ts # Player action type definitions
 │   │       ├── PlayerActionQueue.ts # Action queue management
-│   │       └── UpdatePipeline.ts # Pluggable update systems pipeline
+│   │       ├── UpdatePipeline.ts # Pluggable update systems pipeline
+│   │       ├── TurnService.ts # Factory service for easy TurnController setup
+│   │       ├── index.ts # Barrel exports for all turn-related modules
 │   │       ├── TurnController.skeleton.spec.ts # Turn system tests
 │   │       ├── TurnController.start.spec.ts # Turn start phase tests
 │   │       ├── TurnController.player.spec.ts # Player action phase tests
 │   │       ├── TurnController.update.spec.ts # Update stats phase tests
 │   │       ├── TurnController.end.spec.ts # Turn end phase tests
 │   │       ├── PlayerActionQueue.spec.ts # Queue functionality tests
-│   │       └── UpdatePipeline.spec.ts # Update pipeline system tests
+│   │       ├── UpdatePipeline.spec.ts # Update pipeline system tests
+│   │       └── TurnService.spec.ts # TurnService factory tests
 │   ├── types/            # TypeScript type definitions
 │   │   ├── GameState.ts  # Main game state interface
 │   │   ├── Town.ts       # Town entity interface
@@ -135,6 +138,33 @@ A comprehensive set of immutable state manipulation functions for the town econo
 
 A comprehensive turn management system that orchestrates game progression through distinct phases:
 
+#### Turn Service Factory (`src/core/turn/TurnService.ts`)
+
+The **TurnService** provides a simple factory function for creating ready-to-use TurnControllers:
+
+```typescript
+import { createTurnController } from './src/core/turn';
+
+// Simple usage - get a fully wired TurnController
+const { controller, playerQ, pipeline } = createTurnController();
+
+// With phase monitoring hook
+const { controller } = createTurnController({
+  onPhase: (phase, detail) => console.log(`Phase: ${phase}`, detail),
+});
+
+// Run a turn immediately
+const result = await controller.runTurn(gameState);
+```
+
+**Key Benefits:**
+
+- **One-liner setup**: No manual wiring required
+- **Automatic dependency injection**: PlayerActionQueue, UpdatePipeline, and TurnController automatically connected
+- **Optional hooks**: Easy integration of phase monitoring and logging
+- **Production ready**: All components properly initialized and validated
+- **Type safe**: Full TypeScript support with proper return types
+
 #### Turn Phases
 
 - **`Start`** - Beginning of turn setup and initialization
@@ -188,6 +218,7 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Atomic Turn Execution**: Complete turn execution or complete rollback - no partial state updates
 - **Precise Error Reporting**: `TurnPhaseError` identifies exact phase where failure occurred
 - **Robust Error Recovery**: Original game state preserved on any phase failure
+- **Factory Service**: Simple one-liner setup with `createTurnController()` factory function
 
 ## 🔧 Development Workflow
 
@@ -214,6 +245,7 @@ feat: add immutable state API for town economy simulation
 fix: resolve memory leak in data processing
 docs: update API documentation
 test: add comprehensive test suite for stateApi (113 tests)
+feat: add TurnService factory for easy TurnController setup
 ```
 
 ## 🛡️ Error Handling & Reliability
@@ -282,12 +314,13 @@ try {
 
 ### Comprehensive Test Suite
 
-- **266 Tests**: Covering all core systems including state API, turn management, queue operations, and update pipeline
+- **276 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, and TurnService factory
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
 - **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
 - **Update Pipeline Tests**: Full coverage of pluggable update system functionality
+- **TurnService Tests**: Factory function tests covering component wiring and hook integration
 - **Phase Detail Tests**: Verification of phase hook data including system counts and turn summaries
 - **Error Handling Tests**: Full coverage of atomic turn execution and phase error reporting
 - **Phase Order Tests**: Verification of deterministic phase sequencing and logging
@@ -303,6 +336,9 @@ pnpm test src/core/stateApi.spec.ts
 
 # Run turn system tests
 pnpm test src/core/turn/
+
+# Run TurnService factory tests
+pnpm test src/core/turn/TurnService.spec.ts
 
 # Run specific turn phase tests
 pnpm test src/core/turn/TurnController.start.spec.ts
@@ -422,6 +458,7 @@ pnpm coverage
 - **Phase Safety**: All turn phases should be safe no-ops initially, ready for future implementation
 - **Error Handling**: Implement atomic operations with proper error reporting using `TurnPhaseError`
 - **State Consistency**: Ensure no partial state updates - operations must be all-or-nothing
+- **Factory Services**: Provide simple factory functions for complex component setup when appropriate
 
 ## 📄 License
 
