@@ -1,6 +1,8 @@
 import type { GoodId } from '../../types/Goods';
 import type { Town } from '../../types/Town';
 
+import type { TradeLimits } from './TradeLimits';
+
 /**
  * Interface for price models that can quote prices and adjust them based on trades.
  *
@@ -36,9 +38,11 @@ export interface PriceModel {
 export interface SimpleLinearPriceModelOptions {
   /** The base step size for price adjustments (default: 1) */
   baseStep?: number;
-  /** Minimum allowed price (default: 0) */
+  /** Trade limits to apply to prices (optional, uses internal min/max if not provided) */
+  limits?: TradeLimits;
+  /** Minimum allowed price (default: 0, overridden by limits.minPrice if provided) */
   min?: number;
-  /** Maximum allowed price (default: 100) */
+  /** Maximum allowed price (default: 100, overridden by limits.maxPrice if provided) */
   max?: number;
 }
 
@@ -54,7 +58,11 @@ export interface SimpleLinearPriceModelOptions {
  * @returns A configured PriceModel instance
  */
 export function createSimpleLinearPriceModel(opts: SimpleLinearPriceModelOptions = {}): PriceModel {
-  const { baseStep = 1, min = 0, max = 100 } = opts;
+  const { baseStep = 1, limits, min = 0, max = 100 } = opts;
+
+  // Use limits if provided, otherwise fall back to local min/max
+  const effectiveMin = limits?.minPrice ?? min;
+  const effectiveMax = limits?.maxPrice ?? max;
 
   return {
     quote(town: Town, good: GoodId): number {
@@ -78,8 +86,8 @@ export function createSimpleLinearPriceModel(opts: SimpleLinearPriceModelOptions
         newPrice = currentPrice - baseStep;
       }
 
-      // Clamp price between min and max
-      newPrice = Math.max(min, Math.min(max, newPrice));
+      // Clamp price between effective min and max
+      newPrice = Math.max(effectiveMin, Math.min(effectiveMax, newPrice));
 
       // Return new town instance with updated prices
       return {

@@ -4,6 +4,7 @@ import type { GoodId, GoodConfig } from '../../types/Goods';
 import { applyPostTradePricing } from './PriceAdjustment';
 import type { PriceModel } from './PriceModel';
 import { executeTrade } from './TradeExecutor';
+import type { TradeLimits } from './TradeLimits';
 import type { TradeRequest, TradeResult } from './TradeTypes';
 import { validateTrade } from './TradeValidator';
 
@@ -29,12 +30,13 @@ export class TradeService {
     request: TradeRequest,
     priceModel: PriceModel,
     goods: Record<GoodId, GoodConfig>,
+    limits?: TradeLimits,
   ): Promise<TradeResult> {
     // Step 1: Validate the trade request
     const validatedTrade = validateTrade(state, request);
 
     // Step 2: Execute the trade and get intermediate result
-    const executionResult = executeTrade(state, validatedTrade, goods);
+    const executionResult = executeTrade(state, validatedTrade, goods, limits);
 
     // Step 3: Apply post-trade price adjustments
     const finalState = applyPostTradePricing(executionResult.state, validatedTrade, priceModel);
@@ -62,6 +64,7 @@ export async function performTrade(
   request: TradeRequest,
   priceModel: PriceModel,
   goods: Record<GoodId, GoodConfig>,
+  limits?: TradeLimits,
 ): Promise<TradeResult> {
-  return TradeService.performTrade(state, request, priceModel, goods);
+  return TradeService.performTrade(state, request, priceModel, goods, limits);
 }

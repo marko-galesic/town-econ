@@ -1,8 +1,10 @@
 import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
 import type { Town } from '../../types/Town';
-import { incResource, addProsperity, addMilitary } from '../stateApi';
+import { addProsperity, addMilitary } from '../stateApi';
 
+import type { TradeLimits } from './TradeLimits';
+import { limitResource, limitTreasury } from './TradeLimits';
 import type { TradeResult } from './TradeTypes';
 import type { ValidatedTrade } from './TradeValidator';
 
@@ -18,6 +20,7 @@ export function executeTrade(
   state: GameState,
   vt: ValidatedTrade,
   goods: Record<GoodId, GoodConfig>,
+  limits?: TradeLimits,
 ): TradeResult {
   // Clone state (immutable approach)
   const newState: GameState = {
@@ -43,22 +46,64 @@ export function executeTrade(
   // Execute trade based on side
   if (vt.side === 'sell') {
     // Sell: fromTown sells to toTown
-    // Move goods
-    fromTown = { ...fromTown, ...incResource(fromTown, vt.goodId, -vt.qty) };
-    toTown = { ...toTown, ...incResource(toTown, vt.goodId, vt.qty) };
+    // Calculate new resource amounts
+    const fromTownNewResource = fromTown.resources[vt.goodId] - vt.qty;
+    const toTownNewResource = toTown.resources[vt.goodId] + vt.qty;
+
+    // Apply limits if provided
+    const fromTownFinalResource = limits
+      ? limitResource(fromTownNewResource, limits)
+      : Math.max(0, fromTownNewResource);
+    const toTownFinalResource = limits
+      ? limitResource(toTownNewResource, limits)
+      : Math.max(0, toTownNewResource);
+
+    // Update resources
+    fromTown = {
+      ...fromTown,
+      resources: { ...fromTown.resources, [vt.goodId]: fromTownFinalResource },
+    };
+    toTown = {
+      ...toTown,
+      resources: { ...toTown.resources, [vt.goodId]: toTownFinalResource },
+    };
 
     // Move currency
     fromTown.treasury += total;
     toTown.treasury -= total;
   } else {
     // Buy: fromTown buys from toTown
-    // Move goods
-    fromTown = { ...fromTown, ...incResource(fromTown, vt.goodId, vt.qty) };
-    toTown = { ...toTown, ...incResource(toTown, vt.goodId, -vt.qty) };
+    // Calculate new resource amounts
+    const fromTownNewResource = fromTown.resources[vt.goodId] + vt.qty;
+    const toTownNewResource = toTown.resources[vt.goodId] - vt.qty;
+
+    // Apply limits if provided
+    const fromTownFinalResource = limits
+      ? limitResource(fromTownNewResource, limits)
+      : Math.max(0, fromTownNewResource);
+    const toTownFinalResource = limits
+      ? limitResource(toTownNewResource, limits)
+      : Math.max(0, toTownNewResource);
+
+    // Update resources
+    fromTown = {
+      ...fromTown,
+      resources: { ...fromTown.resources, [vt.goodId]: fromTownFinalResource },
+    };
+    toTown = {
+      ...toTown,
+      resources: { ...toTown.resources, [vt.goodId]: toTownFinalResource },
+    };
 
     // Move currency
     fromTown.treasury -= total;
     toTown.treasury += total;
+  }
+
+  // Apply trade limits to treasury to prevent runaway states
+  if (limits) {
+    fromTown.treasury = limitTreasury(fromTown.treasury, limits);
+    toTown.treasury = limitTreasury(toTown.treasury, limits);
   }
 
   // Apply effects

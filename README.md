@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 301 tests passing)
+- `pnpm test` - Run test suite once (✅ 398 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -71,6 +71,9 @@ town-econ/
 │   │   │   ├── PriceModel.ts # Pluggable price model interface and implementation
 │   │   │   ├── PriceModel.spec.ts # Price model test suite (18 tests)
 │   │   │   ├── PriceModel.example.ts # Usage examples and documentation
+│   │   │   ├── TradeLimits.ts # Runaway state prevention with configurable limits
+│   │   │   ├── TradeLimits.spec.ts # Trade limits test suite (18 tests)
+│   │   │   ├── TradeExecutor.limits.spec.ts # Trade execution with limits test suite (10 tests)
 │   │   │   └── index.ts # Trade system exports
 │   │   └── turn/         # Turn-based game progression system
 │   │       ├── TurnPhase.ts # Game turn phase definitions
@@ -160,6 +163,16 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Seed Data**: Initial towns configured with balanced treasury values (500-1500 range)
 - **Future Ready**: Foundation for buying/selling mechanics and economic simulation
 
+### Trade Limits & Runaway State Prevention
+
+- **Configurable Limits**: `TradeLimits` interface allows customization of resource, treasury, and price bounds
+- **Default Safety**: `DEFAULT_LIMITS` provides reasonable bounds (1M resources, 1B treasury, 1-9999 prices)
+- **Automatic Enforcement**: Resources and treasury automatically clamped during trade execution
+- **Negative Prevention**: Always prevents negative values regardless of limit configuration
+- **Price Boundaries**: Enforces minimum and maximum price constraints on all goods
+- **Game Balance**: Prevents runaway inflation/deflation while maintaining meaningful gameplay
+- **Backward Compatible**: Existing code continues to work without changes
+
 ### Price Modeling System
 
 - **Pluggable Architecture**: `PriceModel` interface allows easy swapping of pricing strategies
@@ -183,7 +196,7 @@ A comprehensive set of immutable state manipulation functions for the town econo
 
 ### Trade System (`src/core/trade/`)
 
-A comprehensive trade system foundation with type-safe interfaces, error handling, validation, and pluggable price modeling:
+A comprehensive trade system foundation with type-safe interfaces, error handling, validation, pluggable price modeling, and **runaway state prevention**:
 
 #### Trade Types
 
@@ -209,7 +222,12 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 
 #### Trade Execution System
 
-- **`executeTrade(state, validatedTrade, goods)`**: Executes validated trades with goods movement, currency transfer, and effect application
+- **`executeTrade(state, validatedTrade, goods, limits?)`**: Executes validated trades with goods movement, currency transfer, effect application, and **automatic limit enforcement**
+- **Limit Integration**: Optional `TradeLimits` parameter for automatic resource and treasury clamping
+- **Resource Protection**: Resources automatically clamped to `[0, maxResource]` during trade execution
+- **Treasury Safety**: Treasury values clamped to `[0, maxTreasury]` after trade completion
+- **Negative Prevention**: Always prevents negative values even without limits specified
+- **Configurable Enforcement**: Limits are optional - pass `undefined` for unlimited operation
 - **Goods Movement**: Moves goods between towns based on trade side (buy/sell)
 - **Currency Transfer**: Updates town treasuries with trade costs
 - **Effect Application**: Applies prosperity and military effects from goods
@@ -226,6 +244,29 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Configurable**: Customizable step size, min/max boundaries, and price clamping
 - **Immutable**: Returns new town instances with updated prices, preserving original state
 - **Per-Trade Adjustment**: Price changes once per trade call, regardless of quantity
+
+#### Trade Limits System (`src/core/trade/TradeLimits.ts`)
+
+A comprehensive system to prevent runaway states and maintain game balance:
+
+- **`TradeLimits` Interface**: Configurable caps for resources, treasury, and prices
+- **`DEFAULT_LIMITS`**: Reasonable bounds (maxResource: 1M, maxTreasury: 1B, minPrice: 1, maxPrice: 9999)
+- **Resource Clamping**: Prevents resources from exceeding `maxResource` or going negative
+- **Treasury Limits**: Caps town currency at `maxTreasury` and prevents negative balances
+- **Price Boundaries**: Enforces `minPrice` and `maxPrice` constraints on all goods
+- **Utility Functions**: `clamp()`, `limitResource()`, `limitTreasury()`, `limitPrice()` for easy integration
+- **Configurable**: All limits are optional and can be customized per game mode
+- **Backward Compatible**: Existing code continues to work without changes
+
+**Usage Example:**
+
+```typescript
+import { DEFAULT_LIMITS, limitResource, limitTreasury } from './src/core/trade';
+
+// Apply limits to prevent runaway inflation
+const clampedResource = limitResource(5000000, DEFAULT_LIMITS); // Returns 1000000
+const clampedTreasury = limitTreasury(2000000000, DEFAULT_LIMITS); // Returns 1000000000
+```
 
 #### Trade Service
 
@@ -271,10 +312,12 @@ const { state, deltas, unitPriceApplied } = result;
 - **Effect Integration**: Goods effects automatically applied during trade execution
 - **Pluggable Pricing**: Easy to swap different price models for different economic strategies
 - **Pure Validation**: Deterministic validation function with no side effects
-- **Comprehensive Coverage**: 51 tests covering validation, execution, and price adjustment scenarios
-- **Production Ready**: Complete trade system ready for game integration
-- **Export Ready**: All types, errors, validators, executors, and price models exported through barrel exports for easy importing
-- **Unified Service**: TradeService composes all trade operations into single callable unit
+- **Runaway State Prevention**: Configurable limits prevent resources, treasury, and prices from exceeding bounds
+- **Automatic Limit Enforcement**: Resources and treasury automatically clamped during trade execution
+- **Comprehensive Coverage**: 51 tests covering validation, execution, price adjustment, and limit enforcement scenarios
+- **Production Ready**: Complete trade system ready for game integration with built-in safety mechanisms
+- **Export Ready**: All types, errors, validators, executors, price models, and limits exported through barrel exports for easy importing
+- **Unified Service**: TradeService composes all trade operations into single callable unit with optional limit support
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
@@ -497,12 +540,13 @@ try {
 
 ### Comprehensive Test Suite
 
-- **370 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, and **trade integration in PlayerAction phase**
+- **398 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, and **trade limits enforcement**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
 - **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
 - **Trade Integration Tests**: Full coverage of trade processing during PlayerAction phase
+- **Trade Limits Tests**: Full coverage of resource, treasury, and price limit enforcement (28 tests)
 - **Update Pipeline Tests**: Full coverage of pluggable update system functionality
 - **TurnService Tests**: Factory function tests covering component wiring and hook integration
 - **Phase Detail Tests**: Verification of phase hook data including system counts and turn summaries
@@ -533,6 +577,10 @@ pnpm test src/core/turn/TurnController.end.spec.ts
 
 # Run trade integration tests
 pnpm test src/core/turn/TurnController.trade.spec.ts
+
+# Run trade limits tests
+pnpm test src/core/trade/TradeLimits.spec.ts
+pnpm test src/core/trade/TradeExecutor.limits.spec.ts
 
 # Run error handling tests
 pnpm test src/core/turn/TurnController.error.spec.ts
