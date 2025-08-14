@@ -169,6 +169,18 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Immutable Updates**: Price changes return new town instances, preserving original state
 - **Per-Trade Adjustment**: Prices change once per trade regardless of quantity for predictable economics
 
+#### Post-Trade Price Adjustment
+
+- **`applyPostTradePricing(state, vt, model)`**: Applies price adjustments to both towns after trade execution
+- **Quantity Delta Calculation**: Automatically determines inventory changes from each town's perspective
+  - **Seller**: Inventory decreases → negative delta → price increases
+  - **Buyer**: Inventory increases → positive delta → price decreases
+- **Dual Town Updates**: Updates prices for both towns involved in the trade
+- **Price Model Integration**: Uses any PriceModel implementation for flexible pricing strategies
+- **Immutable Updates**: Returns new GameState with updated town prices, preserving original state
+- **Error Handling**: Throws error if towns not found in current game state
+- **Trade Side Awareness**: Correctly interprets buy/sell transactions for proper delta calculation
+
 ### Trade System (`src/core/trade/`)
 
 A comprehensive trade system foundation with type-safe interfaces, error handling, validation, and pluggable price modeling:
@@ -224,7 +236,7 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Effect Integration**: Goods effects automatically applied during trade execution
 - **Pluggable Pricing**: Easy to swap different price models for different economic strategies
 - **Pure Validation**: Deterministic validation function with no side effects
-- **Comprehensive Coverage**: 42 tests covering validation and execution scenarios
+- **Comprehensive Coverage**: 51 tests covering validation, execution, and price adjustment scenarios
 - **Production Ready**: Complete trade system ready for game integration
 - **Export Ready**: All types, errors, validators, executors, and price models exported through barrel exports for easy importing
 
