@@ -4,6 +4,12 @@ node_modules/
 # Build output
 dist/
 
+# Compiled JavaScript files
+*.js
+!*.config.js
+!vite.config.js
+!vitest.config.js
+
 # IDE
 .vscode/
 
