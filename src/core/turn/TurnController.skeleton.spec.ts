@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
+import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -13,7 +14,34 @@ describe('TurnController', () => {
 
   beforeEach(() => {
     playerQueue = new PlayerActionQueue();
-    controller = new TurnController(playerQueue, new UpdatePipeline(), {});
+    const mockState: GameState = {
+      turn: 0,
+      version: 1,
+      rngSeed: 'test-seed',
+      towns: [],
+      goods: {
+        fish: {
+          id: 'fish',
+          name: 'Fish',
+          effects: { prosperityDelta: 2, militaryDelta: 1 },
+        },
+        wood: {
+          id: 'wood',
+          name: 'Wood',
+          effects: { prosperityDelta: 1, militaryDelta: 2 },
+        },
+        ore: {
+          id: 'ore',
+          name: 'Ore',
+          effects: { prosperityDelta: 3, militaryDelta: 3 },
+        },
+      },
+    };
+
+    controller = new TurnController(playerQueue, new UpdatePipeline(), {
+      priceModel: createSimpleLinearPriceModel(),
+      goods: mockState.goods,
+    });
   });
 
   describe('runTurn', () => {
@@ -166,7 +194,36 @@ describe('TurnController', () => {
         turn: 0,
         version: 1,
         rngSeed: 'test-seed',
-        towns: [],
+        towns: [
+          {
+            id: 'town1',
+            name: 'Town 1',
+            resources: { fish: 10, wood: 10, ore: 10 },
+            prices: { fish: 2, wood: 3, ore: 5 },
+            militaryRaw: 5,
+            prosperityRaw: 8,
+            treasury: 1000,
+            revealed: {
+              militaryTier: 'militia',
+              prosperityTier: 'modest',
+              lastUpdatedTurn: 0,
+            },
+          },
+          {
+            id: 'town2',
+            name: 'Town 2',
+            resources: { fish: 10, wood: 10, ore: 10 },
+            prices: { fish: 4, wood: 1, ore: 6 },
+            militaryRaw: 12,
+            prosperityRaw: 15,
+            treasury: 1200,
+            revealed: {
+              militaryTier: 'garrison',
+              prosperityTier: 'prosperous',
+              lastUpdatedTurn: 0,
+            },
+          },
+        ],
         goods: {
           fish: {
             id: 'fish',
@@ -187,9 +244,29 @@ describe('TurnController', () => {
       };
 
       // Add actions to queue
-      playerQueue.enqueue({ type: 'trade' });
+      playerQueue.enqueue({
+        type: 'trade',
+        payload: {
+          fromTownId: 'town1',
+          toTownId: 'town2',
+          goodId: 'fish',
+          quantity: 5,
+          side: 'buy',
+          pricePerUnit: 4, // Town2 quotes 4 for fish
+        },
+      });
       playerQueue.enqueue({ type: 'none' });
-      playerQueue.enqueue({ type: 'trade', payload: { good: 'fish' } });
+      playerQueue.enqueue({
+        type: 'trade',
+        payload: {
+          fromTownId: 'town1',
+          toTownId: 'town2',
+          goodId: 'wood',
+          quantity: 3,
+          side: 'sell',
+          pricePerUnit: 3, // Town1 quotes 3 for wood
+        },
+      });
 
       expect(playerQueue.length).toBe(3);
 

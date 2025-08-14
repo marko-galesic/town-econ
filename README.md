@@ -288,10 +288,10 @@ The **TurnService** provides a simple factory function for creating ready-to-use
 import { createTurnController } from './src/core/turn';
 
 // Simple usage - get a fully wired TurnController
-const { controller, playerQ, pipeline } = createTurnController();
+const { controller, playerQ, pipeline } = createTurnController(gameState);
 
 // With phase monitoring hook
-const { controller } = createTurnController({
+const { controller } = createTurnController(gameState, {
   onPhase: (phase, detail) => console.log(`Phase: ${phase}`, detail),
 });
 
@@ -303,6 +303,8 @@ const result = await controller.runTurn(gameState);
 
 - **One-liner setup**: No manual wiring required
 - **Automatic dependency injection**: PlayerActionQueue, UpdatePipeline, and TurnController automatically connected
+- **Default PriceModel**: Creates a default SimpleLinearPriceModel for trade price adjustments
+- **Goods integration**: Automatically passes goods configuration from game state
 - **Optional hooks**: Easy integration of phase monitoring and logging
 - **Production ready**: All components properly initialized and validated
 - **Type safe**: Full TypeScript support with proper return types
@@ -310,7 +312,7 @@ const result = await controller.runTurn(gameState);
 #### Turn Phases
 
 - **`Start`** - Beginning of turn setup and initialization
-- **`PlayerAction`** - Player decision processing and action execution
+- **`PlayerAction`** - Player decision processing and action execution (including trade processing)
 - **`AiActions`** - AI-controlled entity behavior and decisions
 - **`UpdateStats`** - Game state updates and calculations (pluggable pipeline)
 - **`End`** - Turn completion and cleanup with turn summary
@@ -320,6 +322,7 @@ const result = await controller.runTurn(gameState);
 - **`TurnController.runTurn(state)`** - Executes complete turn with phase sequencing
 - **Phase Orchestration**: Enforces strict phase order and execution
 - **Action Processing**: Consumes player actions from queue during player phase
+- **Trade Integration**: Processes trade actions during PlayerAction phase with full trade execution
 - **State Management**: Returns updated game state with phase execution log
 - **Observer Hooks**: Optional `onPhase` callback for monitoring phase execution
 - **Turn Incrementation**: Automatically advances turn counter at start of each turn
@@ -328,13 +331,51 @@ const result = await controller.runTurn(gameState);
 - **Atomic Execution**: Guaranteed atomic turn execution - either completes fully or fails cleanly
 - **Error Handling**: Comprehensive error handling with `TurnPhaseError` for precise phase failure reporting
 - **State Preservation**: Original input state preserved on failure due to immutability assumption
+- **Trade Error Handling**: Trade validation and execution errors properly wrapped in TurnPhaseError
 
 #### Player Action System
 
 - **`PlayerActionQueue`**: FIFO queue for managing player actions
-- **Action Types**: Extensible system starting with `'none'` and `'trade'` actions
+- **Action Types**: Extensible system with `'none'` and `'trade'` actions
+- **Trade Actions**: Full support for `{ type: 'trade', payload: TradeRequest }` actions
 - **Queue Management**: `enqueue()`, `dequeue()`, `clear()`, and `length` operations
 - **Integration**: Seamlessly wired into TurnController for action consumption
+
+#### Trade Action Processing
+
+The **PlayerAction phase** now fully supports trade execution:
+
+```typescript
+// Enqueue a trade action
+playerQ.enqueue({
+  type: 'trade',
+  payload: {
+    fromTownId: 'riverdale',
+    toTownId: 'forestburg',
+    goodId: 'fish',
+    quantity: 5,
+    side: 'buy',
+    pricePerUnit: 4, // Must match Forestburg's quoted price
+  },
+});
+
+// Run the turn - trade will be processed during PlayerAction phase
+const result = await controller.runTurn(gameState);
+
+// Trade results available in phase callback
+const playerActionPhase = result.phaseLog.find(p => p.phase === 'PlayerAction');
+// Contains: { action, result: { unitPriceApplied, deltas } }
+```
+
+**Key Features:**
+
+- **One trade per turn**: TurnController processes exactly one queued trade action per turn
+- **Full trade lifecycle**: Validation, execution, and price adjustments all handled automatically
+- **State updates**: Resources, treasury, and prices updated according to trade results
+- **Phase callbacks**: Trade results reported via `onPhase(TurnPhase.PlayerAction, detail)`
+- **Error handling**: Trade errors wrapped in `TurnPhaseError` with `PlayerAction` phase
+- **Price validation**: Trades must use correct quoted prices from towns
+- **Immutable design**: Original game state never modified, new state returned
 
 #### Update Pipeline System
 
@@ -456,16 +497,18 @@ try {
 
 ### Comprehensive Test Suite
 
-- **343 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, and trade execution
+- **370 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, and **trade integration in PlayerAction phase**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
 - **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
+- **Trade Integration Tests**: Full coverage of trade processing during PlayerAction phase
 - **Update Pipeline Tests**: Full coverage of pluggable update system functionality
 - **TurnService Tests**: Factory function tests covering component wiring and hook integration
 - **Phase Detail Tests**: Verification of phase hook data including system counts and turn summaries
 - **Error Handling Tests**: Full coverage of atomic turn execution and phase error reporting
 - **Phase Order Tests**: Verification of deterministic phase sequencing and logging
+- **Trade Action Tests**: Comprehensive testing of trade queue processing, state updates, and error handling
 
 ### Running Tests
 
@@ -487,6 +530,9 @@ pnpm test src/core/turn/TurnController.start.spec.ts
 pnpm test src/core/turn/TurnController.player.spec.ts
 pnpm test src/core/turn/TurnController.update.spec.ts
 pnpm test src/core/turn/TurnController.end.spec.ts
+
+# Run trade integration tests
+pnpm test src/core/turn/TurnController.trade.spec.ts
 
 # Run error handling tests
 pnpm test src/core/turn/TurnController.error.spec.ts

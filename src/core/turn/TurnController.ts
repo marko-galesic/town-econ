@@ -1,5 +1,8 @@
 import type { GameState } from '../../types/GameState';
+import type { GoodId, GoodConfig } from '../../types/Goods';
 import { advanceTurn } from '../stateApi';
+import type { PriceModel } from '../trade/PriceModel';
+import { performTrade } from '../trade/TradeService';
 
 import type { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnPhaseError } from './TurnErrors';
@@ -24,6 +27,10 @@ export interface TurnControllerOptions {
   /** Optional callback for observing phase execution */
   // eslint-disable-next-line no-unused-vars
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
+  /** Price model for trade price adjustments */
+  priceModel: PriceModel;
+  /** Configuration for all goods in the game */
+  goods: Record<GoodId, GoodConfig>;
 }
 
 /**
@@ -36,11 +43,13 @@ export interface TurnControllerOptions {
 export class TurnController {
   // eslint-disable-next-line no-unused-vars
   private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
+  private readonly priceModel: PriceModel;
+  private readonly goods: Record<GoodId, GoodConfig>;
 
   constructor(
     private readonly playerQ: PlayerActionQueue,
     private readonly updatePipeline: UpdatePipeline,
-    options?: TurnControllerOptions,
+    options: TurnControllerOptions,
   ) {
     // Ensure the queue is properly initialized
     if (!playerQ) {
@@ -49,7 +58,16 @@ export class TurnController {
     if (!updatePipeline) {
       throw new Error('UpdatePipeline is required');
     }
-    this.onPhase = options?.onPhase || undefined;
+    if (!options.priceModel) {
+      throw new Error('PriceModel is required');
+    }
+    if (!options.goods) {
+      throw new Error('Goods configuration is required');
+    }
+
+    this.onPhase = options.onPhase || undefined;
+    this.priceModel = options.priceModel;
+    this.goods = options.goods;
   }
   /**
    * Runs a complete game turn, executing all phases in sequence.
@@ -123,23 +141,45 @@ export class TurnController {
    * Player action phase - consumes one action from the queue if available,
    * otherwise synthesizes a 'none' action.
    * @param s - Current game state
-   * @returns Same game state (no changes yet)
+   * @returns Updated game state after processing the action
    */
   private async playerAction(s: GameState): Promise<GameState> {
     // Consume one action from the queue, or synthesize 'none' if empty
     const action = this.playerQ.dequeue() ?? { type: 'none' as const };
 
-    // Notify observer of the phase execution
-    this.onPhase?.(TurnPhase.PlayerAction, action);
-
     // Process the action based on its type
+    let resultSummary: unknown;
+    let currentState = s;
+
     switch (action.type) {
-      case 'none':
       case 'trade':
+        try {
+          const tradeResult = await performTrade(s, action.payload, this.priceModel, this.goods);
+          currentState = tradeResult.state;
+          resultSummary = {
+            action,
+            result: {
+              unitPriceApplied: tradeResult.unitPriceApplied,
+              deltas: tradeResult.deltas,
+            },
+          };
+        } catch (error) {
+          // Wrap trade errors in TurnPhaseError to maintain phase error policy
+          throw new TurnPhaseError(TurnPhase.PlayerAction, error);
+        }
+        break;
+
+      case 'none':
       default:
-        // For now, no state changes - just return the same state
-        return s;
+        // No state changes for 'none' action
+        resultSummary = { action };
+        break;
     }
+
+    // Notify observer of the phase execution
+    this.onPhase?.(TurnPhase.PlayerAction, resultSummary);
+
+    return currentState;
   }
 
   /**

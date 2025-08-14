@@ -1,24 +1,25 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
+import { createDefaultTurnControllerOptions } from './testHelpers';
 import { TurnController } from './TurnController';
 import { TurnPhase } from './TurnPhase';
 import { UpdatePipeline } from './UpdatePipeline';
 
 describe('TurnController.endTurn', () => {
-  it('should emit End phase with correct turn number', async () => {
-    const playerQ = new PlayerActionQueue();
-    const pipeline = new UpdatePipeline();
-    const onPhase = vi.fn();
+  let playerQ: PlayerActionQueue;
+  let pipeline: UpdatePipeline;
+  let gameState: GameState;
 
-    const controller = new TurnController(playerQ, pipeline, { onPhase });
-
-    const initialState: GameState = {
+  beforeEach(() => {
+    playerQ = new PlayerActionQueue();
+    pipeline = new UpdatePipeline();
+    gameState = {
       turn: 0,
       version: 1,
-      rngSeed: 'test',
+      rngSeed: 'test-seed',
       towns: [],
       goods: {
         fish: {
@@ -38,92 +39,61 @@ describe('TurnController.endTurn', () => {
         },
       },
     };
+  });
 
-    // Run just the endTurn phase
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await (controller as any).endTurn(initialState);
+  it('should emit End phase with correct turn number', async () => {
+    const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
+    const onPhase = (phase: TurnPhase, detail?: unknown) => {
+      phaseLog.push({ phase, detail });
+    };
 
-    // State should be unchanged
-    expect(result).toBe(initialState);
+    const controller = new TurnController(playerQ, pipeline, {
+      ...createDefaultTurnControllerOptions(),
+      onPhase,
+    });
 
-    // Phase hook should have been called with turn number
-    expect(onPhase).toHaveBeenCalledWith(TurnPhase.End, { turn: 0 });
+    await controller.runTurn(gameState);
+
+    const endPhase = phaseLog.find(p => p.phase === TurnPhase.End);
+    expect(endPhase).toBeDefined();
+    expect(endPhase?.detail).toMatchObject({ turn: 1 });
   });
 
   it('should emit End phase with incremented turn number after full turn', async () => {
-    const playerQ = new PlayerActionQueue();
-    const pipeline = new UpdatePipeline();
-    const onPhase = vi.fn();
-
-    const controller = new TurnController(playerQ, pipeline, { onPhase });
-
-    const initialState: GameState = {
-      turn: 0,
-      version: 1,
-      rngSeed: 'test',
-      towns: [],
-      goods: {
-        fish: {
-          id: 'fish',
-          name: 'Fish',
-          effects: { prosperityDelta: 2, militaryDelta: 1 },
-        },
-        wood: {
-          id: 'wood',
-          name: 'Wood',
-          effects: { prosperityDelta: 1, militaryDelta: 2 },
-        },
-        ore: {
-          id: 'ore',
-          name: 'Ore',
-          effects: { prosperityDelta: 3, militaryDelta: 3 },
-        },
-      },
+    const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
+    const onPhase = (phase: TurnPhase, detail?: unknown) => {
+      phaseLog.push({ phase, detail });
     };
 
-    // Run a complete turn
-    const result = await controller.runTurn(initialState);
+    const controllerWithHook = new TurnController(playerQ, pipeline, {
+      ...createDefaultTurnControllerOptions(),
+      onPhase,
+    });
 
-    // Turn should have been incremented
-    expect(result.state.turn).toBe(1);
+    // Run first turn
+    const result1 = await controllerWithHook.runTurn(gameState);
+    expect(result1.state.turn).toBe(1);
 
-    // Phase hook should have been called with the final turn number
-    expect(onPhase).toHaveBeenCalledWith(TurnPhase.End, { turn: 1 });
+    // Run second turn
+    const result2 = await controllerWithHook.runTurn(result1.state);
+    expect(result2.state.turn).toBe(2);
+
+    // Check that End phase was called with correct turn numbers
+    const endPhases = phaseLog.filter(p => p.phase === TurnPhase.End);
+    expect(endPhases).toHaveLength(2);
+    expect(endPhases[0]?.detail).toMatchObject({ turn: 1 });
+    expect(endPhases[1]?.detail).toMatchObject({ turn: 2 });
   });
 
   it('should work without onPhase hook', async () => {
-    const playerQ = new PlayerActionQueue();
-    const pipeline = new UpdatePipeline();
+    const controllerWithoutHook = new TurnController(
+      playerQ,
+      pipeline,
+      createDefaultTurnControllerOptions(),
+    );
 
-    const controller = new TurnController(playerQ, pipeline);
-
-    const initialState: GameState = {
-      turn: 5,
-      version: 1,
-      rngSeed: 'test',
-      towns: [],
-      goods: {
-        fish: {
-          id: 'fish',
-          name: 'Fish',
-          effects: { prosperityDelta: 2, militaryDelta: 1 },
-        },
-        wood: {
-          id: 'wood',
-          name: 'Wood',
-          effects: { prosperityDelta: 1, militaryDelta: 2 },
-        },
-        ore: {
-          id: 'ore',
-          name: 'Ore',
-          effects: { prosperityDelta: 3, militaryDelta: 3 },
-        },
-      },
-    };
-
-    // Should not throw when no hook is provided
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await (controller as any).endTurn(initialState);
-    expect(result).toBe(initialState);
+    const result = await controllerWithoutHook.runTurn(gameState);
+    expect(result.state.turn).toBe(1);
+    expect(result.phaseLog).toContain(TurnPhase.End);
   });
 });

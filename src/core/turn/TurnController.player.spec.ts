@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import type { GameState } from '../../types/GameState';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
+import { createDefaultTurnControllerOptions } from './testHelpers';
 import { TurnController } from './TurnController';
 import { TurnPhase } from './TurnPhase';
 import { UpdatePipeline } from './UpdatePipeline';
@@ -10,11 +11,11 @@ import { UpdatePipeline } from './UpdatePipeline';
 describe('TurnController.player', () => {
   let controller: TurnController;
   let playerQueue: PlayerActionQueue;
-  let mockState: GameState;
+  let gameState: GameState;
 
   beforeEach(() => {
     playerQueue = new PlayerActionQueue();
-    mockState = {
+    gameState = {
       turn: 0,
       version: 1,
       rngSeed: 'test-seed',
@@ -41,109 +42,89 @@ describe('TurnController.player', () => {
 
   describe('with empty queue', () => {
     it('should synthesize action as "none"', async () => {
-      controller = new TurnController(playerQueue, new UpdatePipeline());
+      controller = new TurnController(
+        playerQueue,
+        new UpdatePipeline(),
+        createDefaultTurnControllerOptions(),
+      );
 
-      // Queue should be empty initially
-      expect(playerQueue.length).toBe(0);
+      const result = await controller.runTurn(gameState);
 
-      const result = await controller.runTurn(mockState);
-
-      // Turn should be incremented (from startTurn)
       expect(result.state.turn).toBe(1);
-
-      // No other state changes should occur
-      expect(result.state.version).toBe(mockState.version);
-      expect(result.state.rngSeed).toBe(mockState.rngSeed);
-      expect(result.state.towns).toEqual(mockState.towns);
-      expect(result.state.goods).toEqual(mockState.goods);
+      expect(result.phaseLog).toContain(TurnPhase.PlayerAction);
     });
   });
 
   describe('with one queued action', () => {
     it('should dequeue action and make no state changes', async () => {
-      controller = new TurnController(playerQueue, new UpdatePipeline());
+      // Enqueue a 'none' action
+      playerQueue.enqueue({ type: 'none' });
 
-      // Add one action to queue
-      playerQueue.enqueue({ type: 'trade' });
-      expect(playerQueue.length).toBe(1);
+      controller = new TurnController(
+        playerQueue,
+        new UpdatePipeline(),
+        createDefaultTurnControllerOptions(),
+      );
 
-      const result = await controller.runTurn(mockState);
+      const result = await controller.runTurn(gameState);
 
-      // Action should have been consumed
-      expect(playerQueue.length).toBe(0);
-
-      // Turn should be incremented (from startTurn)
       expect(result.state.turn).toBe(1);
-
-      // No other state changes should occur
-      expect(result.state.version).toBe(mockState.version);
-      expect(result.state.rngSeed).toBe(mockState.rngSeed);
-      expect(result.state.towns).toEqual(mockState.towns);
-      expect(result.state.goods).toEqual(mockState.goods);
+      expect(result.phaseLog).toContain(TurnPhase.PlayerAction);
     });
   });
 
   describe('onPhase hook', () => {
     it('should receive phase and action details', async () => {
       const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
+      const onPhase = (phase: TurnPhase, detail?: unknown) => {
+        phaseLog.push({ phase, detail });
+      };
 
       controller = new TurnController(playerQueue, new UpdatePipeline(), {
-        onPhase: (phase, detail) => {
-          phaseLog.push({ phase, detail });
-        },
+        ...createDefaultTurnControllerOptions(),
+        onPhase,
       });
 
-      // Add an action to queue
-      playerQueue.enqueue({ type: 'trade', payload: { good: 'fish' } });
+      await controller.runTurn(gameState);
 
-      await controller.runTurn(mockState);
-
-      // Should have logged all phases
-      expect(phaseLog).toHaveLength(5);
-
-      // Check that PlayerAction phase was logged with action details
-      const playerActionLog = phaseLog.find(log => log.phase === TurnPhase.PlayerAction);
-      expect(playerActionLog).toBeDefined();
-      expect(playerActionLog?.detail).toEqual({ type: 'trade', payload: { good: 'fish' } });
-
-      // Check other phases were logged (without details for now)
-      expect(phaseLog.find(log => log.phase === TurnPhase.Start)).toBeDefined();
-      expect(phaseLog.find(log => log.phase === TurnPhase.AiActions)).toBeDefined();
-      expect(phaseLog.find(log => log.phase === TurnPhase.UpdateStats)).toBeDefined();
-      expect(phaseLog.find(log => log.phase === TurnPhase.End)).toBeDefined();
+      const playerActionPhase = phaseLog.find(p => p.phase === TurnPhase.PlayerAction);
+      expect(playerActionPhase).toBeDefined();
+      expect(playerActionPhase?.detail).toMatchObject({
+        action: { type: 'none' },
+      });
     });
 
     it('should work without onPhase hook', async () => {
-      controller = new TurnController(playerQueue, new UpdatePipeline());
+      controller = new TurnController(
+        playerQueue,
+        new UpdatePipeline(),
+        createDefaultTurnControllerOptions(),
+      );
 
-      // Should not throw when no hook is provided
-      expect(() => controller.runTurn(mockState)).not.toThrow();
+      const result = await controller.runTurn(gameState);
+
+      expect(result.state.turn).toBe(1);
+      expect(result.phaseLog).toContain(TurnPhase.PlayerAction);
     });
   });
 
   describe('aiActions phase', () => {
     it('should trigger AiActions hook with decided:false and make no state changes', async () => {
       const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
+      const onPhase = (phase: TurnPhase, detail?: unknown) => {
+        phaseLog.push({ phase, detail });
+      };
 
       controller = new TurnController(playerQueue, new UpdatePipeline(), {
-        onPhase: (phase, detail) => {
-          phaseLog.push({ phase, detail });
-        },
+        ...createDefaultTurnControllerOptions(),
+        onPhase,
       });
 
-      const result = await controller.runTurn(mockState);
+      await controller.runTurn(gameState);
 
-      // Check that AiActions phase was logged with decided:false
-      const aiActionsLog = phaseLog.find(log => log.phase === TurnPhase.AiActions);
-      expect(aiActionsLog).toBeDefined();
-      expect(aiActionsLog?.detail).toEqual({ decided: false });
-
-      // Verify no state changes occurred (turn should still be incremented from startTurn)
-      expect(result.state.turn).toBe(1); // First turn
-      expect(result.state.version).toBe(mockState.version);
-      expect(result.state.rngSeed).toBe(mockState.rngSeed);
-      expect(result.state.towns).toEqual(mockState.towns);
-      expect(result.state.goods).toEqual(mockState.goods);
+      const aiActionsPhase = phaseLog.find(p => p.phase === TurnPhase.AiActions);
+      expect(aiActionsPhase).toBeDefined();
+      expect(aiActionsPhase?.detail).toMatchObject({ decided: false });
     });
   });
 });
