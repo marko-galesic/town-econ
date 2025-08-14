@@ -92,8 +92,8 @@ describe('StatsUpdateSystem', () => {
             name: 'Test Town 1',
             prosperityRaw: 50,
             militaryRaw: 30,
-            resources: {},
-            prices: {},
+            resources: { fish: 0, wood: 0, ore: 0 },
+            prices: { fish: 10, wood: 15, ore: 20 },
             treasury: 100,
             revealed: {
               prosperityTier: 'modest',
@@ -106,8 +106,8 @@ describe('StatsUpdateSystem', () => {
             name: 'Test Town 2',
             prosperityRaw: 80,
             militaryRaw: 70,
-            resources: {},
-            prices: {},
+            resources: { fish: 0, wood: 0, ore: 0 },
+            prices: { fish: 12, wood: 18, ore: 25 },
             treasury: 200,
             revealed: {
               prosperityTier: 'prosperous',
@@ -300,8 +300,8 @@ describe('StatsUpdateSystem', () => {
             name: 'Preserved Town',
             prosperityRaw: 100,
             militaryRaw: 100,
-            resources: {},
-            prices: {},
+            resources: { fish: 0, wood: 0, ore: 0 },
+            prices: { fish: 10, wood: 15, ore: 20 },
             treasury: 300,
             revealed: {
               prosperityTier: 'opulent',

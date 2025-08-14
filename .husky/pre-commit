@@ -1,8 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname "$0")/_/h"
 
-# Run lint-staged to fix and format staged files
-npx lint-staged
+# Run linting to ensure code quality
+pnpm lint
+
+# Run format check to ensure consistent code style
+pnpm format:check
 
 # Run type check to ensure no TypeScript errors
 pnpm typecheck
