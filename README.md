@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 276 tests passing)
+- `pnpm test` - Run test suite once (✅ 301 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -61,9 +61,12 @@ town-econ/
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
 │   │   ├── validation.ts # Data validation system
-│   │   ├── trade/        # Trade system types and error handling
+│   │   ├── trade/        # Trade system types, error handling, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
 │   │   │   ├── TradeErrors.ts # Trade validation and execution errors
+│   │   │   ├── PriceModel.ts # Pluggable price model interface and implementation
+│   │   │   ├── PriceModel.spec.ts # Price model test suite (18 tests)
+│   │   │   ├── PriceModel.example.ts # Usage examples and documentation
 │   │   │   └── index.ts # Trade system exports
 │   │   └── turn/         # Turn-based game progression system
 │   │       ├── TurnPhase.ts # Game turn phase definitions
@@ -153,9 +156,18 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Seed Data**: Initial towns configured with balanced treasury values (500-1500 range)
 - **Future Ready**: Foundation for buying/selling mechanics and economic simulation
 
+### Price Modeling System
+
+- **Pluggable Architecture**: `PriceModel` interface allows easy swapping of pricing strategies
+- **Supply/Demand Dynamics**: Automatic price adjustment based on trade activity
+- **Linear Price Model**: Default implementation with configurable step sizes and boundaries
+- **Price Clamping**: Automatic min/max price enforcement to prevent extreme values
+- **Immutable Updates**: Price changes return new town instances, preserving original state
+- **Per-Trade Adjustment**: Prices change once per trade regardless of quantity for predictable economics
+
 ### Trade System (`src/core/trade/`)
 
-A comprehensive trade system foundation with type-safe interfaces and error handling:
+A comprehensive trade system foundation with type-safe interfaces, error handling, and pluggable price modeling:
 
 #### Trade Types
 
@@ -169,13 +181,23 @@ A comprehensive trade system foundation with type-safe interfaces and error hand
 - **`TradeExecutionError`**: Runtime trade execution failures with optional cause chaining
 - **Type Safety**: All errors extend base Error class with proper TypeScript support
 
+#### Price Model System
+
+- **`PriceModel` Interface**: Pluggable interface for price adjustment strategies
+- **`createSimpleLinearPriceModel()`**: Default implementation with supply/demand dynamics
+- **Supply/Demand Logic**: Prices increase when goods are sold (demand), decrease when bought (supply)
+- **Configurable**: Customizable step size, min/max boundaries, and price clamping
+- **Immutable**: Returns new town instances with updated prices, preserving original state
+- **Per-Trade Adjustment**: Price changes once per trade call, regardless of quantity
+
 #### Key Features
 
 - **Type-Safe Interfaces**: Full TypeScript support with no `any` types
 - **Precise Error Reporting**: Path-based validation errors for easy debugging
 - **Immutable Design**: Trade results return new game state without modifying originals
+- **Pluggable Pricing**: Easy to swap different price models for different economic strategies
 - **Future Ready**: Foundation for complete trade execution and validation logic
-- **Export Ready**: All types and errors exported through barrel exports for easy importing
+- **Export Ready**: All types, errors, and price models exported through barrel exports for easy importing
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
@@ -357,7 +379,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **283 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, and treasury system validation
+- **301 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, and price modeling
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested

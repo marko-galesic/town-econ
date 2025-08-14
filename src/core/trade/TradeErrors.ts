@@ -4,10 +4,10 @@
  */
 export class TradeValidationError extends Error {
   constructor(
+    // eslint-disable-next-line no-unused-vars
     public path: string,
     message: string,
   ) {
-    // eslint-disable-line no-unused-vars
     super(message);
     this.name = 'TradeValidationError';
   }
@@ -20,9 +20,9 @@ export class TradeValidationError extends Error {
 export class TradeExecutionError extends Error {
   constructor(
     message: string,
+    // eslint-disable-next-line no-unused-vars
     public override cause?: Error,
   ) {
-    // eslint-disable-line no-unused-vars
     super(message);
     this.name = 'TradeExecutionError';
   }
