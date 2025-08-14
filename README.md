@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 398 tests passing)
+- `pnpm test` - Run test suite once (✅ 415 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -98,7 +98,12 @@ town-econ/
 │   │   └── Tiers.ts      # Military and prosperity tier types
 │   ├── data/             # Game data and configuration
 │   │   ├── goods.json    # Goods definitions and effects
-│   │   └── towns.json    # Initial town configurations
+│   │   ├── towns.json    # Initial town configurations
+│   │   └── tierThresholds.json # Tier mapping thresholds for military and prosperity
+│   ├── core/
+│   │   └── stats/        # Statistics and tier mapping utilities
+│   │       ├── TierMap.ts # Tier mapping functions and interfaces
+│   │       └── TierMap.spec.ts # Tier mapping test suite
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -162,6 +167,31 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Validation**: Comprehensive validation ensures treasury values are always ≥0
 - **Seed Data**: Initial towns configured with balanced treasury values (500-1500 range)
 - **Future Ready**: Foundation for buying/selling mechanics and economic simulation
+
+### Tier Mapping System (`src/core/stats/TierMap.ts`)
+
+A data-driven system for mapping raw stat values to tier classifications:
+
+#### Core Functions
+
+- **`clampRaw(x, min, max)`**: Clamps raw stat values between bounds (default 0-100)
+- **`mapToTier(raw, thresholds)`**: Maps raw stats to tier IDs using configurable thresholds
+- **Stable Sorting**: Automatically sorts thresholds for consistent results regardless of input order
+
+#### Data-Driven Configuration
+
+- **`tierThresholds.json`**: JSON configuration for military and prosperity tier mappings
+- **Military Tiers**: militia (0), garrison (20), formidable (50), host (90)
+- **Prosperity Tiers**: struggling (0), modest (25), prosperous (60), opulent (95)
+- **Configurable**: Easy to modify thresholds without code changes
+
+#### Key Features
+
+- **Pure Functions**: No mutation, deterministic results
+- **Type Safety**: Full TypeScript integration with existing `Tiers.ts` types
+- **Robust Handling**: Works with unsorted thresholds, edge cases, and boundary values
+- **Performance**: Efficient O(n log n) sorting + O(n) lookup
+- **100% Coverage**: Comprehensive test suite with edge case coverage
 
 ### Trade Limits & Runaway State Prevention
 
@@ -540,7 +570,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **398 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, and **trade limits enforcement**
+- **415 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, and **tier mapping system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -581,6 +611,10 @@ pnpm test src/core/turn/TurnController.trade.spec.ts
 # Run trade limits tests
 pnpm test src/core/trade/TradeLimits.spec.ts
 pnpm test src/core/trade/TradeExecutor.limits.spec.ts
+
+# Run tier mapping tests
+pnpm test src/core/stats/TierMap.spec.ts
+pnpm test src/data/tierThresholds.spec.ts
 
 # Run error handling tests
 pnpm test src/core/turn/TurnController.error.spec.ts

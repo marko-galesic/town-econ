@@ -1,0 +1,14 @@
+{
+  "military": [
+    { "tier": "militia", "min": 0 },
+    { "tier": "garrison", "min": 20 },
+    { "tier": "formidable", "min": 50 },
+    { "tier": "host", "min": 90 }
+  ],
+  "prosperity": [
+    { "tier": "struggling", "min": 0 },
+    { "tier": "modest", "min": 25 },
+    { "tier": "prosperous", "min": 60 },
+    { "tier": "opulent", "min": 95 }
+  ]
+}
