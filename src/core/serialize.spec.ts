@@ -56,6 +56,7 @@ describe('serializeGameState', () => {
           prices: { fish: 2, wood: 1, ore: 4 },
           militaryRaw: 15,
           prosperityRaw: 20,
+          treasury: 1000,
           revealed: {
             militaryTier: 'formidable',
             prosperityTier: 'prosperous',

@@ -18,6 +18,7 @@ describe('deserializeGameState', () => {
         prices: { fish: 2, wood: 1, ore: 4 },
         militaryRaw: 15,
         prosperityRaw: 20,
+        treasury: 1000,
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
@@ -163,6 +164,7 @@ describe('deserializeGameState', () => {
             prices: { fish: 2, wood: 1, ore: 4 },
             militaryRaw: 15,
             prosperityRaw: 20,
+            treasury: 1000,
             revealed: {
               militaryTier: 'formidable',
               prosperityTier: 'prosperous',
@@ -224,6 +226,7 @@ describe('deserializeGameState', () => {
             prices: { fish: 2, wood: 1, ore: 4.5 }, // Float instead of integer
             militaryRaw: 15,
             prosperityRaw: 20,
+            treasury: 1000,
             revealed: {
               militaryTier: 'formidable',
               prosperityTier: 'prosperous',
@@ -299,6 +302,7 @@ describe('deserializeGameState', () => {
             prices: { fish: 3, wood: 2, ore: 5 },
             militaryRaw: 10,
             prosperityRaw: 15,
+            treasury: 1200,
             revealed: {
               militaryTier: 'garrison',
               prosperityTier: 'modest',

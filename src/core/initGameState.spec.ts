@@ -65,6 +65,7 @@ describe('initGameState', () => {
         expect(town).toHaveProperty('prices');
         expect(town).toHaveProperty('militaryRaw');
         expect(town).toHaveProperty('prosperityRaw');
+        expect(town).toHaveProperty('treasury');
         expect(town).toHaveProperty('revealed');
         expect(town.revealed).toHaveProperty('militaryTier');
         expect(town.revealed).toHaveProperty('prosperityTier');
@@ -99,6 +100,17 @@ describe('initGameState', () => {
           expect(Number.isInteger(priceValue)).toBe(true);
           expect(priceValue).toBeGreaterThanOrEqual(0);
         });
+      });
+    });
+
+    it('should have nonnegative integer treasury for each town', () => {
+      const gameState = initGameState();
+
+      gameState.towns.forEach(town => {
+        expect(town).toHaveProperty('treasury');
+        expect(typeof town.treasury).toBe('number');
+        expect(Number.isInteger(town.treasury)).toBe(true);
+        expect(town.treasury).toBeGreaterThanOrEqual(0);
       });
     });
   });
@@ -192,6 +204,7 @@ describe('initGameState', () => {
           expect(town1.prices).toEqual(town2.prices);
           expect(town1.militaryRaw).toBe(town2.militaryRaw);
           expect(town1.prosperityRaw).toBe(town2.prosperityRaw);
+          expect(town1.treasury).toBe(town2.treasury);
           expect(town1.revealed).toEqual(town2.revealed);
         }
       });

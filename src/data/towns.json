@@ -14,6 +14,7 @@
     },
     "militaryRaw": 5,
     "prosperityRaw": 8,
+    "treasury": 750,
     "revealed": {
       "militaryTier": "militia",
       "prosperityTier": "modest",
@@ -35,6 +36,7 @@
     },
     "militaryRaw": 12,
     "prosperityRaw": 15,
+    "treasury": 1200,
     "revealed": {
       "militaryTier": "garrison",
       "prosperityTier": "prosperous",
@@ -56,6 +58,7 @@
     },
     "militaryRaw": 18,
     "prosperityRaw": 22,
+    "treasury": 1500,
     "revealed": {
       "militaryTier": "formidable",
       "prosperityTier": "opulent",

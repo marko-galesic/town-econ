@@ -29,6 +29,7 @@ describe('validateGameState', () => {
         prices: { fish: 2, wood: 1, ore: 4 },
         militaryRaw: 15,
         prosperityRaw: 20,
+        treasury: 1000,
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
@@ -696,6 +697,86 @@ describe('validateGameState', () => {
         const validationError = error as ValidationError;
         expect(validationError.path).toBe('goods.ore.effects.militaryDelta');
         expect(validationError.message).toContain('Expected integer');
+      }
+    });
+
+    it('should throw with path when town treasury is missing', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        delete (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.treasury;
+      }
+
+      expect(() => validateGameState(invalidState)).toThrow();
+      try {
+        validateGameState(invalidState);
+      } catch (error) {
+        const validationError = error as ValidationError;
+        expect(validationError.path).toBe('towns[0].treasury');
+        expect(validationError.message).toContain('Missing required field: treasury');
+      }
+    });
+
+    it('should throw with path when town treasury contains NaN', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.treasury = NaN;
+      }
+
+      expect(() => validateGameState(invalidState)).toThrow();
+      try {
+        validateGameState(invalidState);
+      } catch (error) {
+        const validationError = error as ValidationError;
+        expect(validationError.path).toBe('towns[0].treasury');
+        expect(validationError.message).toContain('Expected finite number');
+      }
+    });
+
+    it('should throw with path when town treasury contains Infinity', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.treasury = Infinity;
+      }
+
+      expect(() => validateGameState(invalidState)).toThrow();
+      try {
+        validateGameState(invalidState);
+      } catch (error) {
+        const validationError = error as ValidationError;
+        expect(validationError.path).toBe('towns[0].treasury');
+        expect(validationError.message).toContain('Expected finite number');
+      }
+    });
+
+    it('should throw with path when town treasury contains float', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.treasury = 1000.5;
+      }
+
+      expect(() => validateGameState(invalidState)).toThrow();
+      try {
+        validateGameState(invalidState);
+      } catch (error) {
+        const validationError = error as ValidationError;
+        expect(validationError.path).toBe('towns[0].treasury');
+        expect(validationError.message).toContain('Expected integer');
+      }
+    });
+
+    it('should throw with path when town treasury contains negative value', () => {
+      const invalidState = JSON.parse(JSON.stringify(validGameState)) as DeepInvalidGameState;
+      if (invalidState.towns?.[0]) {
+        (invalidState.towns[0] as DeepModifiable<GameState['towns'][0]>)!.treasury = -100;
+      }
+
+      expect(() => validateGameState(invalidState)).toThrow();
+      try {
+        validateGameState(invalidState);
+      } catch (error) {
+        const validationError = error as ValidationError;
+        expect(validationError.path).toBe('towns[0].treasury');
+        expect(validationError.message).toContain('Expected value >= 0');
       }
     });
   });

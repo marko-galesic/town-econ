@@ -23,6 +23,9 @@ export interface Town {
   /** Raw prosperity value (integer, can be negative) */
   prosperityRaw: number;
 
+  /** Integer ≥0. Currency balance for the town. */
+  treasury: number;
+
   /** Revealed tier information and last update timestamp */
   revealed: {
     /** The military tier based on raw military strength (derived from militaryRaw) */

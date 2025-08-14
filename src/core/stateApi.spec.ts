@@ -38,6 +38,7 @@ describe('stateApi', () => {
     prices: { fish: 2, wood: 3, ore: 1 },
     militaryRaw: 15,
     prosperityRaw: 25,
+    treasury: 1000,
     revealed: {
       militaryTier: 'garrison',
       prosperityTier: 'modest',
@@ -406,6 +407,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -477,6 +479,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -602,6 +605,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -757,6 +761,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -882,6 +887,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -1037,6 +1043,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 5,
       prosperityRaw: 10,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -1167,6 +1174,7 @@ describe('stateApi', () => {
       },
       militaryRaw: 5,
       prosperityRaw: 10,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',
@@ -1294,6 +1302,7 @@ describe('stateApi', () => {
           prices: { fish: 2, wood: 3, ore: 1 },
           militaryRaw: 15,
           prosperityRaw: 25,
+          treasury: 1500,
           revealed: {
             militaryTier: 'garrison',
             prosperityTier: 'modest',
@@ -1307,6 +1316,7 @@ describe('stateApi', () => {
           prices: { fish: 1, wood: 4, ore: 6 },
           militaryRaw: -5,
           prosperityRaw: -10,
+          treasury: 800,
           revealed: {
             militaryTier: 'militia',
             prosperityTier: 'struggling',

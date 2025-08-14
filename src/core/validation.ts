@@ -175,6 +175,9 @@ function validateTown(value: unknown, path: string, goodIds: GoodId[]): Town {
   if (!('prosperityRaw' in obj)) {
     throw { path: `${path}.prosperityRaw`, message: 'Missing required field: prosperityRaw' };
   }
+  if (!('treasury' in obj)) {
+    throw { path: `${path}.treasury`, message: 'Missing required field: treasury' };
+  }
   if (!('revealed' in obj)) {
     throw { path: `${path}.revealed`, message: 'Missing required field: revealed' };
   }
@@ -211,6 +214,9 @@ function validateTown(value: unknown, path: string, goodIds: GoodId[]): Town {
 
   // Validate prosperityRaw (integer, can be negative)
   validateInteger(obj.prosperityRaw, `${path}.prosperityRaw`);
+
+  // Validate treasury (nonnegative integer)
+  validateInteger(obj.treasury, `${path}.treasury`, 0);
 
   // Validate revealed object
   const revealed = validateObject(obj.revealed, `${path}.revealed`);

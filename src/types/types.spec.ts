@@ -42,6 +42,7 @@ describe('Type smoke tests', () => {
       prices: { fish: 5, wood: 3, ore: 8 },
       militaryRaw: 15,
       prosperityRaw: 25,
+      treasury: 1000,
       revealed: {
         militaryTier,
         prosperityTier,
@@ -66,6 +67,7 @@ describe('Type smoke tests', () => {
         prices: { fish: 3, wood: 2, ore: 5 },
         militaryRaw: 20,
         prosperityRaw: 40,
+        treasury: 1500,
         revealed: {
           militaryTier: 'formidable',
           prosperityTier: 'prosperous',
@@ -79,6 +81,7 @@ describe('Type smoke tests', () => {
         prices: { fish: 4, wood: 1, ore: 6 },
         militaryRaw: 10,
         prosperityRaw: 30,
+        treasury: 1200,
         revealed: {
           militaryTier: 'garrison',
           prosperityTier: 'modest',
@@ -92,6 +95,7 @@ describe('Type smoke tests', () => {
         prices: { fish: 5, wood: 3, ore: 2 },
         militaryRaw: 25,
         prosperityRaw: 35,
+        treasury: 1800,
         revealed: {
           militaryTier: 'host',
           prosperityTier: 'prosperous',
@@ -157,6 +161,7 @@ describe('Type smoke tests', () => {
       prices: { fish: 1, wood: 1, ore: 1 },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 500,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',

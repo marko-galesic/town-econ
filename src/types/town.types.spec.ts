@@ -19,6 +19,7 @@ describe('Town types', () => {
       },
       militaryRaw: 15,
       prosperityRaw: 25,
+      treasury: 1000,
       revealed: {
         militaryTier: 'garrison',
         prosperityTier: 'modest',
@@ -53,6 +54,7 @@ describe('Town types', () => {
       },
       militaryRaw: 0,
       prosperityRaw: 0,
+      treasury: 1000,
       revealed: {
         militaryTier: 'militia',
         prosperityTier: 'struggling',

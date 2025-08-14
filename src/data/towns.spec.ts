@@ -26,6 +26,7 @@ describe('towns.json', () => {
       expect(town).toHaveProperty('prices');
       expect(town).toHaveProperty('militaryRaw');
       expect(town).toHaveProperty('prosperityRaw');
+      expect(town).toHaveProperty('treasury');
       expect(town).toHaveProperty('revealed');
       expect(town.revealed).toHaveProperty('militaryTier');
       expect(town.revealed).toHaveProperty('prosperityTier');
@@ -36,6 +37,7 @@ describe('towns.json', () => {
       expect(typeof town.name).toBe('string');
       expect(typeof town.militaryRaw).toBe('number');
       expect(typeof town.prosperityRaw).toBe('number');
+      expect(typeof town.treasury).toBe('number');
       expect(typeof town.revealed.lastUpdatedTurn).toBe('number');
 
       // Check resources and prices are objects
@@ -118,5 +120,15 @@ describe('towns.json', () => {
     expect(riverdale?.prosperityRaw).toBe(8);
     expect(riverdale?.revealed.militaryTier).toBe('militia');
     expect(riverdale?.revealed.prosperityTier).toBe('modest');
+    expect(riverdale?.treasury).toBe(750);
+  });
+
+  it('should have nonnegative integer treasury values for all towns', () => {
+    const towns = townsData as Town[];
+
+    towns.forEach(town => {
+      expect(Number.isInteger(town.treasury)).toBe(true);
+      expect(town.treasury).toBeGreaterThanOrEqual(0);
+    });
   });
 });

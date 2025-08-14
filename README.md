@@ -79,7 +79,7 @@ town-econ/
 │   │       └── TurnService.spec.ts # TurnService factory tests
 │   ├── types/            # TypeScript type definitions
 │   │   ├── GameState.ts  # Main game state interface
-│   │   ├── Town.ts       # Town entity interface
+│   │   ├── Town.ts       # Town entity interface with treasury system
 │   │   ├── Goods.ts      # Goods and resources interface
 │   │   └── Tiers.ts      # Military and prosperity tier types
 │   ├── data/             # Game data and configuration
@@ -116,6 +116,12 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **`addProsperity(town, delta)`** - Update prosperity raw value (preserves tier info)
 - **`addMilitary(town, delta)`** - Update military raw value (preserves tier info)
 
+#### Economy & Currency
+
+- **Treasury System**: Each town has a `treasury` field representing their currency balance
+- **Fixed-Point Currency**: All treasury values are integers ≥0 for precise financial calculations
+- **Buying/Selling Ready**: Treasury system enables future trade mechanics and economic transactions
+
 #### Game State Operations
 
 - **`advanceTurn(state)`** - Increment game turn (shallow copy with turn+1)
@@ -133,6 +139,15 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **JSON Schema Validation**: Robust validation of game state structure
 - **Type-Safe Deserialization**: Safe loading of game data with detailed error reporting
 - **Comprehensive Coverage**: All data structures validated with specific error paths
+- **Treasury Validation**: Ensures all towns have valid non-negative integer treasury values
+
+### Treasury & Economy System
+
+- **Currency Management**: Each town maintains a `treasury` balance for economic transactions
+- **Fixed-Point Precision**: Integer-based currency system prevents floating-point errors
+- **Validation**: Comprehensive validation ensures treasury values are always ≥0
+- **Seed Data**: Initial towns configured with balanced treasury values (500-1500 range)
+- **Future Ready**: Foundation for buying/selling mechanics and economic simulation
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
@@ -314,7 +329,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **276 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, and TurnService factory
+- **283 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, and treasury system validation
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
