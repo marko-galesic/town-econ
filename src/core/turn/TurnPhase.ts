@@ -7,6 +7,6 @@ export enum TurnPhase {
   PlayerAction = 'playerAction',
   AiActions = 'aiActions',
   UpdateStats = 'updateStats',
-  End = 'end'
+  End = 'end',
 }
 /* eslint-enable no-unused-vars */

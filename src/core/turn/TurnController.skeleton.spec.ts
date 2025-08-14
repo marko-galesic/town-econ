@@ -5,6 +5,7 @@ import type { GameState } from '../../types/GameState';
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
 import { TurnPhase } from './TurnPhase';
+import { UpdatePipeline } from './UpdatePipeline';
 
 describe('TurnController', () => {
   let controller: TurnController;
@@ -12,7 +13,7 @@ describe('TurnController', () => {
 
   beforeEach(() => {
     playerQueue = new PlayerActionQueue();
-    controller = new TurnController(playerQueue, {});
+    controller = new TurnController(playerQueue, new UpdatePipeline(), {});
   });
 
   describe('runTurn', () => {
@@ -26,19 +27,19 @@ describe('TurnController', () => {
           fish: {
             id: 'fish',
             name: 'Fish',
-            effects: { prosperityDelta: 2, militaryDelta: 1 }
+            effects: { prosperityDelta: 2, militaryDelta: 1 },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
-            effects: { prosperityDelta: 1, militaryDelta: 2 }
+            effects: { prosperityDelta: 1, militaryDelta: 2 },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
-            effects: { prosperityDelta: 3, militaryDelta: 3 }
-          }
-        }
+            effects: { prosperityDelta: 3, militaryDelta: 3 },
+          },
+        },
       };
 
       const result = await controller.runTurn(mockState);
@@ -48,7 +49,7 @@ describe('TurnController', () => {
         TurnPhase.PlayerAction,
         TurnPhase.AiActions,
         TurnPhase.UpdateStats,
-        TurnPhase.End
+        TurnPhase.End,
       ]);
     });
 
@@ -62,19 +63,19 @@ describe('TurnController', () => {
           fish: {
             id: 'fish',
             name: 'Fish',
-            effects: { prosperityDelta: 2, militaryDelta: 1 }
+            effects: { prosperityDelta: 2, militaryDelta: 1 },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
-            effects: { prosperityDelta: 1, militaryDelta: 2 }
+            effects: { prosperityDelta: 1, militaryDelta: 2 },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
-            effects: { prosperityDelta: 3, militaryDelta: 3 }
-          }
-        }
+            effects: { prosperityDelta: 3, militaryDelta: 3 },
+          },
+        },
       };
 
       const result = await controller.runTurn(mockState);
@@ -98,19 +99,19 @@ describe('TurnController', () => {
           fish: {
             id: 'fish',
             name: 'Fish',
-            effects: { prosperityDelta: 2, militaryDelta: 1 }
+            effects: { prosperityDelta: 2, militaryDelta: 1 },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
-            effects: { prosperityDelta: 1, militaryDelta: 2 }
+            effects: { prosperityDelta: 1, militaryDelta: 2 },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
-            effects: { prosperityDelta: 3, militaryDelta: 3 }
-          }
-        }
+            effects: { prosperityDelta: 3, militaryDelta: 3 },
+          },
+        },
       };
 
       const result = await controller.runTurn(mockState);
@@ -136,19 +137,19 @@ describe('TurnController', () => {
           fish: {
             id: 'fish',
             name: 'Fish',
-            effects: { prosperityDelta: 2, militaryDelta: 1 }
+            effects: { prosperityDelta: 2, militaryDelta: 1 },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
-            effects: { prosperityDelta: 1, militaryDelta: 2 }
+            effects: { prosperityDelta: 1, militaryDelta: 2 },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
-            effects: { prosperityDelta: 3, militaryDelta: 3 }
-          }
-        }
+            effects: { prosperityDelta: 3, militaryDelta: 3 },
+          },
+        },
       };
 
       // Queue should be empty initially
@@ -170,19 +171,19 @@ describe('TurnController', () => {
           fish: {
             id: 'fish',
             name: 'Fish',
-            effects: { prosperityDelta: 2, militaryDelta: 1 }
+            effects: { prosperityDelta: 2, militaryDelta: 1 },
           },
           wood: {
             id: 'wood',
             name: 'Wood',
-            effects: { prosperityDelta: 1, militaryDelta: 2 }
+            effects: { prosperityDelta: 1, militaryDelta: 2 },
           },
           ore: {
             id: 'ore',
             name: 'Ore',
-            effects: { prosperityDelta: 3, militaryDelta: 3 }
-          }
-        }
+            effects: { prosperityDelta: 3, militaryDelta: 3 },
+          },
+        },
       };
 
       // Add actions to queue

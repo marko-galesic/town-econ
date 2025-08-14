@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 247 tests passing)
+- `pnpm test` - Run test suite once (✅ 258 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -66,10 +66,14 @@ town-econ/
 │   │       ├── TurnController.ts # Turn orchestration and phase sequencing
 │   │       ├── PlayerAction.ts # Player action type definitions
 │   │       ├── PlayerActionQueue.ts # Action queue management
+│   │       └── UpdatePipeline.ts # Pluggable update systems pipeline
 │   │       ├── TurnController.skeleton.spec.ts # Turn system tests
 │   │       ├── TurnController.start.spec.ts # Turn start phase tests
 │   │       ├── TurnController.player.spec.ts # Player action phase tests
-│   │       └── PlayerActionQueue.spec.ts # Queue functionality tests
+│   │       ├── TurnController.update.spec.ts # Update stats phase tests
+│   │       ├── TurnController.end.spec.ts # Turn end phase tests
+│   │       ├── PlayerActionQueue.spec.ts # Queue functionality tests
+│   │       └── UpdatePipeline.spec.ts # Update pipeline system tests
 │   ├── types/            # TypeScript type definitions
 │   │   ├── GameState.ts  # Main game state interface
 │   │   ├── Town.ts       # Town entity interface
@@ -136,8 +140,8 @@ A comprehensive turn management system that orchestrates game progression throug
 - **`Start`** - Beginning of turn setup and initialization
 - **`PlayerAction`** - Player decision processing and action execution
 - **`AiActions`** - AI-controlled entity behavior and decisions
-- **`UpdateStats`** - Game state updates and calculations
-- **`End`** - Turn completion and cleanup
+- **`UpdateStats`** - Game state updates and calculations (pluggable pipeline)
+- **`End`** - Turn completion and cleanup with turn summary
 
 #### Turn Controller
 
@@ -147,6 +151,8 @@ A comprehensive turn management system that orchestrates game progression throug
 - **State Management**: Returns updated game state with phase execution log
 - **Observer Hooks**: Optional `onPhase` callback for monitoring phase execution
 - **Turn Incrementation**: Automatically advances turn counter at start of each turn
+- **Update Pipeline Integration**: Pluggable system for UpdateStats phase modifications
+- **End Phase Summary**: Emits turn completion details with current turn number
 
 #### Player Action System
 
@@ -154,6 +160,16 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Action Types**: Extensible system starting with `'none'` and `'trade'` actions
 - **Queue Management**: `enqueue()`, `dequeue()`, `clear()`, and `length` operations
 - **Integration**: Seamlessly wired into TurnController for action consumption
+
+#### Update Pipeline System
+
+- **`UpdatePipeline`**: Pluggable system for executing update logic during UpdateStats phase
+- **System Registration**: `register(sys: UpdateSystem)` for adding new update systems
+- **Sequential Execution**: Systems execute in registration order with state chaining
+- **Type Safety**: `UpdateSystem = (s: GameState) => GameState` function signature
+- **Integration**: Automatically wired into TurnController constructor
+- **Phase Reporting**: Reports system count and execution details to phase hooks
+- **Future Ready**: Designed for production, pricing, and tier adjustment systems
 
 #### Key Features
 
@@ -164,6 +180,8 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Observer System**: Comprehensive phase monitoring with extensible hooks
 - **Safe No-Op Implementation**: All phases safely implemented with future extensibility
 - **Comprehensive Testing**: Full test coverage for turn system and queue operations
+- **Pluggable Update Systems**: Extensible pipeline for production, pricing, and tier updates
+- **Phase Summaries**: Rich phase details including system counts and turn information
 
 ## 🔧 Development Workflow
 
@@ -215,11 +233,13 @@ test: add comprehensive test suite for stateApi (113 tests)
 
 ### Comprehensive Test Suite
 
-- **247 Tests**: Covering all core systems including state API, turn management, and queue operations
+- **258 Tests**: Covering all core systems including state API, turn management, queue operations, and update pipeline
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
 - **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
+- **Update Pipeline Tests**: Full coverage of pluggable update system functionality
+- **Phase Detail Tests**: Verification of phase hook data including system counts and turn summaries
 
 ### Running Tests
 
@@ -236,6 +256,11 @@ pnpm test src/core/turn/
 # Run specific turn phase tests
 pnpm test src/core/turn/TurnController.start.spec.ts
 pnpm test src/core/turn/TurnController.player.spec.ts
+pnpm test src/core/turn/TurnController.update.spec.ts
+pnpm test src/core/turn/TurnController.end.spec.ts
+
+# Run update pipeline tests
+pnpm test src/core/turn/UpdatePipeline.spec.ts
 
 # Watch mode for development
 pnpm test:watch

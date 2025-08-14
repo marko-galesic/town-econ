@@ -3,6 +3,7 @@ import { advanceTurn } from '../stateApi';
 
 import type { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnPhase } from './TurnPhase';
+import type { UpdatePipeline } from './UpdatePipeline';
 
 /**
  * Result of running a complete turn, containing the updated game state
@@ -35,10 +36,17 @@ export class TurnController {
   // eslint-disable-next-line no-unused-vars
   private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
 
-  constructor(private readonly playerQ: PlayerActionQueue, options?: TurnControllerOptions) {
+  constructor(
+    private readonly playerQ: PlayerActionQueue,
+    private readonly updatePipeline: UpdatePipeline,
+    options?: TurnControllerOptions,
+  ) {
     // Ensure the queue is properly initialized
     if (!playerQ) {
       throw new Error('PlayerActionQueue is required');
+    }
+    if (!updatePipeline) {
+      throw new Error('UpdatePipeline is required');
     }
     this.onPhase = options?.onPhase || undefined;
   }
@@ -64,15 +72,13 @@ export class TurnController {
 
     currentState = await this.updateStats(currentState);
     phaseLog.push(TurnPhase.UpdateStats);
-    this.onPhase?.(TurnPhase.UpdateStats);
 
     currentState = await this.endTurn(currentState);
     phaseLog.push(TurnPhase.End);
-    this.onPhase?.(TurnPhase.End);
 
     return {
       state: currentState,
-      phaseLog
+      phaseLog,
     };
   }
 
@@ -120,20 +126,23 @@ export class TurnController {
   }
 
   /**
-   * Update stats phase - currently no logic implemented.
+   * Update stats phase - runs all registered update systems through the pipeline.
    * @param s - Current game state
-   * @returns Same game state (no changes yet)
+   * @returns Updated game state after all update systems have been applied
    */
   private async updateStats(s: GameState): Promise<GameState> {
-    return s;
+    const s2 = this.updatePipeline.run(s);
+    this.onPhase?.(TurnPhase.UpdateStats, { ran: this.updatePipeline.systemCount });
+    return s2;
   }
 
   /**
-   * End of turn phase - currently no logic implemented.
+   * End of turn phase - emits turn summary and returns final state.
    * @param s - Current game state
-   * @returns Same game state (no changes yet)
+   * @returns Same game state (no changes)
    */
   private async endTurn(s: GameState): Promise<GameState> {
+    this.onPhase?.(TurnPhase.End, { turn: s.turn });
     return s;
   }
 }

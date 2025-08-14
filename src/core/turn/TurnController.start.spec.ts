@@ -4,6 +4,7 @@ import type { GameState } from '../../types/GameState';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
+import { UpdatePipeline } from './UpdatePipeline';
 
 describe('TurnController.start', () => {
   let controller: TurnController;
@@ -11,7 +12,7 @@ describe('TurnController.start', () => {
 
   beforeEach(() => {
     playerQueue = new PlayerActionQueue();
-    controller = new TurnController(playerQueue, {});
+    controller = new TurnController(playerQueue, new UpdatePipeline(), {});
   });
 
   it('should increment turn counter from 0 to 1 after runTurn', async () => {
@@ -24,19 +25,19 @@ describe('TurnController.start', () => {
         fish: {
           id: 'fish',
           name: 'Fish',
-          effects: { prosperityDelta: 2, militaryDelta: 1 }
+          effects: { prosperityDelta: 2, militaryDelta: 1 },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
-          effects: { prosperityDelta: 1, militaryDelta: 2 }
+          effects: { prosperityDelta: 1, militaryDelta: 2 },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
-          effects: { prosperityDelta: 3, militaryDelta: 3 }
-        }
-      }
+          effects: { prosperityDelta: 3, militaryDelta: 3 },
+        },
+      },
     };
 
     const result = await controller.runTurn(initialState);
@@ -54,19 +55,19 @@ describe('TurnController.start', () => {
         fish: {
           id: 'fish',
           name: 'Fish',
-          effects: { prosperityDelta: 2, militaryDelta: 1 }
+          effects: { prosperityDelta: 2, militaryDelta: 1 },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
-          effects: { prosperityDelta: 1, militaryDelta: 2 }
+          effects: { prosperityDelta: 1, militaryDelta: 2 },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
-          effects: { prosperityDelta: 3, militaryDelta: 3 }
-        }
-      }
+          effects: { prosperityDelta: 3, militaryDelta: 3 },
+        },
+      },
     };
 
     const result = await controller.runTurn(initialState);

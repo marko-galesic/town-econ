@@ -5,6 +5,7 @@ import type { GameState } from '../../types/GameState';
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
 import { TurnPhase } from './TurnPhase';
+import { UpdatePipeline } from './UpdatePipeline';
 
 describe('TurnController.player', () => {
   let controller: TurnController;
@@ -22,25 +23,25 @@ describe('TurnController.player', () => {
         fish: {
           id: 'fish',
           name: 'Fish',
-          effects: { prosperityDelta: 2, militaryDelta: 1 }
+          effects: { prosperityDelta: 2, militaryDelta: 1 },
         },
         wood: {
           id: 'wood',
           name: 'Wood',
-          effects: { prosperityDelta: 1, militaryDelta: 2 }
+          effects: { prosperityDelta: 1, militaryDelta: 2 },
         },
         ore: {
           id: 'ore',
           name: 'Ore',
-          effects: { prosperityDelta: 3, militaryDelta: 3 }
-        }
-      }
+          effects: { prosperityDelta: 3, militaryDelta: 3 },
+        },
+      },
     };
   });
 
   describe('with empty queue', () => {
     it('should synthesize action as "none"', async () => {
-      controller = new TurnController(playerQueue);
+      controller = new TurnController(playerQueue, new UpdatePipeline());
 
       // Queue should be empty initially
       expect(playerQueue.length).toBe(0);
@@ -60,7 +61,7 @@ describe('TurnController.player', () => {
 
   describe('with one queued action', () => {
     it('should dequeue action and make no state changes', async () => {
-      controller = new TurnController(playerQueue);
+      controller = new TurnController(playerQueue, new UpdatePipeline());
 
       // Add one action to queue
       playerQueue.enqueue({ type: 'trade' });
@@ -86,10 +87,10 @@ describe('TurnController.player', () => {
     it('should receive phase and action details', async () => {
       const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
 
-      controller = new TurnController(playerQueue, {
+      controller = new TurnController(playerQueue, new UpdatePipeline(), {
         onPhase: (phase, detail) => {
           phaseLog.push({ phase, detail });
-        }
+        },
       });
 
       // Add an action to queue
@@ -113,7 +114,7 @@ describe('TurnController.player', () => {
     });
 
     it('should work without onPhase hook', async () => {
-      controller = new TurnController(playerQueue);
+      controller = new TurnController(playerQueue, new UpdatePipeline());
 
       // Should not throw when no hook is provided
       expect(() => controller.runTurn(mockState)).not.toThrow();
@@ -124,10 +125,10 @@ describe('TurnController.player', () => {
     it('should trigger AiActions hook with decided:false and make no state changes', async () => {
       const phaseLog: Array<{ phase: TurnPhase; detail?: unknown }> = [];
 
-      controller = new TurnController(playerQueue, {
+      controller = new TurnController(playerQueue, new UpdatePipeline(), {
         onPhase: (phase, detail) => {
           phaseLog.push({ phase, detail });
-        }
+        },
       });
 
       const result = await controller.runTurn(mockState);
