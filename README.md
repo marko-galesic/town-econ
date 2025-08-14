@@ -57,10 +57,17 @@ town-econ/
 ├── src/
 │   ├── core/             # Core game logic and state management
 │   │   ├── stateApi.ts   # Immutable state manipulation functions
-│   │   ├── stateApi.spec.ts # Comprehensive test suite (113 tests)
+│   │   ├── stateApi.spec.ts # State API test suite (113 tests)
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
-│   │   └── validation.ts # Data validation system
+│   │   ├── validation.ts # Data validation system
+│   │   └── turn/         # Turn-based game progression system
+│   │       ├── TurnPhase.ts # Game turn phase definitions
+│   │       ├── TurnController.ts # Turn orchestration and phase sequencing
+│   │       ├── PlayerAction.ts # Player action type definitions
+│   │       ├── PlayerActionQueue.ts # Action queue management
+│   │       ├── TurnController.skeleton.spec.ts # Turn system tests
+│   │       └── PlayerActionQueue.spec.ts # Queue functionality tests
 │   ├── types/            # TypeScript type definitions
 │   │   ├── GameState.ts  # Main game state interface
 │   │   ├── Town.ts       # Town entity interface
@@ -118,6 +125,40 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Type-Safe Deserialization**: Safe loading of game data with detailed error reporting
 - **Comprehensive Coverage**: All data structures validated with specific error paths
 
+### Turn-Based Game Progression (`src/core/turn/`)
+
+A comprehensive turn management system that orchestrates game progression through distinct phases:
+
+#### Turn Phases
+
+- **`Start`** - Beginning of turn setup and initialization
+- **`PlayerAction`** - Player decision processing and action execution
+- **`AiActions`** - AI-controlled entity behavior and decisions
+- **`UpdateStats`** - Game state updates and calculations
+- **`End`** - Turn completion and cleanup
+
+#### Turn Controller
+
+- **`TurnController.runTurn(state)`** - Executes complete turn with phase sequencing
+- **Phase Orchestration**: Enforces strict phase order and execution
+- **Action Processing**: Consumes player actions from queue during player phase
+- **State Management**: Returns updated game state with phase execution log
+
+#### Player Action System
+
+- **`PlayerActionQueue`**: FIFO queue for managing player actions
+- **Action Types**: Extensible system starting with `'none'` and `'trade'` actions
+- **Queue Management**: `enqueue()`, `dequeue()`, `clear()`, and `length` operations
+- **Integration**: Seamlessly wired into TurnController for action consumption
+
+#### Key Features
+
+- **Strict Phase Sequencing**: Enforced turn progression through all phases
+- **Action Queue Integration**: Player actions processed one per turn
+- **Immutable Design**: Maintains state immutability principles
+- **Async Ready**: All phase methods async for future logic implementation
+- **Comprehensive Testing**: Full test coverage for turn system and queue operations
+
 ## 🔧 Development Workflow
 
 ### Code Quality Gates
@@ -168,10 +209,10 @@ test: add comprehensive test suite for stateApi (113 tests)
 
 ### Comprehensive Test Suite
 
-- **113 Tests**: Covering all state API functions and edge cases
+- **240 Tests**: Covering all core systems including state API, turn management, and queue operations
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
-- **100% Coverage**: All state API functions fully tested
+- **100% Coverage**: All core functions fully tested
 
 ### Running Tests
 
@@ -181,6 +222,9 @@ pnpm test
 
 # Run specific test file
 pnpm test src/core/stateApi.spec.ts
+
+# Run turn system tests
+pnpm test src/core/turn/
 
 # Watch mode for development
 pnpm test:watch
@@ -280,6 +324,7 @@ pnpm coverage
 - **Zero Linting Errors**: All code must pass ESLint without warnings
 - **Type Safety**: Full TypeScript compliance with strict mode
 - **Immutability**: State manipulation functions must be pure and immutable
+- **Turn System Integration**: New game mechanics should integrate with the turn-based progression system
 
 ## 📄 License
 
