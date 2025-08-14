@@ -239,6 +239,7 @@ class TurnPhaseError extends Error {
 ```
 
 **Usage Example:**
+
 ```typescript
 try {
   const result = await turnController.runTurn(gameState);
