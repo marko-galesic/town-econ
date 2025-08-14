@@ -97,7 +97,15 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**', '*.config.js', '*.config.ts'],
+    ignores: [
+      'dist/**',
+      'coverage/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.ts',
+      '**/*.spec.js', // Exclude compiled JavaScript test files
+      '**/*.js', // Exclude all compiled JavaScript files
+    ],
   },
   prettier,
 ];

@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 425 tests passing)
+- `pnpm test` - Run test suite once (✅ 914 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -109,7 +109,9 @@ town-econ/
 │   │       ├── FuzzyTier.example.ts # Usage examples and demonstrations
 │   │       ├── RevealCadence.ts # Tier reveal cadence management system
 │   │       ├── RevealCadence.spec.ts # Reveal cadence test suite
-│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence)
+│   │       ├── RawStatSystem.ts # Per-turn raw stat update system
+│   │       ├── RawStatSystem.spec.ts # Raw stat system test suite (11 tests)
+│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RawStatSystem)
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -282,6 +284,43 @@ if (isRevealDue(currentTurn, lastRevealedTurn, DEFAULT_REVEAL_POLICY)) {
 - **Global Policy**: Single cadence policy for all tier reveals (extensible to per-stat policies)
 - **Initial Reveal**: Always reveals on turn 0 for new games
 - **100% Test Coverage**: Comprehensive test suite covering all scenarios and edge cases
+
+### Raw Stat Turn Update System (`src/core/stats/RawStatSystem.ts`)
+
+A pure, deterministic system for applying per-turn stat updates to all towns in the game state:
+
+#### Core Components
+
+- **`RawStatRules` Interface**: Configurable decay rates and maximum values for raw stats
+- **`DEFAULT_RAW_RULES`**: Sensible defaults (prosperity decay: 1, military decay: 0, max: 100)
+- **`applyRawStatTurn(state, rules?)`**: Applies stat updates to all towns and returns new state
+
+#### Usage Example
+
+```typescript
+import { applyRawStatTurn, DEFAULT_RAW_RULES } from './core/stats';
+
+// Apply default decay rules (prosperity -1, military 0)
+const updatedState = applyRawStatTurn(gameState);
+
+// Apply custom rules
+const customRules = {
+  prosperityDecayPerTurn: 2, // Prosperity decays faster
+  militaryDecayPerTurn: 1, // Military also decays
+  maxRaw: 50, // Lower maximum stat value
+};
+const customUpdatedState = applyRawStatTurn(gameState, customRules);
+```
+
+#### Key Features
+
+- **Pure & Immutable**: Always returns new state, never modifies input
+- **Configurable Decay**: Support for positive (decay), negative (growth), or zero (no change) rates
+- **Automatic Clamping**: Values automatically clamped to [0, maxRaw] range
+- **Per-Town Updates**: Applies updates to all towns in the game state
+- **Integer Precision**: All calculations maintain integer precision
+- **Deterministic**: Same input always produces same output
+- **100% Test Coverage**: Comprehensive test suite with edge case handling
 
 ### Trade Limits & Runaway State Prevention
 
