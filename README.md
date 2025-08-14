@@ -113,7 +113,10 @@ town-econ/
 │   │       ├── RevealSystem.spec.ts # Reveal system test suite (10 tests)
 │   │       ├── RawStatSystem.ts # Per-turn raw stat update system
 │   │       ├── RawStatSystem.spec.ts # Raw stat system test suite (11 tests)
-│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RevealSystem, RawStatSystem)
+│   │       ├── StatsUpdateSystem.ts # Integrated stats update system for UpdatePipeline
+│   │       ├── StatsUpdateSystem.spec.ts # Stats update system test suite (11 tests)
+│   │       ├── StatsUpdateSystem.example.ts # Usage examples with UpdatePipeline
+│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RevealSystem, RawStatSystem, StatsUpdateSystem)
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -375,6 +378,90 @@ const customUpdatedState = applyRawStatTurn(gameState, customRules);
 - **Integer Precision**: All calculations maintain integer precision
 - **Deterministic**: Same input always produces same output
 - **100% Test Coverage**: Comprehensive test suite with edge case handling
+
+### Integrated Stats Update System (`src/core/stats/StatsUpdateSystem.ts`)
+
+A unified system that combines raw stat updates and tier reveals in the correct order, designed for seamless integration with the UpdatePipeline:
+
+#### Core Components
+
+- **`StatsUpdateOptions` Interface**: Configurable options for raw stats, reveal intervals, and fuzz settings
+- **`createStatsUpdateSystem(opts?, seedAccessor?)`**: Factory function that returns a registerable UpdateSystem
+- **Automatic Ordering**: Always applies raw updates before reveal updates for consistency
+- **UpdatePipeline Ready**: Returns `(s: GameState) => GameState` function for direct registration
+
+#### Usage Example
+
+```typescript
+import { createStatsUpdateSystem } from './core/stats';
+import { UpdatePipeline } from './core/turn';
+
+// Create the update pipeline
+const pipeline = new UpdatePipeline();
+
+// Create and register the stats update system with default settings
+const statsSystem = createStatsUpdateSystem();
+pipeline.register(statsSystem);
+
+// Or with custom configuration
+const customStatsSystem = createStatsUpdateSystem({
+  raw: {
+    prosperityDecayPerTurn: 2, // Custom prosperity decay
+    militaryDecayPerTurn: 1, // Custom military decay
+    maxRaw: 150, // Custom max raw value
+  },
+  revealInterval: 3, // Reveal every 3 turns
+  fuzz: {
+    jitterProb: 0.3, // Custom fuzz probability
+  },
+});
+pipeline.register(customStatsSystem);
+
+// Use custom seed accessor for deterministic but varied results
+const seededStatsSystem = createStatsUpdateSystem(
+  { revealInterval: 1 },
+  state => `turn-${state.turn}-custom-seed`,
+);
+pipeline.register(seededStatsSystem);
+```
+
+#### Key Features
+
+- **Unified Processing**: Combines raw stat updates and tier reveals in single system
+- **Correct Order**: Raw updates always applied before reveal updates
+- **Configurable Options**: Full customization of decay rates, reveal intervals, and fuzz settings
+- **Flexible Seeding**: Custom seed accessor or automatic fallback to `rngSeed`
+- **UpdatePipeline Integration**: Designed specifically for registration with UpdatePipeline
+- **Deterministic**: Same inputs always produce same outputs
+- **Immutable Design**: Returns new game state without modifying originals
+- **100% Test Coverage**: Comprehensive test suite covering all configuration options and edge cases
+
+#### Integration with Turn System
+
+The StatsUpdateSystem is designed to work seamlessly with the existing turn-based progression:
+
+```typescript
+import { createTurnController } from './core/turn';
+import { createStatsUpdateSystem } from './core/stats';
+
+// Create a turn controller with integrated stats updates
+const { controller, pipeline } = createTurnController(gameState);
+
+// Register the stats update system
+const statsSystem = createStatsUpdateSystem({ revealInterval: 2 });
+pipeline.register(statsSystem);
+
+// Run turns - stats will be automatically updated during UpdateStats phase
+const result = await controller.runTurn(gameState);
+```
+
+**Benefits:**
+
+- **Automatic Execution**: Stats updated automatically during each turn's UpdateStats phase
+- **Configurable Timing**: Reveal intervals control how often tier information is updated
+- **Consistent Order**: Raw stats always processed before tier reveals
+- **Turn Integration**: Seamlessly integrated with existing turn progression system
+- **Performance**: Efficient processing with minimal overhead per turn
 
 ### Trade Limits & Runaway State Prevention
 
@@ -753,7 +840,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **430 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, and **fuzzy tier system**
+- **945 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, and **integrated stats update system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
