@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 934 tests passing)
+- `pnpm test` - Run test suite once (✅ 946 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -651,6 +651,47 @@ const result = await controller.runTurn(gameState);
 - **Optional hooks**: Easy integration of phase monitoring and logging
 - **Production ready**: All components properly initialized and validated
 - **Type safe**: Full TypeScript support with proper return types
+- **Integrated Stats System**: Automatically registers StatsUpdateSystem for automatic stat updates during UpdateStats phase
+
+#### Stats System Integration
+
+The TurnService automatically integrates the **StatsUpdateSystem** to provide automatic stat management:
+
+```typescript
+import { createTurnController } from './src/core/turn';
+
+// Create controller - StatsUpdateSystem automatically registered
+const { controller } = createTurnController(gameState);
+
+// Run turns - stats automatically updated during UpdateStats phase
+const result = await controller.runTurn(gameState);
+
+// Stats are automatically updated:
+// - Prosperity decays by 1 per turn (clamped ≥0)
+// - Military stats updated according to rules
+// - Tier information revealed every 2 turns with fuzzy logic
+// - All updates use deterministic RNG from game state
+```
+
+**Default Configuration:**
+- **Prosperity Decay**: 1 point per turn (clamped at 0)
+- **Reveal Interval**: Every 2 turns
+- **Fuzzy Logic**: 20% jitter probability for tier reveals
+- **Deterministic**: Uses game state's `rngSeed` for reproducible results
+
+**Custom Configuration:**
+```typescript
+// The factory can be extended to accept custom stats configuration
+// For now, it uses sensible defaults that work well for most games
+```
+
+**Benefits:**
+- **Zero Configuration**: Works out of the box with sensible defaults
+- **Automatic Execution**: Stats updated every turn without manual intervention
+- **Game Balance**: Built-in decay prevents runaway prosperity inflation
+- **Strategic Depth**: Tier reveals at intervals add uncertainty and planning
+- **Deterministic**: Same game state always produces same results
+- **Performance**: Efficient updates with minimal overhead per turn
 
 #### Turn Phases
 
@@ -840,7 +881,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **945 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, and **integrated stats update system**
+- **946 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, and **TurnService stats integration**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -899,6 +940,12 @@ pnpm test src/core/turn/TurnController.order.spec.ts
 
 # Run update pipeline tests
 pnpm test src/core/turn/UpdatePipeline.spec.ts
+
+# Run TurnService factory tests
+pnpm test src/core/turn/TurnService.spec.ts
+
+# Run TurnService stats integration tests
+pnpm test src/core/turn/TurnService.stats.spec.ts
 
 # Watch mode for development
 pnpm test:watch
