@@ -61,6 +61,10 @@ town-econ/
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
 │   │   ├── validation.ts # Data validation system
+│   │   ├── trade/        # Trade system types and error handling
+│   │   │   ├── TradeTypes.ts # Trade request/response interfaces
+│   │   │   ├── TradeErrors.ts # Trade validation and execution errors
+│   │   │   └── index.ts # Trade system exports
 │   │   └── turn/         # Turn-based game progression system
 │   │       ├── TurnPhase.ts # Game turn phase definitions
 │   │       ├── TurnController.ts # Turn orchestration and phase sequencing
@@ -148,6 +152,30 @@ A comprehensive set of immutable state manipulation functions for the town econo
 - **Validation**: Comprehensive validation ensures treasury values are always ≥0
 - **Seed Data**: Initial towns configured with balanced treasury values (500-1500 range)
 - **Future Ready**: Foundation for buying/selling mechanics and economic simulation
+
+### Trade System (`src/core/trade/`)
+
+A comprehensive trade system foundation with type-safe interfaces and error handling:
+
+#### Trade Types
+
+- **`TradeSide`**: Union type for `'buy' | 'sell'` transactions
+- **`TradeRequest`**: Complete trade request interface with town IDs, goods, quantity, side, and pricing
+- **`TradeResult`**: Trade execution result with updated state, town deltas, and applied unit price
+
+#### Trade Error Handling
+
+- **`TradeValidationError`**: Validation failures with precise path identification for debugging
+- **`TradeExecutionError`**: Runtime trade execution failures with optional cause chaining
+- **Type Safety**: All errors extend base Error class with proper TypeScript support
+
+#### Key Features
+
+- **Type-Safe Interfaces**: Full TypeScript support with no `any` types
+- **Precise Error Reporting**: Path-based validation errors for easy debugging
+- **Immutable Design**: Trade results return new game state without modifying originals
+- **Future Ready**: Foundation for complete trade execution and validation logic
+- **Export Ready**: All types and errors exported through barrel exports for easy importing
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
