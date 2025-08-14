@@ -17,8 +17,6 @@ export interface StatsUpdateOptions {
   fuzz?: FuzzOptions;
 }
 
-// Test comment for pre-commit hook
-
 /**
  * Creates a stats update system that applies raw stat updates followed by reveal updates
  *
