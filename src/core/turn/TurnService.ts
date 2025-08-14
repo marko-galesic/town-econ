@@ -1,6 +1,6 @@
 import type { GameState } from '../../types/GameState';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
+import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -40,7 +40,10 @@ export function createTurnController(
   const pipeline = new UpdatePipeline();
 
   // Register the stats update system with default options
-  const statsSystem = createStatsUpdateSystem({ raw: { prosperityDecayPerTurn: 1 }, revealInterval: 2 }, s => s.rngSeed);
+  const statsSystem = createStatsUpdateSystem(
+    { raw: { prosperityDecayPerTurn: 1 }, revealInterval: 2 },
+    s => s.rngSeed,
+  );
   console.log('Created stats system:', typeof statsSystem);
   pipeline.register(statsSystem);
   console.log('Pipeline system count after registration:', pipeline.systemCount);

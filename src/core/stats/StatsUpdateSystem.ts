@@ -48,7 +48,10 @@ export function createStatsUpdateSystem(
     console.log('Using seed:', seed);
 
     const s2 = applyRevealPass(s1, seed, policy);
-    console.log('After reveal pass - town 0 lastUpdatedTurn:', s2.towns[0]?.revealed.lastUpdatedTurn);
+    console.log(
+      'After reveal pass - town 0 lastUpdatedTurn:',
+      s2.towns[0]?.revealed.lastUpdatedTurn,
+    );
 
     return s2;
   };

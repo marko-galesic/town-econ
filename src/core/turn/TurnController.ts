@@ -215,7 +215,10 @@ export class TurnController {
     console.log('After pipeline run - towns count:', s2.towns.length);
     if (s2.towns.length > 0) {
       console.log('After pipeline run - town 0 prosperity:', s2.towns[0]!.prosperityRaw);
-      console.log('After pipeline run - town 0 lastUpdatedTurn:', s2.towns[0]!.revealed.lastUpdatedTurn);
+      console.log(
+        'After pipeline run - town 0 lastUpdatedTurn:',
+        s2.towns[0]!.revealed.lastUpdatedTurn,
+      );
     }
 
     this.onPhase?.(TurnPhase.UpdateStats, { ran: this.updatePipeline.systemCount });

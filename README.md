@@ -674,18 +674,21 @@ const result = await controller.runTurn(gameState);
 ```
 
 **Default Configuration:**
+
 - **Prosperity Decay**: 1 point per turn (clamped at 0)
 - **Reveal Interval**: Every 2 turns
 - **Fuzzy Logic**: 20% jitter probability for tier reveals
 - **Deterministic**: Uses game state's `rngSeed` for reproducible results
 
 **Custom Configuration:**
+
 ```typescript
 // The factory can be extended to accept custom stats configuration
 // For now, it uses sensible defaults that work well for most games
 ```
 
 **Benefits:**
+
 - **Zero Configuration**: Works out of the box with sensible defaults
 - **Automatic Execution**: Stats updated every turn without manual intervention
 - **Game Balance**: Built-in decay prevents runaway prosperity inflation
