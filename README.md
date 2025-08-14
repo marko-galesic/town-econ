@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 258 tests passing)
+- `pnpm test` - Run test suite once (✅ 266 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -153,6 +153,9 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Turn Incrementation**: Automatically advances turn counter at start of each turn
 - **Update Pipeline Integration**: Pluggable system for UpdateStats phase modifications
 - **End Phase Summary**: Emits turn completion details with current turn number
+- **Atomic Execution**: Guaranteed atomic turn execution - either completes fully or fails cleanly
+- **Error Handling**: Comprehensive error handling with `TurnPhaseError` for precise phase failure reporting
+- **State Preservation**: Original input state preserved on failure due to immutability assumption
 
 #### Player Action System
 
@@ -182,6 +185,9 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Comprehensive Testing**: Full test coverage for turn system and queue operations
 - **Pluggable Update Systems**: Extensible pipeline for production, pricing, and tier updates
 - **Phase Summaries**: Rich phase details including system counts and turn information
+- **Atomic Turn Execution**: Complete turn execution or complete rollback - no partial state updates
+- **Precise Error Reporting**: `TurnPhaseError` identifies exact phase where failure occurred
+- **Robust Error Recovery**: Original game state preserved on any phase failure
 
 ## 🔧 Development Workflow
 
@@ -210,6 +216,48 @@ docs: update API documentation
 test: add comprehensive test suite for stateApi (113 tests)
 ```
 
+## 🛡️ Error Handling & Reliability
+
+### Atomic Turn Execution
+
+The turn system guarantees **atomic execution** - either a complete turn executes successfully, or it fails cleanly with the original state preserved:
+
+- **No Partial Updates**: If any phase fails, the entire turn is rolled back
+- **State Preservation**: Original input state remains unchanged on failure
+- **Precise Error Reporting**: `TurnPhaseError` identifies exactly which phase failed
+- **Immutability Assumption**: Relies on immutable state design for safe rollback
+
+### TurnPhaseError
+
+```typescript
+class TurnPhaseError extends Error {
+  constructor(
+    public readonly phase: TurnPhase,
+    public override readonly cause: unknown
+  )
+}
+```
+
+**Usage Example:**
+```typescript
+try {
+  const result = await turnController.runTurn(gameState);
+  // Turn completed successfully
+} catch (error) {
+  if (error instanceof TurnPhaseError) {
+    console.log(`Turn failed during ${error.phase}: ${error.cause}`);
+    // Original gameState is unchanged and safe to retry
+  }
+}
+```
+
+### Error Recovery Strategies
+
+- **Immediate Retry**: Safe to retry with same state after fixing the underlying issue
+- **Phase-Specific Handling**: Different recovery logic based on which phase failed
+- **State Inspection**: Original state available for debugging and recovery decisions
+- **Logging Integration**: Phase information available for comprehensive error tracking
+
 ## 🎯 TypeScript Configuration
 
 ### Strict Mode Enabled
@@ -233,13 +281,15 @@ test: add comprehensive test suite for stateApi (113 tests)
 
 ### Comprehensive Test Suite
 
-- **258 Tests**: Covering all core systems including state API, turn management, queue operations, and update pipeline
+- **266 Tests**: Covering all core systems including state API, turn management, queue operations, and update pipeline
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
 - **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
 - **Update Pipeline Tests**: Full coverage of pluggable update system functionality
 - **Phase Detail Tests**: Verification of phase hook data including system counts and turn summaries
+- **Error Handling Tests**: Full coverage of atomic turn execution and phase error reporting
+- **Phase Order Tests**: Verification of deterministic phase sequencing and logging
 
 ### Running Tests
 
@@ -258,6 +308,12 @@ pnpm test src/core/turn/TurnController.start.spec.ts
 pnpm test src/core/turn/TurnController.player.spec.ts
 pnpm test src/core/turn/TurnController.update.spec.ts
 pnpm test src/core/turn/TurnController.end.spec.ts
+
+# Run error handling tests
+pnpm test src/core/turn/TurnController.error.spec.ts
+
+# Run phase order tests
+pnpm test src/core/turn/TurnController.order.spec.ts
 
 # Run update pipeline tests
 pnpm test src/core/turn/UpdatePipeline.spec.ts
@@ -363,6 +419,8 @@ pnpm coverage
 - **Turn System Integration**: New game mechanics should integrate with the turn-based progression system
 - **Observer Pattern**: Use the existing `onPhase` hooks for extensibility and monitoring
 - **Phase Safety**: All turn phases should be safe no-ops initially, ready for future implementation
+- **Error Handling**: Implement atomic operations with proper error reporting using `TurnPhaseError`
+- **State Consistency**: Ensure no partial state updates - operations must be all-or-nothing
 
 ## 📄 License
 

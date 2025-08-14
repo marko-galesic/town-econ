@@ -2,6 +2,7 @@ import type { GameState } from '../../types/GameState';
 import { advanceTurn } from '../stateApi';
 
 import type { PlayerActionQueue } from './PlayerActionQueue';
+import { TurnPhaseError } from './TurnErrors';
 import { TurnPhase } from './TurnPhase';
 import type { UpdatePipeline } from './UpdatePipeline';
 
@@ -53,33 +54,60 @@ export class TurnController {
   /**
    * Runs a complete game turn, executing all phases in sequence.
    *
+   * This method is atomic: if any phase fails, the original input state is preserved
+   * and a TurnPhaseError is thrown with information about which phase failed.
+   *
+   * Note: This method assumes immutability - it does not mutate the input state.
+   * All state modifications are performed through the individual phase methods.
+   *
    * @param state - The current game state
    * @returns Promise resolving to the turn result with updated state and phase log
+   * @throws TurnPhaseError if any phase fails during execution
    */
   async runTurn(state: GameState): Promise<TurnResult> {
     const phaseLog: TurnPhase[] = [];
 
-    // Execute phases in order
-    let currentState = await this.startTurn(state);
-    phaseLog.push(TurnPhase.Start);
-    this.onPhase?.(TurnPhase.Start);
+    try {
+      // Execute phases in order
+      let currentState = await this.startTurn(state);
+      phaseLog.push(TurnPhase.Start);
+      this.onPhase?.(TurnPhase.Start);
 
-    currentState = await this.playerAction(currentState);
-    phaseLog.push(TurnPhase.PlayerAction);
+      currentState = await this.playerAction(currentState);
+      phaseLog.push(TurnPhase.PlayerAction);
 
-    currentState = await this.aiActions(currentState);
-    phaseLog.push(TurnPhase.AiActions);
+      currentState = await this.aiActions(currentState);
+      phaseLog.push(TurnPhase.AiActions);
 
-    currentState = await this.updateStats(currentState);
-    phaseLog.push(TurnPhase.UpdateStats);
+      currentState = await this.updateStats(currentState);
+      phaseLog.push(TurnPhase.UpdateStats);
 
-    currentState = await this.endTurn(currentState);
-    phaseLog.push(TurnPhase.End);
+      currentState = await this.endTurn(currentState);
+      phaseLog.push(TurnPhase.End);
 
-    return {
-      state: currentState,
-      phaseLog,
-    };
+      return {
+        state: currentState,
+        phaseLog,
+      };
+    } catch (error) {
+      // If any phase fails, throw a TurnPhaseError with phase context
+      // The original state remains unchanged due to immutability assumption
+      // Determine which phase failed based on the phase log length
+      let failedPhase: TurnPhase;
+      if (phaseLog.length === 0) {
+        failedPhase = TurnPhase.Start;
+      } else if (phaseLog.length === 1) {
+        failedPhase = TurnPhase.PlayerAction;
+      } else if (phaseLog.length === 2) {
+        failedPhase = TurnPhase.AiActions;
+      } else if (phaseLog.length === 3) {
+        failedPhase = TurnPhase.UpdateStats;
+      } else {
+        failedPhase = TurnPhase.End;
+      }
+
+      throw new TurnPhaseError(failedPhase, error);
+    }
   }
 
   /**
