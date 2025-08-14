@@ -1,4 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname "$0")/_/h"
 
+# Run lint-staged to fix and format staged files
 npx lint-staged
+
+# Run type check to ensure no TypeScript errors
+pnpm typecheck

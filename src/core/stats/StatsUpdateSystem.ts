@@ -17,6 +17,8 @@ export interface StatsUpdateOptions {
   fuzz?: FuzzOptions;
 }
 
+// Test comment for pre-commit hook
+
 /**
  * Creates a stats update system that applies raw stat updates followed by reveal updates
  *
@@ -24,13 +26,14 @@ export interface StatsUpdateOptions {
  * @param seedAccessor - Optional function to extract seed from game state (defaults to rngSeed)
  * @returns A function that can be registered with UpdatePipeline
  */
+/* eslint-disable no-unused-vars */
 export function createStatsUpdateSystem(
   _opts?: StatsUpdateOptions,
-  _seedAccessor?: (gameState: GameState) => string,
-): (gameState: GameState) => GameState {
-  return (gameState: GameState) => {
+  _seedAccessor?: (_gameState: GameState) => string,
+): (_gameState: GameState) => GameState {
+  return (_gameState: GameState) => {
     // Step 1: Apply raw stat updates (decay, etc.)
-    const s1 = applyRawStatTurn(gameState, { ...DEFAULT_RAW_RULES, ..._opts?.raw });
+    const s1 = applyRawStatTurn(_gameState, { ...DEFAULT_RAW_RULES, ..._opts?.raw });
 
     // Step 2: Apply reveal pass with configured interval
     const policy: RevealPolicy = {
@@ -45,3 +48,4 @@ export function createStatsUpdateSystem(
     return s2;
   };
 }
+/* eslint-enable no-unused-vars */
