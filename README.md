@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 914 tests passing)
+- `pnpm test` - Run test suite once (✅ 934 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -109,9 +109,11 @@ town-econ/
 │   │       ├── FuzzyTier.example.ts # Usage examples and demonstrations
 │   │       ├── RevealCadence.ts # Tier reveal cadence management system
 │   │       ├── RevealCadence.spec.ts # Reveal cadence test suite
+│   │       ├── RevealSystem.ts # Town tier reveal system with fuzzy logic
+│   │       ├── RevealSystem.spec.ts # Reveal system test suite (10 tests)
 │   │       ├── RawStatSystem.ts # Per-turn raw stat update system
 │   │       ├── RawStatSystem.spec.ts # Raw stat system test suite (11 tests)
-│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RawStatSystem)
+│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RevealSystem, RawStatSystem)
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -284,6 +286,58 @@ if (isRevealDue(currentTurn, lastRevealedTurn, DEFAULT_REVEAL_POLICY)) {
 - **Global Policy**: Single cadence policy for all tier reveals (extensible to per-stat policies)
 - **Initial Reveal**: Always reveals on turn 0 for new games
 - **100% Test Coverage**: Comprehensive test suite covering all scenarios and edge cases
+
+### Town Tier Reveal System (`src/core/stats/RevealSystem.ts`)
+
+A comprehensive system that applies fuzzy tier reveals to towns only when due according to the reveal policy:
+
+#### Core Components
+
+- **`applyRevealPass(state, seed, policy?)`**: Main function that updates town revealed tiers when due
+- **Fuzzy Tier Integration**: Uses `fuzzyTierFor()` for deterministic but varied tier assignments
+- **Cadence Management**: Integrates with `RevealCadence` system for timing control
+- **Immutable Updates**: Returns new game state without modifying originals
+
+#### Usage Example
+
+```typescript
+import { applyRevealPass, DEFAULT_REVEAL_POLICY } from './core/stats';
+
+// Apply reveal pass with default policy (every 2 turns)
+const updatedState = applyRevealPass(gameState, 'game-session-123');
+
+// Apply with custom reveal policy
+const customPolicy = { interval: 3 }; // Reveal every 3 turns
+const customUpdatedState = applyRevealPass(gameState, 'game-session-123', customPolicy);
+```
+
+#### Key Features
+
+- **Conditional Updates**: Only updates `town.revealed.{militaryTier, prosperityTier, lastUpdatedTurn}` when due
+- **Fuzzy Logic**: Uses deterministic fuzzy tier mapping for varied but predictable results
+- **Cadence Respect**: Follows reveal policy to control update frequency
+- **Deterministic**: Same (seed, town, turn) always produces same results
+- **Multi-Town Support**: Processes all towns independently with individual timing
+- **Policy Flexibility**: Supports custom reveal intervals beyond default 2-turn cadence
+- **100% Test Coverage**: Comprehensive test suite covering all scenarios and edge cases
+- **Integration Ready**: Designed to work with UpdatePipeline and TurnController systems
+
+#### Reveal Logic
+
+The system implements the following logic for each town:
+
+1. **Check Timing**: Uses `isRevealDue()` to determine if reveal is due
+2. **Skip if Not Due**: Towns not due for reveal remain unchanged
+3. **Apply Fuzzy Tiers**: When due, generates new military and prosperity tiers using `fuzzyTierFor()`
+4. **Update Timestamp**: Sets `lastUpdatedTurn` to current turn number
+5. **Preserve Other Data**: All other town properties remain unchanged
+
+#### Integration with Game Systems
+
+- **UpdatePipeline Ready**: Can be registered as an update system for automatic execution
+- **Turn-Based**: Designed to work with the turn progression system
+- **State Immutability**: Maintains the project's immutable state design principles
+- **Deterministic Seeds**: Uses game state's RNG seed for reproducible results
 
 ### Raw Stat Turn Update System (`src/core/stats/RawStatSystem.ts`)
 
