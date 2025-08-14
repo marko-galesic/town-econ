@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once
+- `pnpm test` - Run test suite once (✅ 247 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -67,6 +67,8 @@ town-econ/
 │   │       ├── PlayerAction.ts # Player action type definitions
 │   │       ├── PlayerActionQueue.ts # Action queue management
 │   │       ├── TurnController.skeleton.spec.ts # Turn system tests
+│   │       ├── TurnController.start.spec.ts # Turn start phase tests
+│   │       ├── TurnController.player.spec.ts # Player action phase tests
 │   │       └── PlayerActionQueue.spec.ts # Queue functionality tests
 │   ├── types/            # TypeScript type definitions
 │   │   ├── GameState.ts  # Main game state interface
@@ -143,6 +145,8 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Phase Orchestration**: Enforces strict phase order and execution
 - **Action Processing**: Consumes player actions from queue during player phase
 - **State Management**: Returns updated game state with phase execution log
+- **Observer Hooks**: Optional `onPhase` callback for monitoring phase execution
+- **Turn Incrementation**: Automatically advances turn counter at start of each turn
 
 #### Player Action System
 
@@ -157,6 +161,8 @@ A comprehensive turn management system that orchestrates game progression throug
 - **Action Queue Integration**: Player actions processed one per turn
 - **Immutable Design**: Maintains state immutability principles
 - **Async Ready**: All phase methods async for future logic implementation
+- **Observer System**: Comprehensive phase monitoring with extensible hooks
+- **Safe No-Op Implementation**: All phases safely implemented with future extensibility
 - **Comprehensive Testing**: Full test coverage for turn system and queue operations
 
 ## 🔧 Development Workflow
@@ -209,10 +215,11 @@ test: add comprehensive test suite for stateApi (113 tests)
 
 ### Comprehensive Test Suite
 
-- **240 Tests**: Covering all core systems including state API, turn management, and queue operations
+- **247 Tests**: Covering all core systems including state API, turn management, and queue operations
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
+- **Turn System Tests**: Comprehensive coverage of all turn phases and player actions
 
 ### Running Tests
 
@@ -225,6 +232,10 @@ pnpm test src/core/stateApi.spec.ts
 
 # Run turn system tests
 pnpm test src/core/turn/
+
+# Run specific turn phase tests
+pnpm test src/core/turn/TurnController.start.spec.ts
+pnpm test src/core/turn/TurnController.player.spec.ts
 
 # Watch mode for development
 pnpm test:watch
@@ -325,6 +336,8 @@ pnpm coverage
 - **Type Safety**: Full TypeScript compliance with strict mode
 - **Immutability**: State manipulation functions must be pure and immutable
 - **Turn System Integration**: New game mechanics should integrate with the turn-based progression system
+- **Observer Pattern**: Use the existing `onPhase` hooks for extensibility and monitoring
+- **Phase Safety**: All turn phases should be safe no-ops initially, ready for future implementation
 
 ## 📄 License
 

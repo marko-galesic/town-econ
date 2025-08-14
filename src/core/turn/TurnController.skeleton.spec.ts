@@ -12,7 +12,7 @@ describe('TurnController', () => {
 
   beforeEach(() => {
     playerQueue = new PlayerActionQueue();
-    controller = new TurnController(playerQueue);
+    controller = new TurnController(playerQueue, {});
   });
 
   describe('runTurn', () => {
@@ -79,10 +79,13 @@ describe('TurnController', () => {
 
       const result = await controller.runTurn(mockState);
 
-      // For now, we allow the same reference since no logic is implemented yet
-      // This documents our current choice and can be updated when state modifications are added
-      expect(result.state).toBe(mockState);
-      expect(result.state).toEqual(mockState);
+      // State is now modified (turn is incremented) so we expect a new object
+      expect(result.state).not.toBe(mockState);
+      expect(result.state.turn).toBe(1);
+      expect(result.state.version).toBe(mockState.version);
+      expect(result.state.rngSeed).toBe(mockState.rngSeed);
+      expect(result.state.towns).toEqual(mockState.towns);
+      expect(result.state.goods).toEqual(mockState.goods);
     });
 
     it('should execute phases in the correct order', async () => {

@@ -1,7 +1,7 @@
 import type { GameState } from '../../types/GameState';
+import { advanceTurn } from '../stateApi';
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-import { PlayerActionQueue } from './PlayerActionQueue';
+import type { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnPhase } from './TurnPhase';
 
 /**
@@ -16,6 +16,15 @@ export interface TurnResult {
 }
 
 /**
+ * Options for configuring the TurnController
+ */
+export interface TurnControllerOptions {
+  /** Optional callback for observing phase execution */
+  // eslint-disable-next-line no-unused-vars
+  onPhase?: (phase: TurnPhase, detail?: unknown) => void;
+}
+
+/**
  * Controls the execution of game turns, orchestrating the sequence of phases.
  * For now, phases are executed in sequence without logic - they return the same state.
  *
@@ -23,11 +32,15 @@ export interface TurnResult {
  * this may be changed to return shallow copies when state modifications are implemented.
  */
 export class TurnController {
-  constructor(private readonly playerQ: PlayerActionQueue) {
+  // eslint-disable-next-line no-unused-vars
+  private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
+
+  constructor(private readonly playerQ: PlayerActionQueue, options?: TurnControllerOptions) {
     // Ensure the queue is properly initialized
     if (!playerQ) {
       throw new Error('PlayerActionQueue is required');
     }
+    this.onPhase = options?.onPhase || undefined;
   }
   /**
    * Runs a complete game turn, executing all phases in sequence.
@@ -41,6 +54,7 @@ export class TurnController {
     // Execute phases in order
     let currentState = await this.startTurn(state);
     phaseLog.push(TurnPhase.Start);
+    this.onPhase?.(TurnPhase.Start);
 
     currentState = await this.playerAction(currentState);
     phaseLog.push(TurnPhase.PlayerAction);
@@ -50,9 +64,11 @@ export class TurnController {
 
     currentState = await this.updateStats(currentState);
     phaseLog.push(TurnPhase.UpdateStats);
+    this.onPhase?.(TurnPhase.UpdateStats);
 
     currentState = await this.endTurn(currentState);
     phaseLog.push(TurnPhase.End);
+    this.onPhase?.(TurnPhase.End);
 
     return {
       state: currentState,
@@ -61,12 +77,12 @@ export class TurnController {
   }
 
   /**
-   * Start of turn phase - currently no logic implemented.
+   * Start of turn phase - increments the turn counter.
    * @param s - Current game state
-   * @returns Same game state (no changes yet)
+   * @returns Game state with turn incremented by 1
    */
   private async startTurn(s: GameState): Promise<GameState> {
-    return s;
+    return advanceTurn(s);
   }
 
   /**
@@ -79,12 +95,17 @@ export class TurnController {
     // Consume one action from the queue, or synthesize 'none' if empty
     const action = this.playerQ.dequeue() ?? { type: 'none' as const };
 
-    // TODO: Process the action based on its type
-    // For now, just return the same state
-    // Log the action for debugging (will be removed when logic is implemented)
-    console.log('Processing player action:', action.type);
+    // Notify observer of the phase execution
+    this.onPhase?.(TurnPhase.PlayerAction, action);
 
-    return s;
+    // Process the action based on its type
+    switch (action.type) {
+      case 'none':
+      case 'trade':
+      default:
+        // For now, no state changes - just return the same state
+        return s;
+    }
   }
 
   /**
@@ -93,6 +114,8 @@ export class TurnController {
    * @returns Same game state (no changes yet)
    */
   private async aiActions(s: GameState): Promise<GameState> {
+    const detail = { decided: false };
+    this.onPhase?.(TurnPhase.AiActions, detail);
     return s;
   }
 
