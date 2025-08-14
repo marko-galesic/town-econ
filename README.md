@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 415 tests passing)
+- `pnpm test` - Run test suite once (✅ 425 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -103,7 +103,10 @@ town-econ/
 │   ├── core/
 │   │   └── stats/        # Statistics and tier mapping utilities
 │   │       ├── TierMap.ts # Tier mapping functions and interfaces
-│   │       └── TierMap.spec.ts # Tier mapping test suite
+│   │       ├── TierMap.spec.ts # Tier mapping test suite
+│   │       ├── RevealCadence.ts # Tier reveal cadence management system
+│   │       ├── RevealCadence.spec.ts # Reveal cadence test suite
+│   │       └── index.ts # Stats module exports
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -192,6 +195,38 @@ A data-driven system for mapping raw stat values to tier classifications:
 - **Robust Handling**: Works with unsorted thresholds, edge cases, and boundary values
 - **Performance**: Efficient O(n log n) sorting + O(n) lookup
 - **100% Coverage**: Comprehensive test suite with edge case coverage
+
+### Tier Reveal Cadence System (`src/core/stats/RevealCadence.ts`)
+
+A configurable system for managing when tier information is revealed to players, adding strategic fuzziness to the game:
+
+#### Core Components
+
+- **`RevealPolicy` Interface**: Configurable interval for tier reveals (e.g., every 2 turns)
+- **`DEFAULT_REVEAL_POLICY`**: Default policy of revealing every 2 turns
+- **`isRevealDue(currentTurn, lastUpdatedTurn, policy)`**: Determines if tiers should be revealed
+- **`markRevealed(now)`**: Helper function for tracking when tiers were last revealed
+
+#### Usage Example
+
+```typescript
+import { isRevealDue, markRevealed, DEFAULT_REVEAL_POLICY } from './core/stats';
+
+// Check if it's time to reveal updated tier information
+if (isRevealDue(currentTurn, lastRevealedTurn, DEFAULT_REVEAL_POLICY)) {
+  // Update revealed tiers
+  lastRevealedTurn = markRevealed(currentTurn);
+}
+```
+
+#### Key Features
+
+- **Configurable Cadence**: Support for any interval (1, 2, 3, 5+ turns)
+- **Strategic Fuzziness**: Players don't see tier changes every turn, adding uncertainty
+- **Deterministic Logic**: Pure functions with predictable behavior
+- **Global Policy**: Single cadence policy for all tier reveals (extensible to per-stat policies)
+- **Initial Reveal**: Always reveals on turn 0 for new games
+- **100% Test Coverage**: Comprehensive test suite covering all scenarios and edge cases
 
 ### Trade Limits & Runaway State Prevention
 
