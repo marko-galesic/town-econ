@@ -4,3 +4,4 @@ export * from './PriceModel';
 export * from './PriceModel.example';
 export * from './TradeExecutor';
 export * from './PriceAdjustment';
+export * from './TradeService';

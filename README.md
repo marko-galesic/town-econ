@@ -227,6 +227,41 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Immutable**: Returns new town instances with updated prices, preserving original state
 - **Per-Trade Adjustment**: Price changes once per trade call, regardless of quantity
 
+#### Trade Service
+
+The **TradeService** provides a unified entry point for performing complete trade transactions:
+
+```typescript
+import { performTrade } from './src/core/trade';
+
+// Single call performs validation, execution, and price updates
+const result = await performTrade(
+  gameState, // Current game state
+  tradeRequest, // Trade request to process
+  priceModel, // Price model for post-trade adjustments
+  goods, // Goods configuration
+);
+
+// Result includes final state with price adjustments and town deltas
+const { state, deltas, unitPriceApplied } = result;
+```
+
+**Key Benefits:**
+
+- **Single Entry Point**: One method call handles the complete trade lifecycle
+- **Composition Pattern**: Orchestrates validation → execution → pricing in sequence
+- **Immutability Preserved**: Original state unchanged, returns new state instance
+- **Consistent Results**: Deltas and final state are always consistent
+- **Error Propagation**: TradeValidationError properly propagated from validation step
+- **Ready for Integration**: Perfect for TurnController and UI components
+
+**Implementation Details:**
+
+- **Step 1**: Validates trade request using `validateTrade()`
+- **Step 2**: Executes trade using `executeTrade()` for goods/currency movement
+- **Step 3**: Applies price adjustments using `applyPostTradePricing()`
+- **Returns**: Complete `TradeResult` with final state and deltas
+
 #### Key Features
 
 - **Type-Safe Interfaces**: Full TypeScript support with no `any` types
@@ -239,6 +274,7 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Comprehensive Coverage**: 51 tests covering validation, execution, and price adjustment scenarios
 - **Production Ready**: Complete trade system ready for game integration
 - **Export Ready**: All types, errors, validators, executors, and price models exported through barrel exports for easy importing
+- **Unified Service**: TradeService composes all trade operations into single callable unit
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
