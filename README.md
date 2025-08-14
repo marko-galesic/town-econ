@@ -104,9 +104,12 @@ town-econ/
 │   │   └── stats/        # Statistics and tier mapping utilities
 │   │       ├── TierMap.ts # Tier mapping functions and interfaces
 │   │       ├── TierMap.spec.ts # Tier mapping test suite
+│   │       ├── FuzzyTier.ts # Fuzzy tier mapping with deterministic jitter
+│   │       ├── FuzzyTier.spec.ts # Fuzzy tier test suite (15 tests)
+│   │       ├── FuzzyTier.example.ts # Usage examples and demonstrations
 │   │       ├── RevealCadence.ts # Tier reveal cadence management system
 │   │       ├── RevealCadence.spec.ts # Reveal cadence test suite
-│   │       └── index.ts # Stats module exports
+│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence)
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -195,6 +198,58 @@ A data-driven system for mapping raw stat values to tier classifications:
 - **Robust Handling**: Works with unsorted thresholds, edge cases, and boundary values
 - **Performance**: Efficient O(n log n) sorting + O(n) lookup
 - **100% Coverage**: Comprehensive test suite with edge case coverage
+
+### Fuzzy Tier System (`src/core/stats/FuzzyTier.ts`)
+
+A deterministic fuzzy tier mapping system that adds controlled randomness to tier reveals while maintaining game balance:
+
+#### Core Components
+
+- **`FuzzOptions` Interface**: Configurable jitter probability (defaults to 0.2)
+- **`seededRand(seedString)`**: Deterministic PRNG using xorshift32 algorithm
+- **`fuzzyTierFor(raw, thresholds, seed, townId, turn, opts?)`**: Maps raw values to fuzzy tiers with bounded jitter
+
+#### Fuzzy Tier Behavior
+
+- **True Tier Preference**: By default, 80% chance to show the actual tier
+- **Bounded Jitter**: 20% chance to show ±1 tier from true tier (never more than 1 step)
+- **Edge Safety**: First/last tiers are clamped to stay within bounds
+- **Deterministic**: Same (seed, townId, turn) always yields same fuzzy tier
+
+#### Usage Example
+
+```typescript
+import { fuzzyTierFor, DEFAULT_FUZZ } from './src/core/stats';
+
+// Get fuzzy tier with default 20% jitter probability
+const fuzzyTier = fuzzyTierFor(
+  rawValue, // e.g., 35
+  prosperityThresholds, // tier thresholds array
+  'game-session-123', // rng seed
+  'riverdale', // town ID
+  10, // turn number
+);
+
+// Custom jitter probability
+const customFuzzyTier = fuzzyTierFor(
+  rawValue,
+  prosperityThresholds,
+  'game-session-123',
+  'riverdale',
+  10,
+  { jitterProb: 0.5 }, // 50% chance to jitter
+);
+```
+
+#### Key Features
+
+- **Deterministic Randomness**: Uses seeded PRNG for reproducible results
+- **Configurable Probability**: Default 20% jitter, customizable via `FuzzOptions`
+- **Bounded Jitter**: Never jumps more than ±1 step from true tier
+- **Edge-Safe**: First/last tiers clamped to stay within bounds
+- **Tiny PRNG**: Lightweight xorshift32 algorithm for performance
+- **Town/Turn Specific**: Different fuzzy tiers for different towns and turns
+- **Production Ready**: Comprehensive test suite with 98% code coverage
 
 ### Tier Reveal Cadence System (`src/core/stats/RevealCadence.ts`)
 
@@ -605,7 +660,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **415 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, and **tier mapping system**
+- **430 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, and **fuzzy tier system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -649,6 +704,11 @@ pnpm test src/core/trade/TradeExecutor.limits.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
+
+# Run fuzzy tier tests
+pnpm test src/core/stats/FuzzyTier.spec.ts
+
+# Run tier thresholds data tests
 pnpm test src/data/tierThresholds.spec.ts
 
 # Run error handling tests
