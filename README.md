@@ -61,9 +61,11 @@ town-econ/
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
 │   │   ├── validation.ts # Data validation system
-│   │   ├── trade/        # Trade system types, error handling, and price modeling
+│   │   ├── trade/        # Trade system types, error handling, validation, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
 │   │   │   ├── TradeErrors.ts # Trade validation and execution errors
+│   │   │   ├── TradeValidator.ts # Pure trade validation with precise error paths
+│   │   │   ├── TradeValidator.spec.ts # Trade validation test suite (34 tests)
 │   │   │   ├── PriceModel.ts # Pluggable price model interface and implementation
 │   │   │   ├── PriceModel.spec.ts # Price model test suite (18 tests)
 │   │   │   ├── PriceModel.example.ts # Usage examples and documentation
@@ -167,13 +169,23 @@ A comprehensive set of immutable state manipulation functions for the town econo
 
 ### Trade System (`src/core/trade/`)
 
-A comprehensive trade system foundation with type-safe interfaces, error handling, and pluggable price modeling:
+A comprehensive trade system foundation with type-safe interfaces, error handling, validation, and pluggable price modeling:
 
 #### Trade Types
 
 - **`TradeSide`**: Union type for `'buy' | 'sell'` transactions
 - **`TradeRequest`**: Complete trade request interface with town IDs, goods, quantity, side, and pricing
 - **`TradeResult`**: Trade execution result with updated state, town deltas, and applied unit price
+
+#### Trade Validation System
+
+- **`TradeValidator`**: Pure, deterministic trade validation with comprehensive input checking
+- **`ValidatedTrade`**: Normalized, safe trade plan with resolved Town objects and validated values
+- **Input Validation**: Comprehensive validation of town IDs, good availability, quantity, affordability, and price sanity
+- **Precise Error Paths**: All validation errors include exact field paths (e.g., `towns[1].resources.ore`, `quantity`)
+- **Side-Specific Logic**: Different validation rules for buy vs sell transactions
+- **Stock & Treasury Checks**: Validates sufficient resources and currency for trade execution
+- **Price Sanity**: Ensures unit prices match counterparty's quoted prices
 
 #### Trade Error Handling
 
@@ -196,8 +208,10 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Precise Error Reporting**: Path-based validation errors for easy debugging
 - **Immutable Design**: Trade results return new game state without modifying originals
 - **Pluggable Pricing**: Easy to swap different price models for different economic strategies
+- **Pure Validation**: Deterministic validation function with no side effects
+- **Comprehensive Coverage**: 34 tests covering all validation scenarios and error cases
 - **Future Ready**: Foundation for complete trade execution and validation logic
-- **Export Ready**: All types, errors, and price models exported through barrel exports for easy importing
+- **Export Ready**: All types, errors, validators, and price models exported through barrel exports for easy importing
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
@@ -379,7 +393,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **301 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, and price modeling
+- **335 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, and trade validation
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
