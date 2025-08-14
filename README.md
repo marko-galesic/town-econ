@@ -61,11 +61,13 @@ town-econ/
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
 │   │   ├── validation.ts # Data validation system
-│   │   ├── trade/        # Trade system types, error handling, validation, and price modeling
+│   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
 │   │   │   ├── TradeErrors.ts # Trade validation and execution errors
 │   │   │   ├── TradeValidator.ts # Pure trade validation with precise error paths
 │   │   │   ├── TradeValidator.spec.ts # Trade validation test suite (34 tests)
+│   │   │   ├── TradeExecutor.ts # Trade execution with goods/currency movement and effects
+│   │   │   ├── TradeExecutor.spec.ts # Trade execution test suite (8 tests)
 │   │   │   ├── PriceModel.ts # Pluggable price model interface and implementation
 │   │   │   ├── PriceModel.spec.ts # Price model test suite (18 tests)
 │   │   │   ├── PriceModel.example.ts # Usage examples and documentation
@@ -193,6 +195,17 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **`TradeExecutionError`**: Runtime trade execution failures with optional cause chaining
 - **Type Safety**: All errors extend base Error class with proper TypeScript support
 
+#### Trade Execution System
+
+- **`executeTrade(state, validatedTrade, goods)`**: Executes validated trades with goods movement, currency transfer, and effect application
+- **Goods Movement**: Moves goods between towns based on trade side (buy/sell)
+- **Currency Transfer**: Updates town treasuries with trade costs
+- **Effect Application**: Applies prosperity and military effects from goods
+- **Prosperity Effects**: Both towns receive prosperity boosts (trade stimulates both economies)
+- **Military Effects**: Only buyer receives military benefits (buyer-only for gameplay leverage)
+- **Immutable Updates**: Returns new game state without modifying originals
+- **Comprehensive Deltas**: Returns detailed change information for both towns
+
 #### Price Model System
 
 - **`PriceModel` Interface**: Pluggable interface for price adjustment strategies
@@ -207,11 +220,13 @@ A comprehensive trade system foundation with type-safe interfaces, error handlin
 - **Type-Safe Interfaces**: Full TypeScript support with no `any` types
 - **Precise Error Reporting**: Path-based validation errors for easy debugging
 - **Immutable Design**: Trade results return new game state without modifying originals
+- **Complete Trade Flow**: Full trade lifecycle from validation to execution
+- **Effect Integration**: Goods effects automatically applied during trade execution
 - **Pluggable Pricing**: Easy to swap different price models for different economic strategies
 - **Pure Validation**: Deterministic validation function with no side effects
-- **Comprehensive Coverage**: 34 tests covering all validation scenarios and error cases
-- **Future Ready**: Foundation for complete trade execution and validation logic
-- **Export Ready**: All types, errors, validators, and price models exported through barrel exports for easy importing
+- **Comprehensive Coverage**: 42 tests covering validation and execution scenarios
+- **Production Ready**: Complete trade system ready for game integration
+- **Export Ready**: All types, errors, validators, executors, and price models exported through barrel exports for easy importing
 
 ### Turn-Based Game Progression (`src/core/turn/`)
 
@@ -393,7 +408,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **335 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, and trade validation
+- **343 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, and trade execution
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
