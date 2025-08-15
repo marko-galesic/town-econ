@@ -101,6 +101,12 @@ describe('AiEngine', () => {
       expect(result).toEqual({
         skipped: true,
         reason: 'no-candidate',
+        trace: {
+          aiTownId: 'ai-town',
+          mode: 'greedy',
+          candidateCount: 0,
+          reason: 'no-candidate',
+        },
       });
     });
 
@@ -122,7 +128,10 @@ describe('AiEngine', () => {
 
       vi.mocked(Market.snapshotMarket).mockReturnValue(mockMarket);
       vi.mocked(Candidates.generateCandidates).mockReturnValue(mockCandidates);
-      vi.mocked(Policy.chooseTrade).mockReturnValue(mockChosenQuote);
+      vi.mocked(Policy.chooseTrade).mockReturnValue({
+        quote: mockChosenQuote,
+        score: 25.0,
+      });
 
       const result = decideAiTrade(mockState, aiTownId, mockProfile, mockGoods, mockSeed);
 
@@ -136,6 +145,16 @@ describe('AiEngine', () => {
           pricePerUnit: 4.0,
         },
         reason: 'greedy',
+        trace: {
+          aiTownId: 'ai-town',
+          mode: 'greedy',
+          candidateCount: 1,
+          chosen: {
+            quote: mockChosenQuote,
+            score: 25.0,
+          },
+          reason: 'greedy',
+        },
       });
     });
 
@@ -172,7 +191,10 @@ describe('AiEngine', () => {
 
       vi.mocked(Market.snapshotMarket).mockReturnValue(mockMarket);
       vi.mocked(Candidates.generateCandidates).mockReturnValue(mockCandidates);
-      vi.mocked(Policy.chooseTrade).mockReturnValue(mockCandidates[0]);
+      vi.mocked(Policy.chooseTrade).mockReturnValue({
+        quote: mockCandidates[0]!,
+        score: 25.0,
+      });
 
       decideAiTrade(mockState, aiTownId, mockProfile, mockGoods, mockSeed);
 
@@ -206,7 +228,10 @@ describe('AiEngine', () => {
 
       vi.mocked(Market.snapshotMarket).mockReturnValue(mockMarket);
       vi.mocked(Candidates.generateCandidates).mockReturnValue(mockCandidates);
-      vi.mocked(Policy.chooseTrade).mockReturnValue(mockCandidates[0]);
+      vi.mocked(Policy.chooseTrade).mockReturnValue({
+        quote: mockCandidates[0]!,
+        score: 25.0,
+      });
 
       // Call multiple times with same seed
       const result1 = decideAiTrade(mockState, aiTownId, mockProfile, mockGoods, mockSeed);

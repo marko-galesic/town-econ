@@ -2,6 +2,7 @@ import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
 import type { TradeRequest } from '../trade/TradeTypes';
 
+import type { AiTrace } from './AiTelemetry';
 import type { AiProfile, AiDecision } from './AiTypes';
 import { generateCandidates } from './Candidates';
 import type { CooldownState } from './Cooldown';
@@ -60,17 +61,41 @@ export function decideAiTrade(
   }
 
   if (aiCandidates.length === 0) {
-    return { skipped: true, reason: 'no-candidate' };
+    const trace: AiTrace = {
+      aiTownId,
+      mode: profile.mode,
+      candidateCount: 0,
+      reason: 'no-candidate',
+    };
+    return { skipped: true, reason: 'no-candidate', trace };
   }
 
   const chosen = chooseTrade(profile, aiCandidates, goods, seed, aiTownId);
 
   if (!chosen) {
-    return { skipped: true, reason: 'no-candidate' };
+    const trace: AiTrace = {
+      aiTownId,
+      mode: profile.mode,
+      candidateCount: aiCandidates.length,
+      reason: 'no-candidate',
+    };
+    return { skipped: true, reason: 'no-candidate', trace };
   }
 
-  return {
-    request: quoteToTradeRequest(chosen),
+  const trace: AiTrace = {
+    aiTownId,
+    mode: profile.mode,
+    candidateCount: aiCandidates.length,
+    chosen: {
+      quote: chosen.quote,
+      ...(chosen.score !== undefined && { score: chosen.score }),
+    },
     reason: profile.mode,
+  };
+
+  return {
+    request: quoteToTradeRequest(chosen.quote),
+    reason: profile.mode,
+    trace,
   };
 }

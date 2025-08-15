@@ -1,5 +1,7 @@
 import type { TradeRequest } from '../trade/TradeTypes';
 
+import type { AiTrace } from './AiTelemetry';
+
 /**
  * Represents the AI behavior mode for decision making.
  */
@@ -38,4 +40,6 @@ export interface AiDecision {
   reason: string;
   /** Whether the AI chose to skip trading this turn */
   skipped?: boolean;
+  /** Telemetry data explaining the decision-making process */
+  trace: AiTrace;
 }

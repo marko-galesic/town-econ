@@ -143,7 +143,7 @@ describe('Policy', () => {
       });
 
       it('selection is deterministic for same parameters', () => {
-        const results: Quote[] = [];
+        const results: Array<{ quote: Quote }> = [];
         for (let i = 0; i < 5; i++) {
           results.push(
             chooseTrade(randomProfile, mockCandidates, mockGoods, 'stable-seed', 'stable-ai')!,
@@ -151,8 +151,8 @@ describe('Policy', () => {
         }
 
         // All results should be identical
-        const first = results[0];
-        results.forEach(result => expect(result).toEqual(first));
+        const first = results[0]!;
+        results.forEach(result => expect(result.quote).toEqual(first.quote));
       });
     });
 
@@ -181,7 +181,10 @@ describe('Policy', () => {
         const maxScore = Math.max(...scores);
         const maxScoreIndex = scores.indexOf(maxScore);
 
-        expect(result).toEqual(mockCandidates[maxScoreIndex]);
+        expect(result).toEqual({
+          quote: mockCandidates[maxScoreIndex],
+          score: maxScore,
+        });
       });
 
       it('maintains stable order for ties', () => {
@@ -209,15 +212,22 @@ describe('Policy', () => {
         const result2 = chooseTrade(greedyProfile, tiedCandidates, mockGoods, 'seed2', 'ai-town');
 
         // Should pick the first one (stable order) regardless of seed
-        expect(result1).toEqual(tiedCandidates[0]);
-        expect(result2).toEqual(tiedCandidates[0]);
+        expect(result1).toEqual({
+          quote: tiedCandidates[0],
+          score: 14.2,
+        });
+        expect(result2).toEqual({
+          quote: tiedCandidates[0],
+          score: 14.2,
+        });
       });
 
       it('ignores seed parameter in greedy mode', () => {
         const result1 = chooseTrade(greedyProfile, mockCandidates, mockGoods, 'seed1', 'ai-town');
         const result2 = chooseTrade(greedyProfile, mockCandidates, mockGoods, 'seed2', 'ai-town');
 
-        expect(result1).toEqual(result2);
+        expect(result1?.quote).toEqual(result2?.quote);
+        expect(result1?.score).toEqual(result2?.score);
       });
     });
 

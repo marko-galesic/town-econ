@@ -518,7 +518,7 @@ const result = await controller.runTurn(gameState);
 
 ### AI Configuration System (`src/core/ai/`)
 
-A flexible AI configuration and behavior profile system for guiding AI decision-making in the town economy simulation:
+A flexible AI configuration and behavior profile system for guiding AI decision-making in the town economy simulation, now with comprehensive telemetry for debugging and UI development:
 
 #### Core Components
 
@@ -696,6 +696,16 @@ clearExpiredCooldowns(cooldownState, currentTurn);
 - **AI Integration**: Seamlessly integrated into AI decision-making process
 - **Performance Optimized**: Minimal memory and CPU overhead
 
+**AI Telemetry System**:
+
+The **AiTelemetry module** provides comprehensive insight into AI decision-making processes:
+
+- **`AiTrace` Interface**: Complete telemetry data including AI town ID, mode, candidate count, chosen trade details, and reasoning
+- **Score Visibility**: Greedy AI includes trade scores, random AI doesn't (as intended)
+- **Candidate Analysis**: Shows how many trading opportunities were available
+- **Decision Reasoning**: Human-readable explanations for all AI decisions
+- **Phase Hook Integration**: Telemetry emitted via existing `onPhase` hook system
+
 **AI Engine System**:
 
 The **AiEngine module** provides the core AI decision-making logic that converts trade quotes into executable trade requests:
@@ -744,7 +754,7 @@ if (decision.skipped) {
 
 **AI Actions Phase Integration**:
 
-The **TurnController.aiActions phase** integrates AI decision-making into the turn system, allowing AI towns to execute trades automatically:
+The **TurnController.aiActions phase** integrates AI decision-making into the turn system, allowing AI towns to execute trades automatically with comprehensive telemetry:
 
 ```typescript
 // AI Actions phase processes each AI town independently
@@ -760,20 +770,22 @@ private async aiActions(s: GameState): Promise<GameState> {
       const tradeResult = await performTrade(currentState, decision.request, this.priceModel, this.goods);
       currentState = tradeResult.state;
 
-      // Emit phase details with trade results
+      // Emit phase details with trade results and telemetry
       this.onPhase?.(TurnPhase.AiActions, {
         townId: town.id,
         decision,
         tradeResult: {
           unitPriceApplied: tradeResult.unitPriceApplied,
           deltas: tradeResult.deltas,
-        }
+        },
+        trace: decision.trace, // Complete AI decision telemetry
       });
     } else {
       // AI decided to skip trading
       this.onPhase?.(TurnPhase.AiActions, {
         townId: town.id,
-        decision
+        decision,
+        trace: decision.trace, // Complete AI decision telemetry
       });
     }
   }
@@ -788,6 +800,10 @@ private async aiActions(s: GameState): Promise<GameState> {
 - **Trade Execution**: Successful decisions result in immediate trade execution via TradeService
 - **State Updates**: Game state is updated after each trade, affecting subsequent AI decisions
 - **Phase Hooks**: Detailed phase information is emitted for each AI action (trade or skip)
+- **Comprehensive Telemetry**: Every AI decision includes complete trace data for debugging and UI development
+- **Score Visibility**: Greedy AI shows trade scores, random AI doesn't (as intended)
+- **Candidate Analysis**: Telemetry shows how many trading opportunities were available
+- **Decision Reasoning**: Human-readable explanations for all AI decisions
 - **Error Handling**: Failed trades are logged but don't stop processing of other AI towns
 - **Profile Fallback**: Towns without profiles default to 'greedy' behavior
 - **Deterministic**: Fixed RNG seed ensures consistent AI behavior across identical game states
@@ -832,6 +848,10 @@ Comprehensive test suite covers all AI actions functionality:
 - **Deterministic Behavior**: Tests verify consistent results with fixed seeds
 - **Trade Execution**: Tests verify successful trade execution and state updates
 - **Skip Scenarios**: Tests verify AI properly skips when no profitable trades exist
+- **Telemetry System**: Tests verify complete trace data emission for all AI decisions
+- **Score Visibility**: Tests verify greedy AI includes scores while random AI doesn't
+- **Candidate Analysis**: Tests verify candidate count reporting in telemetry
+- **Decision Reasoning**: Tests verify human-readable reason strings in all telemetry data
 
 **Cooldown System**:
 
@@ -891,6 +911,7 @@ const decision3 = decideAiTrade(state, 'forestburg', profile, goods, seed, coold
 - **Profile Handling**: Tests verify different AI profiles produce expected behaviors
 - **Error Scenarios**: Tests verify graceful handling of missing profiles and failed trades
 - **Phase Details**: Tests verify proper emission of phase hook data
+- **Telemetry Integration**: Tests verify telemetry data is properly included in all phase hooks
 
 **Trade Candidate Generation System**:
 
@@ -1440,7 +1461,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1036 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, and **AI actions phase integration**
+- **1138 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, and **AI telemetry system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1493,6 +1514,9 @@ pnpm test src/core/ai/Policy.spec.ts
 
 # Run AI actions phase tests
 pnpm test src/core/turn/TurnController.ai.spec.ts
+
+# Run AI telemetry tests
+pnpm test src/core/ai/AiTelemetry.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts

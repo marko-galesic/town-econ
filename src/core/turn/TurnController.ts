@@ -214,11 +214,14 @@ export class TurnController {
     // Clear cooldowns that expired before this turn started
     clearExpiredCooldowns(this.cooldownState, s.turn - 1);
 
-    // If there are no AI towns, emit a simple phase hook and return
-    if (aiTowns.length === 0) {
-      this.onPhase?.(TurnPhase.AiActions, { decided: false });
-      return currentState;
-    }
+          // If there are no AI towns, emit a simple phase hook and return
+      if (aiTowns.length === 0) {
+        this.onPhase?.(TurnPhase.AiActions, { decided: false });
+        return currentState;
+      }
+
+      // Emit phase hook before AI actions execution
+      this.onPhase?.(TurnPhase.AiActions, { phase: 'start', aiTownCount: aiTowns.length });
 
     for (const town of aiTowns) {
       // Get AI profile for this town, defaulting to 'greedy' if not specified
@@ -253,7 +256,7 @@ export class TurnController {
           const cooldownKey = createCooldownKey(town.id, decision.request.goodId);
           markCooldown(this.cooldownState, cooldownKey, s.turn);
 
-          // Notify observer with trade details
+          // Notify observer with trade details and telemetry
           this.onPhase?.(TurnPhase.AiActions, {
             townId: town.id,
             decision,
@@ -261,6 +264,7 @@ export class TurnController {
               unitPriceApplied: tradeResult.unitPriceApplied,
               deltas: tradeResult.deltas,
             },
+            trace: decision.trace,
           });
 
           // Note: maxTradesPerTurn is per-town, not global
@@ -271,6 +275,7 @@ export class TurnController {
             townId: town.id,
             decision,
             error: error instanceof Error ? error.message : String(error),
+            trace: decision.trace,
           });
         }
       } else {
@@ -278,6 +283,7 @@ export class TurnController {
         this.onPhase?.(TurnPhase.AiActions, {
           townId: town.id,
           decision,
+          trace: decision.trace,
         });
       }
     }

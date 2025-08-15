@@ -123,6 +123,15 @@ describe('TurnController - AI Actions', () => {
             to: expect.any(Object),
           }),
         },
+        trace: expect.objectContaining({
+          aiTownId: expect.any(String),
+          mode: expect.any(String),
+          candidateCount: expect.any(Number),
+          chosen: expect.objectContaining({
+            quote: expect.any(Object),
+          }),
+          reason: expect.any(String),
+        }),
       });
     });
 
@@ -186,7 +195,92 @@ describe('TurnController - AI Actions', () => {
           skipped: true,
           reason: 'no-candidate',
         },
+        trace: expect.objectContaining({
+          aiTownId: expect.any(String),
+          mode: expect.any(String),
+          candidateCount: expect.any(Number),
+          reason: 'no-candidate',
+        }),
       });
+    });
+
+    it('should emit telemetry data with scores for greedy AI and without scores for random AI', async () => {
+      // Create a game state with two AI towns using different profiles
+      const telemetryState = {
+        ...gameState,
+        towns: gameState.towns.map(town => {
+          if (town.id === 'forestburg') {
+            return {
+              ...town,
+              aiProfileId: 'greedy',
+              treasury: 2000,
+              resources: { ...town.resources, fish: 20 },
+              prices: { ...town.prices, fish: 1 }, // Lower price than Riverdale
+            };
+          }
+          if (town.id === 'ironforge') {
+            return {
+              ...town,
+              aiProfileId: 'random',
+              treasury: 2500,
+              resources: { ...town.resources, wood: 30 },
+              prices: { ...town.prices, wood: 1 }, // Lower price than Riverdale
+            };
+          }
+          return town;
+        }),
+      };
+
+      // Run the turn
+      const result = await controller.runTurn(telemetryState);
+
+      // Verify state changes occurred
+      expect(result.state.turn).toBe(telemetryState.turn + 1);
+
+      // Find AI actions phase details
+      const aiActionsDetails = phaseLog
+        .filter(p => p.phase === TurnPhase.AiActions)
+        .map(p => p.detail);
+
+      // Should have AI actions with telemetry data
+      const tradeActions = aiActionsDetails.filter(
+        detail => detail && typeof detail === 'object' && 'trace' in detail,
+      );
+      expect(tradeActions.length).toBeGreaterThan(0);
+
+              // Find greedy AI action (should have score)
+        const greedyAction = tradeActions.find(
+          detail => detail && typeof detail === 'object' &&
+          'trace' in detail &&
+          (detail as { trace: { mode: string } }).trace.mode === 'greedy'
+        );
+      expect(greedyAction).toBeDefined();
+      expect(greedyAction).toMatchObject({
+        trace: expect.objectContaining({
+          mode: 'greedy',
+          chosen: expect.objectContaining({
+            score: expect.any(Number), // Greedy AI should have score
+          }),
+        }),
+      });
+
+              // Find random AI action (should not have score)
+        const randomAction = tradeActions.find(
+          detail => detail && typeof detail === 'object' &&
+          'trace' in detail &&
+          (detail as { trace: { mode: string } }).trace.mode === 'random'
+        );
+      expect(randomAction).toBeDefined();
+      expect(randomAction).toMatchObject({
+        trace: expect.objectContaining({
+          mode: 'random',
+          chosen: expect.objectContaining({
+            quote: expect.any(Object),
+          }),
+        }),
+      });
+      // Random AI should not have score in trace
+      expect((randomAction as { trace: { chosen?: { score?: number } } }).trace.chosen).not.toHaveProperty('score');
     });
 
     it('should respect maxTradesPerTurn limit', async () => {
@@ -331,21 +425,25 @@ describe('TurnController - AI Actions', () => {
         .filter(p => p.phase === TurnPhase.AiActions)
         .map(p => p.detail);
 
-      // Should have details for each AI town (both should be processed)
-      expect(aiActionsDetails.length).toBe(2);
+      // Should have details for each AI town (both should be processed) plus the start phase hook
+      expect(aiActionsDetails.length).toBe(3);
 
-      // Each AI action should have townId and decision
-      aiActionsDetails.forEach(detail => {
-        expect(detail as { townId: string; decision: unknown }).toMatchObject({
-          townId: expect.any(String),
-          decision: expect.objectContaining({
-            reason: expect.any(String),
-          }),
+      // Each AI action should have townId and decision (filter out the start phase hook)
+      aiActionsDetails
+        .filter(detail => detail && typeof detail === 'object' && 'townId' in detail)
+        .forEach(detail => {
+          expect(detail as { townId: string; decision: unknown }).toMatchObject({
+            townId: expect.any(String),
+            decision: expect.objectContaining({
+              reason: expect.any(String),
+            }),
+          });
         });
-      });
 
       // Verify we have actions for both AI towns
-      const townIds = aiActionsDetails.map(detail => (detail as { townId: string }).townId);
+      const townIds = aiActionsDetails
+        .filter(detail => detail && typeof detail === 'object' && 'townId' in detail)
+        .map(detail => (detail as { townId: string }).townId);
       expect(townIds).toContain('forestburg');
       expect(townIds).toContain('ironforge');
     });
@@ -396,21 +494,25 @@ describe('TurnController - AI Actions', () => {
         .filter(p => p.phase === TurnPhase.AiActions)
         .map(p => p.detail);
 
-      // Should have details for BOTH AI towns
-      expect(aiActionsDetails.length).toBe(2);
+      // Should have details for BOTH AI towns plus the start phase hook
+      expect(aiActionsDetails.length).toBe(3);
 
-      // Each AI action should have townId and decision
-      aiActionsDetails.forEach(detail => {
-        expect(detail as { townId: string; decision: unknown }).toMatchObject({
-          townId: expect.any(String),
-          decision: expect.objectContaining({
-            reason: expect.any(String),
-          }),
+      // Each AI action should have townId and decision (filter out the start phase hook)
+      aiActionsDetails
+        .filter(detail => detail && typeof detail === 'object' && 'townId' in detail)
+        .forEach(detail => {
+          expect(detail as { townId: string; decision: unknown }).toMatchObject({
+            townId: expect.any(String),
+            decision: expect.objectContaining({
+              reason: expect.any(String),
+            }),
+          });
         });
-      });
 
       // Verify we have actions for both AI towns
-      const townIds = aiActionsDetails.map(detail => (detail as { townId: string }).townId);
+      const townIds = aiActionsDetails
+        .filter(detail => detail && typeof detail === 'object' && 'townId' in detail)
+        .map(detail => (detail as { townId: string }).townId);
       expect(townIds).toContain('forestburg');
       expect(townIds).toContain('ironforge');
     });
