@@ -1,16 +1,17 @@
 import { describe, it, expect } from 'vitest';
 
-import type { GameState, GoodId } from '../../types/GameState';
+import type { GameState } from '../../types/GameState';
+import type { GoodId, GoodConfig } from '../../types/Goods';
 import type { ProductionConfig } from '../../types/Production';
 
 import { applyProductionTurn } from './ProductionSystem';
 
 describe('ProductionSystem', () => {
   // Test data setup
-  const mockGoods: Record<GoodId, { name: string; description: string }> = {
-    fish: { name: 'Fish', description: 'Fresh fish' },
-    wood: { name: 'Wood', description: 'Timber' },
-    ore: { name: 'Ore', description: 'Raw ore' },
+  const mockGoods: Record<GoodId, GoodConfig> = {
+    fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 2, militaryDelta: 0 } },
+    wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 1, militaryDelta: 1 } },
+    ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: 0, militaryDelta: 2 } },
   };
 
   const createMockTown = (id: string, resources: Record<GoodId, number>) => ({
@@ -22,8 +23,8 @@ describe('ProductionSystem', () => {
     prosperityRaw: 0,
     treasury: 100,
     revealed: {
-      militaryTier: 'weak' as const,
-      prosperityTier: 'poor' as const,
+      militaryTier: 'militia' as const,
+      prosperityTier: 'struggling' as const,
       lastUpdatedTurn: 0,
     },
   });
@@ -37,11 +38,11 @@ describe('ProductionSystem', () => {
   });
 
   const createProductionConfig = (
-    base: Record<GoodId, number>,
-    townMultipliers?: Record<string, Record<GoodId, number>>,
+    base: Partial<Record<GoodId, number>>,
+    townMultipliers?: Record<string, Partial<Record<GoodId, number>>>,
   ): ProductionConfig => ({
-    base,
-    townMultipliers,
+    base: base as Record<GoodId, number>,
+    ...(townMultipliers && { townMultipliers }),
   });
 
   describe('applyProductionTurn', () => {
@@ -64,16 +65,16 @@ describe('ProductionSystem', () => {
       // Town 1: fish = 10 + floor(3 * 1.5) = 10 + 4 = 14
       //         wood = 5 + floor(2 * 0.8) = 5 + 1 = 6
       //         ore = 3 + floor(1 * 2.0) = 3 + 2 = 5
-      expect(result.towns[0].resources.fish).toBe(14);
-      expect(result.towns[0].resources.wood).toBe(6);
-      expect(result.towns[0].resources.ore).toBe(5);
+      expect(result.towns[0]!.resources.fish).toBe(14);
+      expect(result.towns[0]!.resources.wood).toBe(6);
+      expect(result.towns[0]!.resources.ore).toBe(5);
 
       // Town 2: fish = 8 + floor(3 * 1.0) = 8 + 3 = 11
       //         wood = 4 + floor(2 * 1.0) = 4 + 2 = 6
       //         ore = 2 + floor(1 * 1.0) = 2 + 1 = 3
-      expect(result.towns[1].resources.fish).toBe(11);
-      expect(result.towns[1].resources.wood).toBe(6);
-      expect(result.towns[1].resources.ore).toBe(3);
+      expect(result.towns[1]!.resources.fish).toBe(11);
+      expect(result.towns[1]!.resources.wood).toBe(6);
+      expect(result.towns[1]!.resources.ore).toBe(3);
     });
 
     it('assumes multiplier of 1 when town multipliers are missing', () => {
@@ -87,15 +88,15 @@ describe('ProductionSystem', () => {
       const result = applyProductionTurn(initialState, config);
 
       // Should use multiplier of 1: fish = 10 + floor(3 * 1) = 13
-      expect(result.towns[0].resources.fish).toBe(13);
-      expect(result.towns[0].resources.wood).toBe(7);
-      expect(result.towns[0].resources.ore).toBe(4);
+      expect(result.towns[0]!.resources.fish).toBe(13);
+      expect(result.towns[0]!.resources.wood).toBe(7);
+      expect(result.towns[0]!.resources.ore).toBe(4);
     });
 
     it('assumes multiplier of 1 when specific good multiplier is missing', () => {
       const baseRates = { fish: 3, wood: 2, ore: 1 };
       const townMultipliers = {
-        town1: { fish: 1.5 }, // Only fish specified
+        town1: { fish: 1.5, wood: 1.0, ore: 1.0 }, // Only fish specified
       };
 
       const config = createProductionConfig(baseRates, townMultipliers);
@@ -109,9 +110,9 @@ describe('ProductionSystem', () => {
       // Fish: 10 + floor(3 * 1.5) = 10 + 4 = 14
       // Wood: 5 + floor(2 * 1) = 5 + 2 = 7 (default multiplier)
       // Ore: 3 + floor(1 * 1) = 3 + 1 = 4 (default multiplier)
-      expect(result.towns[0].resources.fish).toBe(14);
-      expect(result.towns[0].resources.wood).toBe(7);
-      expect(result.towns[0].resources.ore).toBe(4);
+      expect(result.towns[0]!.resources.fish).toBe(14);
+      expect(result.towns[0]!.resources.wood).toBe(7);
+      expect(result.towns[0]!.resources.ore).toBe(4);
     });
 
     it('assumes base rate of 0 when good is missing from base rates', () => {
@@ -127,9 +128,9 @@ describe('ProductionSystem', () => {
       // Fish: 10 + floor(3 * 1) = 13
       // Wood: 5 + floor(2 * 1) = 7
       // Ore: 3 + floor(0 * 1) = 3 (no change)
-      expect(result.towns[0].resources.fish).toBe(13);
-      expect(result.towns[0].resources.wood).toBe(7);
-      expect(result.towns[0].resources.ore).toBe(3);
+      expect(result.towns[0]!.resources.fish).toBe(13);
+      expect(result.towns[0]!.resources.wood).toBe(7);
+      expect(result.towns[0]!.resources.ore).toBe(3);
     });
 
     it('leaves other fields unchanged', () => {
@@ -143,16 +144,16 @@ describe('ProductionSystem', () => {
       const result = applyProductionTurn(initialState, config);
 
       // Resources should be updated
-      expect(result.towns[0].resources.fish).toBe(13);
+      expect(result.towns[0]!.resources.fish).toBe(13);
 
       // Other fields should remain unchanged
-      expect(result.towns[0].id).toBe(initialState.towns[0].id);
-      expect(result.towns[0].name).toBe(initialState.towns[0].name);
-      expect(result.towns[0].prices).toEqual(initialState.towns[0].prices);
-      expect(result.towns[0].militaryRaw).toBe(initialState.towns[0].militaryRaw);
-      expect(result.towns[0].prosperityRaw).toBe(initialState.towns[0].prosperityRaw);
-      expect(result.towns[0].treasury).toBe(initialState.towns[0].treasury);
-      expect(result.towns[0].revealed).toEqual(initialState.towns[0].revealed);
+      expect(result.towns[0]!.id).toBe(initialState.towns[0]!.id);
+      expect(result.towns[0]!.name).toBe(initialState.towns[0]!.name);
+      expect(result.towns[0]!.prices).toEqual(initialState.towns[0]!.prices);
+      expect(result.towns[0]!.militaryRaw).toBe(initialState.towns[0]!.militaryRaw);
+      expect(result.towns[0]!.prosperityRaw).toBe(initialState.towns[0]!.prosperityRaw);
+      expect(result.towns[0]!.treasury).toBe(initialState.towns[0]!.treasury);
+      expect(result.towns[0]!.revealed).toEqual(initialState.towns[0]!.revealed);
 
       // Game state fields should remain unchanged
       expect(result.turn).toBe(initialState.turn);
@@ -178,15 +179,15 @@ describe('ProductionSystem', () => {
       const config = createProductionConfig(baseRates);
 
       const initialState = createMockGameState([
-        createMockTown('town1', { fish: 10 }), // wood and ore missing
+        createMockTown('town1', { fish: 10, wood: 0, ore: 0 }), // wood and ore missing
       ]);
 
       const result = applyProductionTurn(initialState, config);
 
       // Should handle missing goods gracefully
-      expect(result.towns[0].resources.fish).toBe(13);
-      expect(result.towns[0].resources.wood).toBe(2); // 0 + floor(2 * 1)
-      expect(result.towns[0].resources.ore).toBe(1); // 0 + floor(1 * 1)
+      expect(result.towns[0]!.resources.fish).toBe(13);
+      expect(result.towns[0]!.resources.wood).toBe(2); // 0 + floor(2 * 1)
+      expect(result.towns[0]!.resources.ore).toBe(1); // 0 + floor(1 * 1)
     });
 
     it('applies clampMin option correctly', () => {
@@ -200,9 +201,9 @@ describe('ProductionSystem', () => {
       const result = applyProductionTurn(initialState, config, { clampMin: 20 });
 
       // All resources should be clamped to minimum of 20
-      expect(result.towns[0].resources.fish).toBe(20); // 13 < 20, so clamped
-      expect(result.towns[0].resources.wood).toBe(20); // 7 < 20, so clamped
-      expect(result.towns[0].resources.ore).toBe(20); // 4 < 20, so clamped
+      expect(result.towns[0]!.resources.fish).toBe(20); // 13 < 20, so clamped
+      expect(result.towns[0]!.resources.wood).toBe(20); // 7 < 20, so clamped
+      expect(result.towns[0]!.resources.ore).toBe(20); // 4 < 20, so clamped
     });
 
     it('does not mutate input state', () => {
@@ -213,16 +214,16 @@ describe('ProductionSystem', () => {
         createMockTown('town1', { fish: 10, wood: 5, ore: 3 }),
       ]);
 
-      const originalFish = initialState.towns[0].resources.fish;
-      const originalWood = initialState.towns[0].resources.wood;
-      const originalOre = initialState.towns[0].resources.ore;
+      const originalFish = initialState.towns[0]!.resources.fish;
+      const originalWood = initialState.towns[0]!.resources.wood;
+      const originalOre = initialState.towns[0]!.resources.ore;
 
       applyProductionTurn(initialState, config);
 
       // Input state should remain unchanged
-      expect(initialState.towns[0].resources.fish).toBe(originalFish);
-      expect(initialState.towns[0].resources.wood).toBe(originalWood);
-      expect(initialState.towns[0].resources.ore).toBe(originalOre);
+      expect(initialState.towns[0]!.resources.fish).toBe(originalFish);
+      expect(initialState.towns[0]!.resources.wood).toBe(originalWood);
+      expect(initialState.towns[0]!.resources.ore).toBe(originalOre);
     });
 
     it('returns new state object (not reference to input)', () => {
@@ -239,7 +240,7 @@ describe('ProductionSystem', () => {
       expect(result).not.toBe(initialState);
       expect(result.towns).not.toBe(initialState.towns);
       expect(result.towns[0]).not.toBe(initialState.towns[0]);
-      expect(result.towns[0].resources).not.toBe(initialState.towns[0].resources);
+      expect(result.towns[0]!.resources).not.toBe(initialState.towns[0]!.resources);
     });
   });
 });

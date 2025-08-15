@@ -1,4 +1,5 @@
-import type { GameState, GoodId } from '../../types/GameState';
+import type { GameState } from '../../types/GameState';
+import type { GoodId } from '../../types/Goods';
 import type { ProductionConfig } from '../../types/Production';
 
 /**
