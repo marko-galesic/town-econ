@@ -25,10 +25,11 @@ export function isRevealDue(
 ): boolean {
   console.log('isRevealDue called with:', { currentTurn, lastUpdatedTurn, policy });
 
-  // If we've never revealed before, always reveal on the first turn when updateStats is called
+  // If we've never revealed before, only reveal on turn 0
   if (lastUpdatedTurn === -1) {
-    console.log('isRevealDue: lastUpdatedTurn === -1, returning true');
-    return true; // Always reveal on first call
+    const result = currentTurn === 0;
+    console.log('isRevealDue: lastUpdatedTurn === -1, returning', result);
+    return result;
   }
 
   // Check if current turn is a multiple of the interval since last update

@@ -33,8 +33,24 @@ describe('TierMap', () => {
     it('handles edge cases', () => {
       expect(clampRaw(0, 0, 0)).toBe(0);
       expect(clampRaw(5, 5, 5)).toBe(5);
-      expect(clampRaw(-Infinity)).toBe(0);
-      expect(clampRaw(Infinity)).toBe(100);
+      expect(() => clampRaw(-Infinity)).toThrow('Raw stat value cannot be Infinity or -Infinity');
+      expect(() => clampRaw(Infinity)).toThrow('Raw stat value cannot be Infinity or -Infinity');
+    });
+
+    it('throws error for NaN input', () => {
+      expect(() => clampRaw(NaN)).toThrow('Raw stat value cannot be NaN');
+      expect(() => clampRaw(Number.NaN)).toThrow('Raw stat value cannot be NaN');
+    });
+
+    it('throws error for Infinity input', () => {
+      expect(() => clampRaw(Infinity)).toThrow('Raw stat value cannot be Infinity or -Infinity');
+      expect(() => clampRaw(-Infinity)).toThrow('Raw stat value cannot be Infinity or -Infinity');
+      expect(() => clampRaw(Number.POSITIVE_INFINITY)).toThrow(
+        'Raw stat value cannot be Infinity or -Infinity',
+      );
+      expect(() => clampRaw(Number.NEGATIVE_INFINITY)).toThrow(
+        'Raw stat value cannot be Infinity or -Infinity',
+      );
     });
   });
 

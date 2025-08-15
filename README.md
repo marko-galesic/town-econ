@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 946 tests passing)
+- `pnpm test` - Run test suite once (✅ 986 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -183,11 +183,11 @@ A comprehensive set of immutable state manipulation functions for the town econo
 
 ### Tier Mapping System (`src/core/stats/TierMap.ts`)
 
-A data-driven system for mapping raw stat values to tier classifications:
+A data-driven system for mapping raw stat values to tier classifications with robust validation:
 
 #### Core Functions
 
-- **`clampRaw(x, min, max)`**: Clamps raw stat values between bounds (default 0-100)
+- **`clampRaw(x, min, max)`**: Clamps raw stat values between bounds (default 0-100) with **NaN/Infinity rejection**
 - **`mapToTier(raw, thresholds)`**: Maps raw stats to tier IDs using configurable thresholds
 - **Stable Sorting**: Automatically sorts thresholds for consistent results regardless of input order
 
@@ -205,6 +205,8 @@ A data-driven system for mapping raw stat values to tier classifications:
 - **Robust Handling**: Works with unsorted thresholds, edge cases, and boundary values
 - **Performance**: Efficient O(n log n) sorting + O(n) lookup
 - **100% Coverage**: Comprehensive test suite with edge case coverage
+- **Input Validation**: **Rejects NaN and Infinity values with clear error messages**
+- **Defensive Programming**: **Always validates input bounds and provides helpful error messages**
 
 ### Fuzzy Tier System (`src/core/stats/FuzzyTier.ts`)
 
@@ -222,6 +224,12 @@ A deterministic fuzzy tier mapping system that adds controlled randomness to tie
 - **Bounded Jitter**: 20% chance to show ±1 tier from true tier (never more than 1 step)
 - **Edge Safety**: First/last tiers are clamped to stay within bounds
 - **Deterministic**: Same (seed, townId, turn) always yields same fuzzy tier
+
+#### Defensive Programming Features
+
+- **Empty Thresholds Protection**: **Throws clear error if thresholds array is empty**
+- **Bounds Validation**: **Always validates tier indices are within [0, thresholds.length-1] range**
+- **Configuration Error Detection**: **Detects and reports tier configuration errors**
 
 #### Usage Example
 
@@ -257,6 +265,8 @@ const customFuzzyTier = fuzzyTierFor(
 - **Tiny PRNG**: Lightweight xorshift32 algorithm for performance
 - **Town/Turn Specific**: Different fuzzy tiers for different towns and turns
 - **Production Ready**: Comprehensive test suite with 98% code coverage
+- **Input Validation**: **Always validates thresholds array and tier indices**
+- **Error Reporting**: **Provides clear, actionable error messages for configuration issues**
 
 ### Tier Reveal Cadence System (`src/core/stats/RevealCadence.ts`)
 
@@ -324,6 +334,8 @@ const customUpdatedState = applyRevealPass(gameState, 'game-session-123', custom
 - **Policy Flexibility**: Supports custom reveal intervals beyond default 2-turn cadence
 - **100% Test Coverage**: Comprehensive test suite covering all scenarios and edge cases
 - **Integration Ready**: Designed to work with UpdatePipeline and TurnController systems
+- **Tier Validation**: **Always validates that revealed tiers belong to configured tier sets**
+- **Configuration Validation**: **Validates tier configuration to prevent invalid tier assignments**
 
 #### Reveal Logic
 
@@ -789,6 +801,70 @@ const playerActionPhase = result.phaseLog.find(p => p.phase === 'PlayerAction');
 - **Precise Error Reporting**: `TurnPhaseError` identifies exact phase where failure occurred
 - **Robust Error Recovery**: Original game state preserved on any phase failure
 - **Factory Service**: Simple one-liner setup with `createTurnController()` factory function
+
+## 🛡️ Validation & Defensive Programming
+
+### Stats System Validation
+
+The stats system now includes comprehensive validation and defensive checks to ensure data integrity and prevent runtime errors:
+
+#### Raw Stat Validation (`src/core/stats/TierMap.ts`)
+
+- **NaN Rejection**: **`clampRaw()` now throws clear errors for NaN inputs**
+- **Infinity Rejection**: **Rejects both positive and negative Infinity values**
+- **Clear Error Messages**: Provides specific error messages for each validation failure
+- **Always Active**: Validation runs in all environments (development and production)
+
+```typescript
+// Example validation behavior
+clampRaw(NaN); // Throws: "Raw stat value cannot be NaN"
+clampRaw(Infinity); // Throws: "Raw stat value cannot be Infinity or -Infinity"
+clampRaw(-Infinity); // Throws: "Raw stat value cannot be Infinity or -Infinity"
+```
+
+#### Fuzzy Tier Validation (`src/core/stats/FuzzyTier.ts`)
+
+- **Empty Thresholds Protection**: **Throws error if thresholds array is empty**
+- **Bounds Validation**: **Always validates tier indices are within valid range**
+- **Configuration Error Detection**: **Detects and reports tier configuration errors**
+- **Defensive Indexing**: **Prevents array out-of-bounds access**
+
+```typescript
+// Example validation behavior
+fuzzyTierFor(50, [], 'seed', 'town', 1); // Throws: "Thresholds array cannot be empty - no tiers are configured"
+```
+
+#### Tier Reveal Validation (`src/core/stats/RevealSystem.ts`)
+
+- **Tier Configuration Validation**: **Validates that configured tiers belong to known tier sets**
+- **Revealed Tier Validation**: **Ensures revealed tiers are always from configured allowed values**
+- **Military Tier Validation**: **Validates against MilitaryTier union type**
+- **Prosperity Tier Validation**: **Validates against ProsperityTier union type**
+
+```typescript
+// Example validation behavior
+// Throws error if tier configuration contains invalid tiers
+// Throws error if fuzzy tier generation produces unknown tier values
+```
+
+#### Benefits of Enhanced Validation
+
+- **Runtime Safety**: Prevents crashes from invalid data
+- **Debugging Support**: Clear error messages identify exact validation failures
+- **Data Integrity**: Ensures all stat values and tier assignments are valid
+- **Configuration Safety**: Catches configuration errors early
+- **Production Reliability**: Validation active in all environments
+- **Test Coverage**: All validation logic thoroughly tested
+
+### Trade Limits & Runaway State Prevention
+
+- **Configurable Limits**: `TradeLimits` interface allows customization of resource, treasury, and price bounds
+- **Default Safety**: `DEFAULT_LIMITS` provides reasonable bounds (1M resources, 1B treasury, 1-9999 prices)
+- **Automatic Enforcement**: Resources and treasury automatically clamped during trade execution
+- **Negative Prevention**: Always prevents negative values regardless of limit configuration
+- **Price Boundaries**: Enforces minimum and maximum price constraints on all goods
+- **Game Balance**: Prevents runaway inflation/deflation while maintaining meaningful gameplay
+- **Backward Compatible**: Existing code continues to work without changes
 
 ## 🔧 Development Workflow
 

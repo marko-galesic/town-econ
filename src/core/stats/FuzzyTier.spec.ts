@@ -171,10 +171,26 @@ describe('FuzzyTier', () => {
         expect(result).not.toBe('modest');
       });
 
-      it('should throw error for empty thresholds', () => {
+      it('should throw error for empty thresholds with helpful message', () => {
         expect(() => {
           fuzzyTierFor(30, [], testSeed, testTownId, testTurn);
         }).toThrow('Thresholds array cannot be empty');
+      });
+
+      it('should validate tier index bounds', () => {
+        // This test ensures the internal validation works correctly
+        // The function should never return an invalid tier index
+        const results = [];
+        for (let i = 0; i < 100; i++) {
+          const result = fuzzyTierFor(30, testThresholds, testSeed, testTownId, testTurn + i);
+          results.push(result);
+        }
+
+        // All results should be valid tiers from our test thresholds
+        const validTiers = testThresholds.map(t => t.tier);
+        results.forEach(result => {
+          expect(validTiers).toContain(result);
+        });
       });
     });
 

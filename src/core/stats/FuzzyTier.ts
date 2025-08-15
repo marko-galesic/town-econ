@@ -58,6 +58,7 @@ export function seededRand(seedString: string) {
  * @param turn - Turn number for deterministic per-turn behavior
  * @param opts - Fuzz options (defaults to DEFAULT_FUZZ)
  * @returns The fuzzy tier identifier
+ * @throws Error if thresholds array is empty or if tier mapping fails
  */
 export function fuzzyTierFor(
   raw: number,
@@ -68,7 +69,7 @@ export function fuzzyTierFor(
   opts: FuzzOptions = DEFAULT_FUZZ,
 ): string {
   if (thresholds.length === 0) {
-    throw new Error('Thresholds array cannot be empty');
+    throw new Error('Thresholds array cannot be empty - no tiers are configured');
   }
 
   const { jitterProb = DEFAULT_FUZZ.jitterProb! } = opts;
@@ -78,7 +79,16 @@ export function fuzzyTierFor(
   const trueIdx = thresholds.findIndex(t => t.tier === trueTier);
 
   if (trueIdx === -1) {
-    throw new Error(`Could not find tier ${trueTier} in thresholds`);
+    throw new Error(
+      `Could not find tier ${trueTier} in thresholds - this indicates a configuration error`,
+    );
+  }
+
+  // Validate that trueIdx is within bounds
+  if (trueIdx < 0 || trueIdx >= thresholds.length) {
+    throw new Error(
+      `Invalid tier index ${trueIdx} - must be between 0 and ${thresholds.length - 1}`,
+    );
   }
 
   // Generate deterministic random number for this town/turn combination
@@ -95,6 +105,11 @@ export function fuzzyTierFor(
 
     // Clamp between [0, last] to stay within bounds
     finalIdx = Math.max(0, Math.min(thresholds.length - 1, neighborIdx));
+  }
+
+  // Final validation: ensure finalIdx is within bounds
+  if (finalIdx < 0 || finalIdx >= thresholds.length) {
+    throw new Error(`Final tier index ${finalIdx} is out of bounds [0, ${thresholds.length - 1}]`);
   }
 
   return thresholds[finalIdx]!.tier;

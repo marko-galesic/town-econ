@@ -174,5 +174,46 @@ describe('RevealSystem', () => {
       );
       expect(result1.towns[0]!.revealed.militaryTier).toBe(result2.towns[0]!.revealed.militaryTier);
     });
+
+    it('should validate revealed tiers are in allowed set', () => {
+      const town = createMockTown('town1', 75, 80, 0);
+      const state = createMockGameState(2, [town]);
+
+      const result = applyRevealPass(state, 'test-seed');
+      const revealedTown = result.towns[0]!;
+
+      // Verify military tier is valid
+      expect(['militia', 'garrison', 'formidable', 'host']).toContain(
+        revealedTown.revealed.militaryTier,
+      );
+
+      // Verify prosperity tier is valid
+      expect(['struggling', 'modest', 'prosperous', 'opulent']).toContain(
+        revealedTown.revealed.prosperityTier,
+      );
+    });
+
+    it('should validate tier configuration', () => {
+      const town = createMockTown('town1', 75, 80, 0);
+      const state = createMockGameState(2, [town]);
+
+      // This should not throw as the configuration is valid
+      expect(() => applyRevealPass(state, 'test-seed')).not.toThrow();
+    });
+
+    it('should never return unknown tier values', () => {
+      const town = createMockTown('town1', 75, 80, 0);
+      const state = createMockGameState(2, [town]);
+
+      const result = applyRevealPass(state, 'test-seed');
+      const revealedTown = result.towns[0]!;
+
+      // Ensure fuzzy tier mapping never produces invalid tiers
+      const validMilitaryTiers = ['militia', 'garrison', 'formidable', 'host'];
+      const validProsperityTiers = ['struggling', 'modest', 'prosperous', 'opulent'];
+
+      expect(validMilitaryTiers).toContain(revealedTown.revealed.militaryTier);
+      expect(validProsperityTiers).toContain(revealedTown.revealed.prosperityTier);
+    });
   });
 });

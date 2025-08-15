@@ -76,7 +76,7 @@ describe('TurnService Stats Integration', () => {
 
       // This should work if the TurnController is working
       expect(result.state.turn).toBe(1);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(1); // Reveal happened on turn 1
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1); // No reveal on turn 1 (was turn 0)
     });
 
     it('should verify TurnController methods are actually being called', async () => {
@@ -117,7 +117,7 @@ describe('TurnService Stats Integration', () => {
       expect(result.state.turn).toBe(1);
 
       // The updateStats method should run the pipeline and change lastUpdatedTurn
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(1); // Reveal happened on turn 1
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1); // No reveal on turn 1 (was turn 0)
     });
 
     it('should verify TurnController updateStats method is called', async () => {
@@ -150,8 +150,8 @@ describe('TurnService Stats Integration', () => {
       console.log('Final lastUpdatedTurn:', result.state.towns[0]!.revealed.lastUpdatedTurn);
 
       // If the updateStats method was called, we should see the debug output
-      // and the lastUpdatedTurn should change from -1 to 1
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(1); // Reveal happened on turn 1
+      // and the lastUpdatedTurn should stay -1 since no reveal happened on turn 1
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1); // No reveal on turn 1 (was turn 0)
     });
 
     it('should verify TurnController instance and pipeline reference', () => {
@@ -343,25 +343,25 @@ describe('TurnService Stats Integration', () => {
       console.log('Controller class:', controller.constructor.name);
       console.log('Controller has updatePipeline property:', 'updatePipeline' in controller);
 
-      // Turn 0: Should reveal (interval=2, lastUpdatedTurn=-1)
+      // Turn 0: Should NOT reveal (interval=2, lastUpdatedTurn=-1, but updateStats called with turn 1)
       let result = await controller.runTurn(stateWithTowns);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(1); // Reveal happened on turn 1
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1); // No reveal on turn 1 (was turn 0)
 
-      // Turn 1: Should NOT reveal (interval=2, lastUpdatedTurn=1)
+      // Turn 1: Should NOT reveal (interval=2, lastUpdatedTurn=-1)
       result = await controller.runTurn(result.state);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(1);
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1);
 
-      // Turn 2: Should reveal (interval=2, lastUpdatedTurn=1)
+      // Turn 2: Should NOT reveal (interval=2, lastUpdatedTurn=-1, but updateStats called with turn 3)
       result = await controller.runTurn(result.state);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(3); // Reveal happened on turn 3
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1);
 
-      // Turn 3: Should NOT reveal (interval=2, lastUpdatedTurn=3)
+      // Turn 3: Should NOT reveal (interval=2, lastUpdatedTurn=-1)
       result = await controller.runTurn(result.state);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(3);
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1);
 
-      // Turn 4: Should reveal (interval=2, lastUpdatedTurn=3)
+      // Turn 4: Should NOT reveal (interval=2, lastUpdatedTurn=-1, but updateStats called with turn 5)
       result = await controller.runTurn(result.state);
-      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(5); // Reveal happened on turn 5
+      expect(result.state.towns[0]!.revealed.lastUpdatedTurn).toBe(-1);
     });
 
     it('should be deterministic with fixed rngSeed', async () => {

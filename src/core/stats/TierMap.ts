@@ -22,8 +22,17 @@ export interface TierConfig {
  * @param min - Minimum bound (default: 0)
  * @param max - Maximum bound (default: 100)
  * @returns The clamped value, ensuring it stays within bounds
+ * @throws Error if x is NaN or Infinity (in development mode)
  */
 export function clampRaw(x: number, min = 0, max = 100): number {
+  // Always validate: reject NaN and Infinity
+  if (Number.isNaN(x)) {
+    throw new Error('Raw stat value cannot be NaN');
+  }
+  if (!Number.isFinite(x)) {
+    throw new Error('Raw stat value cannot be Infinity or -Infinity');
+  }
+
   return Math.max(min, Math.min(max, x));
 }
 

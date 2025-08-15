@@ -34,6 +34,23 @@ export function applyRevealPass(
     ],
   };
 
+  // Always validate tier configuration
+  const validMilitaryTiers: MilitaryTier[] = ['militia', 'garrison', 'formidable', 'host'];
+  const validProsperityTiers: ProsperityTier[] = ['struggling', 'modest', 'prosperous', 'opulent'];
+
+  // Ensure all configured tiers are valid
+  tierConfig.military.forEach(threshold => {
+    if (!validMilitaryTiers.includes(threshold.tier as MilitaryTier)) {
+      throw new Error(`Invalid military tier in configuration: ${threshold.tier}`);
+    }
+  });
+
+  tierConfig.prosperity.forEach(threshold => {
+    if (!validProsperityTiers.includes(threshold.tier as ProsperityTier)) {
+      throw new Error(`Invalid prosperity tier in configuration: ${threshold.tier}`);
+    }
+  });
+
   // Create new state with updated towns
   const updatedTowns = state.towns.map(town => {
     // Check if reveal is due for this town
@@ -58,6 +75,19 @@ export function applyRevealPass(
       town.id,
       state.turn,
     ) as ProsperityTier;
+
+    // Always validate revealed tiers are in allowed set
+    if (!validMilitaryTiers.includes(militaryTier)) {
+      throw new Error(
+        `Revealed military tier ${militaryTier} is not in allowed set: ${validMilitaryTiers.join(', ')}`,
+      );
+    }
+
+    if (!validProsperityTiers.includes(prosperityTier)) {
+      throw new Error(
+        `Revealed prosperity tier ${prosperityTier} is not in allowed set: ${validProsperityTiers.join(', ')}`,
+      );
+    }
 
     // Return updated town with new revealed information
     return {
