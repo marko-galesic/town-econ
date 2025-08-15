@@ -61,6 +61,10 @@ town-econ/
 │   │   ├── initGameState.ts # Game state initialization
 │   │   ├── deserialize.ts # JSON deserialization with validation
 │   │   ├── validation.ts # Data validation system
+│   │   ├── ai/           # AI configuration and behavior profiles
+│   │   │   ├── AiTypes.ts # AI mode, profile, and decision interfaces
+│   │   │   ├── AiProfiles.ts # Default AI profiles (random, greedy)
+│   │   │   └── index.ts # AI system exports
 │   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
 │   │   │   ├── TradeErrors.ts # Trade validation and execution errors
@@ -505,6 +509,63 @@ const result = await controller.runTurn(gameState);
 - **Immutable Updates**: Returns new GameState with updated town prices, preserving original state
 - **Error Handling**: Throws error if towns not found in current game state
 - **Trade Side Awareness**: Correctly interprets buy/sell transactions for proper delta calculation
+
+### AI Configuration System (`src/core/ai/`)
+
+A flexible AI configuration and behavior profile system for guiding AI decision-making in the town economy simulation:
+
+#### Core Components
+
+- **`AiMode`**: Union type for `'random' | 'greedy'` behavior modes
+- **`AiProfile`**: Configuration interface with mode, weights, and trade limits
+- **`AiDecision`**: Decision result interface with optional trade requests and reasoning
+- **Default Profiles**: Pre-configured `RANDOM` and `GREEDY` profiles for immediate use
+
+#### AI Profiles
+
+**Random Profile (`RANDOM`)**:
+
+- Balanced decision weights (priceSpread: 0.5, prosperity: 0.25, military: 0.25)
+- Suitable for unpredictable gameplay and testing scenarios
+- Conservative trade limits (1 trade per turn, max 5 quantity per trade)
+
+**Greedy Profile (`GREEDY`)**:
+
+- Prosperity-focused weights (priceSpread: 0.8, prosperity: 0.15, military: 0.05)
+- Heavy emphasis on price spread and economic gains
+- Same trade limits for game balance
+
+#### Usage Example
+
+```typescript
+import { RANDOM, GREEDY, type AiProfile } from './src/core/ai';
+
+// Use default profiles
+const randomAI: AiProfile = RANDOM;
+const greedyAI: AiProfile = GREEDY;
+
+// Create custom profile
+const customAI: AiProfile = {
+  id: 'custom',
+  mode: 'greedy',
+  weights: {
+    priceSpread: 0.6,
+    prosperity: 0.3,
+    military: 0.1,
+  },
+  maxTradesPerTurn: 2,
+  maxQuantityPerTrade: 10,
+};
+```
+
+#### Key Features
+
+- **Type Safety**: Full TypeScript support with no `any` types
+- **Flexible Weights**: Configurable decision criteria weights (0.0 to 1.0)
+- **Trade Limits**: Built-in limits for game balance and performance
+- **Extensible**: Easy to add new AI modes and custom profiles
+- **Ready for Integration**: Designed to work with future AI decision-making systems
+- **Clean Exports**: Barrel exports for easy importing and usage
 
 ### Trade System (`src/core/trade/`)
 
