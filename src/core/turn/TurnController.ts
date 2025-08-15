@@ -214,6 +214,12 @@ export class TurnController {
     let currentState = s;
     const aiTowns = s.towns.filter(town => town.id !== this.playerTownId);
 
+    // If there are no AI towns, emit a simple phase hook and return
+    if (aiTowns.length === 0) {
+      this.onPhase?.(TurnPhase.AiActions, { decided: false });
+      return currentState;
+    }
+
     for (const town of aiTowns) {
       // Get AI profile for this town, defaulting to 'greedy' if not specified
       const profile = this.aiProfiles[town.aiProfileId || 'greedy'] || this.aiProfiles['greedy'];
