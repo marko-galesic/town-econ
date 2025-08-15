@@ -8,3 +8,11 @@ pnpm format:check
 
 # Run type check to ensure no TypeScript errors
 pnpm typecheck
+
+# Check for Windows line endings (CRLF) - fail if any found
+if git grep -l $'\r' -- '*.ts' '*.js' '*.json' '*.md' '*.yml' '*.yaml' '*.html' '*.css' '*.scss' '*.vue' '*.svelte' '*.jsx' '*.tsx' 2>/dev/null; then
+  echo "❌ Windows line endings (CRLF) detected. Please convert to Unix line endings (LF)."
+  echo "You can fix this by running: git config core.autocrlf false && git add --renormalize ."
+  exit 1
+fi
+echo "✅ All files have Unix line endings (LF)"
