@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 986 tests passing)
+- `pnpm test` - Run test suite once (✅ 1012 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -65,6 +65,7 @@ town-econ/
 │   │   │   ├── AiTypes.ts # AI mode, profile, and decision interfaces
 │   │   │   ├── AiProfiles.ts # Default AI profiles (random, greedy)
 │   │   │   ├── Market.ts # Market snapshots and trading helpers for AI
+│   │   │   ├── Valuation.ts # Trade scoring system for AI decision making
 │   │   │   └── index.ts # AI system exports
 │   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -604,6 +605,49 @@ for (const town of market.towns) {
 }
 ```
 
+**Trade Valuation System**:
+
+The **Valuation module** provides AI with intelligent trade scoring for decision-making:
+
+```typescript
+import { scoreQuote, type Quote } from './src/core/ai';
+
+// Create a trade quote
+const quote: Quote = {
+  sellerId: 'riverdale',
+  buyerId: 'forestburg',
+  goodId: 'fish',
+  unitSellPrice: 10,
+  unitBuyPrice: 15,
+  quantity: 5,
+};
+
+// Score the trade based on AI profile preferences
+const score = scoreQuote(quote, goods, aiProfile);
+
+// Higher scores indicate better trades
+if (score > 0) {
+  // Profitable trade opportunity
+  console.log(`Trade score: ${score}`);
+}
+```
+
+**Scoring Formula**:
+
+The valuation system uses a weighted formula that combines price spread and strategic effects:
+
+- **Base Score**: `(unitBuyPrice - unitSellPrice) * quantity`
+- **Stat Bonus**: `prosperityWeight * prosperityDelta + militaryWeight * militaryDelta`
+- **Final Score**: `priceSpreadWeight * baseScore + statBonus`
+
+**Key Features**:
+
+- **Deterministic Scoring**: Same inputs always produce same outputs
+- **Weighted Evaluation**: Configurable weights for price spread vs. stat effects
+- **Strategic Alignment**: Considers prosperity and military benefits of goods
+- **Performance**: Fast mathematical operations for real-time decision making
+- **Type Safety**: Full TypeScript support with comprehensive interfaces
+
 #### Key Features
 
 - **Type Safety**: Full TypeScript support with no `any` types
@@ -1067,7 +1111,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **946 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, and **TurnService stats integration**
+- **1012 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, and **AI trade valuation system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1108,6 +1152,9 @@ pnpm test src/core/turn/TurnController.trade.spec.ts
 # Run trade limits tests
 pnpm test src/core/trade/TradeLimits.spec.ts
 pnpm test src/core/trade/TradeExecutor.limits.spec.ts
+
+# Run AI valuation tests
+pnpm test src/core/ai/Valuation.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
