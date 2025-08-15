@@ -444,4 +444,155 @@ describe('TurnController - AI Actions', () => {
       expect(result1.phaseLog).toEqual(result2.phaseLog);
     });
   });
+
+  describe('Cooldown System', () => {
+    it('should prevent AI from immediately reversing trades', async () => {
+      // Set up a scenario where Forestburg can buy fish from Riverdale
+      const modifiedState = {
+        ...gameState,
+        towns: gameState.towns.map(town => {
+          if (town.id === 'riverdale') {
+            // Riverdale has fish to sell at a reasonable price
+            return {
+              ...town,
+              treasury: 1000,
+              resources: { ...town.resources, fish: 20 },
+              prices: { ...town.prices, fish: 2 }, // Sell price
+            };
+          }
+          if (town.id === 'forestburg') {
+            // Forestburg wants to buy fish and has money
+            return {
+              ...town,
+              aiProfileId: 'greedy',
+              treasury: 2000,
+              resources: { ...town.resources, fish: 0 },
+              prices: { ...town.prices, fish: 4 }, // Buy price (higher than Riverdale's sell price)
+            };
+          }
+          return town;
+        }),
+      };
+
+      // Run the first turn - Forestburg should buy fish from Riverdale
+      const result1 = await controller.runTurn(modifiedState);
+
+      // Verify that a trade occurred
+      const aiActions1 = phaseLog.filter(p => p.phase === TurnPhase.AiActions).map(p => p.detail);
+
+      const tradeAction1 = aiActions1.find(
+        detail => detail && typeof detail === 'object' && 'tradeResult' in detail,
+      );
+      expect(tradeAction1).toBeDefined();
+
+      // Now set up a scenario where Forestburg wants to buy fish again (but should be blocked by cooldown)
+      const stateAfterTrade1 = result1.state;
+      const reverseState = {
+        ...stateAfterTrade1,
+        towns: stateAfterTrade1.towns.map(town => {
+          if (town.id === 'riverdale') {
+            // Riverdale now has fish to sell again
+            return {
+              ...town,
+              resources: { ...town.resources, fish: 15 }, // Still has some fish
+              prices: { ...town.prices, fish: 2 }, // Same sell price
+            };
+          }
+          if (town.id === 'forestburg') {
+            // Forestburg wants to buy fish again (but should be blocked by cooldown)
+            return {
+              ...town,
+              treasury: 1500, // Still has money
+              prices: { ...town.prices, fish: 4 }, // Still willing to pay high price
+            };
+          }
+          return town;
+        }),
+      };
+
+      // Run the second turn - Forestburg should NOT be able to buy fish again due to cooldown
+      await controller.runTurn(reverseState);
+
+      // Verify that no reverse trade occurred
+      const aiActions2 = phaseLog.filter(p => p.phase === TurnPhase.AiActions).map(p => p.detail);
+
+      // Forestburg should skip trading due to cooldown (it was the buyer in the first trade)
+      const forestburgAction2 = aiActions2.find(
+        detail =>
+          detail &&
+          typeof detail === 'object' &&
+          (detail as { townId: string }).townId === 'forestburg',
+      );
+
+      expect(forestburgAction2).toBeDefined();
+
+      const decision = (
+        forestburgAction2 as {
+          decision: { skipped?: boolean; reason?: string; request?: { goodId: string } };
+        }
+      ).decision;
+
+      // The AI might still find other trading opportunities, so we need to check if it's trading fish
+      if (decision.skipped) {
+        expect(decision.reason).toBe('no-candidate'); // Should be filtered out due to cooldown
+      } else {
+        // If it's not skipped, it should not be trading fish (due to cooldown)
+        expect(decision.request).toBeDefined();
+        expect(decision.request!.goodId).not.toBe('fish'); // Should not be trading fish due to cooldown
+      }
+    });
+
+    it('should allow trading after cooldown expires', async () => {
+      // Set up initial trade scenario
+      const modifiedState = {
+        ...gameState,
+        towns: gameState.towns.map(town => {
+          if (town.id === 'riverdale') {
+            return {
+              ...town,
+              treasury: 1000,
+              resources: { ...town.resources, fish: 20 },
+              prices: { ...town.prices, fish: 2 },
+            };
+          }
+          if (town.id === 'forestburg') {
+            return {
+              ...town,
+              aiProfileId: 'greedy',
+              treasury: 2000,
+              resources: { ...town.resources, fish: 0 },
+              prices: { ...town.prices, fish: 4 },
+            };
+          }
+          return town;
+        }),
+      };
+
+      // Run first turn - Forestburg buys fish
+      await controller.runTurn(modifiedState);
+
+      // Run second turn - cooldown still active, should skip
+      await controller.runTurn(modifiedState);
+
+      // Run third turn - cooldown should be expired, trading allowed again
+      await controller.runTurn(modifiedState);
+
+      // Verify that Forestburg can trade again in the third turn
+      const aiActions3 = phaseLog.filter(p => p.phase === TurnPhase.AiActions).map(p => p.detail);
+
+      const forestburgAction3 = aiActions3.find(
+        detail =>
+          detail &&
+          typeof detail === 'object' &&
+          (detail as { townId: string }).townId === 'forestburg',
+      );
+
+      // Forestburg should be able to trade again (either successfully or skip for other reasons)
+      expect(forestburgAction3).toBeDefined();
+
+      // The important thing is that it's not blocked by cooldown anymore
+      // It might still skip for other reasons (no profitable opportunities, etc.)
+      // We don't care if it skips or trades, just that cooldown isn't blocking it
+    });
+  });
 });

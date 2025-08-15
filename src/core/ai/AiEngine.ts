@@ -4,6 +4,7 @@ import type { TradeRequest } from '../trade/TradeTypes';
 
 import type { AiProfile, AiDecision } from './AiTypes';
 import { generateCandidates } from './Candidates';
+import type { CooldownState } from './Cooldown';
 import { snapshotMarket } from './Market';
 import { chooseTrade } from './Policy';
 import type { Quote } from './Valuation';
@@ -31,6 +32,7 @@ export function decideAiTrade(
   profile: AiProfile,
   goods: Record<GoodId, GoodConfig>,
   seed: string,
+  cooldownState?: CooldownState,
 ): AiDecision {
   const market = snapshotMarket(state);
   const candidates = generateCandidates(market, goods, {
@@ -38,9 +40,24 @@ export function decideAiTrade(
   });
 
   // Filter candidates so AI only acts for itself
-  const aiCandidates = candidates.filter(
+  let aiCandidates = candidates.filter(
     candidate => candidate.buyerId === aiTownId || candidate.sellerId === aiTownId,
   );
+
+  // Filter out candidates that are in cooldown for the buyer
+  if (cooldownState) {
+    aiCandidates = aiCandidates.filter(candidate => {
+      // Only apply cooldown to buying actions (when AI is the buyer)
+      if (candidate.buyerId === aiTownId) {
+        const cooldownKey = `${aiTownId}:${candidate.goodId}`;
+        const cooldownUntil = cooldownState[cooldownKey];
+        if (cooldownUntil !== undefined && state.turn <= cooldownUntil) {
+          return false; // Skip this candidate due to cooldown
+        }
+      }
+      return true;
+    });
+  }
 
   if (aiCandidates.length === 0) {
     return { skipped: true, reason: 'no-candidate' };

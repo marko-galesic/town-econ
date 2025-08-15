@@ -2,6 +2,8 @@ import type { GameState } from '../../types/GameState';
 import type { GoodConfig } from '../../types/Goods';
 import { decideAiTrade } from '../ai/AiEngine';
 import type { AiProfile } from '../ai/AiTypes';
+import type { CooldownState } from '../ai/Cooldown';
+import { markCooldown, createCooldownKey, clearExpiredCooldowns } from '../ai/Cooldown';
 import { advanceTurn } from '../stateApi';
 import type { PriceModel } from '../trade/PriceModel';
 import { performTrade } from '../trade/TradeService';
@@ -53,6 +55,7 @@ export class TurnController {
   private readonly goods: Record<string, GoodConfig>;
   private readonly aiProfiles: Record<string, AiProfile>;
   private readonly playerTownId: string;
+  private cooldownState: CooldownState = {};
 
   constructor(
     private readonly playerQ: PlayerActionQueue,
@@ -207,6 +210,10 @@ export class TurnController {
     let currentState = s;
     const aiTowns = s.towns.filter(town => town.id !== this.playerTownId);
 
+    // Clear expired cooldowns at the start of AI actions phase
+    // Clear cooldowns that expired before this turn started
+    clearExpiredCooldowns(this.cooldownState, s.turn - 1);
+
     // If there are no AI towns, emit a simple phase hook and return
     if (aiTowns.length === 0) {
       this.onPhase?.(TurnPhase.AiActions, { decided: false });
@@ -228,6 +235,7 @@ export class TurnController {
         profile,
         this.goods,
         currentState.rngSeed,
+        this.cooldownState,
       );
 
       if (decision.request) {
@@ -240,6 +248,10 @@ export class TurnController {
             this.goods,
           );
           currentState = tradeResult.state;
+
+          // Mark cooldown for the AI town that made the decision (townId, goodId) combination
+          const cooldownKey = createCooldownKey(town.id, decision.request.goodId);
+          markCooldown(this.cooldownState, cooldownKey, s.turn);
 
           // Notify observer with trade details
           this.onPhase?.(TurnPhase.AiActions, {

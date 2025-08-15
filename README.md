@@ -651,6 +651,51 @@ if (selectedTrade) {
 - **Mode Flexibility**: Easy switching between random and greedy behaviors
 - **Integration Ready**: Designed to work with existing AI decision systems
 
+**Cooldown System**:
+
+The **Cooldown module** prevents thrashing trades by implementing a sophisticated cooldown mechanism:
+
+```typescript
+import {
+  CooldownState,
+  shouldSkipCooldown,
+  markCooldown,
+  createCooldownKey,
+  clearExpiredCooldowns,
+} from './src/core/ai/Cooldown';
+
+// Initialize cooldown state
+const cooldownState: CooldownState = {};
+
+// Mark cooldown after trade execution
+const cooldownKey = createCooldownKey('forestburg', 'fish');
+markCooldown(cooldownState, cooldownKey, currentTurn);
+
+// Check if trade should be skipped due to cooldown
+if (shouldSkipCooldown(cooldownState, cooldownKey, nextTurn)) {
+  // Skip this trade candidate
+  return false;
+}
+
+// Clean up expired cooldowns
+clearExpiredCooldowns(cooldownState, currentTurn);
+```
+
+**Core Functions**:
+
+- **`shouldSkipCooldown()`**: Checks if a trade should be blocked due to active cooldown
+- **`markCooldown()`**: Records cooldown for a specific (townId, goodId) combination
+- **`createCooldownKey()`**: Generates consistent cooldown keys from town and good IDs
+- **`clearExpiredCooldowns()`**: Removes expired cooldowns to maintain performance
+
+**Key Features**:
+
+- **Per-Good Isolation**: Cooldown only affects specific goods, not entire towns
+- **Configurable Duration**: Default 1-turn cooldown, easily adjustable
+- **Automatic Cleanup**: Expired cooldowns are automatically removed
+- **AI Integration**: Seamlessly integrated into AI decision-making process
+- **Performance Optimized**: Minimal memory and CPU overhead
+
 **AI Engine System**:
 
 The **AiEngine module** provides the core AI decision-making logic that converts trade quotes into executable trade requests:
@@ -787,6 +832,62 @@ Comprehensive test suite covers all AI actions functionality:
 - **Deterministic Behavior**: Tests verify consistent results with fixed seeds
 - **Trade Execution**: Tests verify successful trade execution and state updates
 - **Skip Scenarios**: Tests verify AI properly skips when no profitable trades exist
+
+**Cooldown System**:
+
+The AI system includes a sophisticated cooldown mechanism to prevent thrashing trades (A buys from B this turn, then reverses next turn):
+
+```typescript
+// Cooldown prevents immediate trade reversal
+const cooldownState: CooldownState = {};
+
+// After AI trades, cooldown is marked for (townId, goodId)
+markCooldown(cooldownState, 'forestburg:fish', currentTurn);
+
+// Next turn, AI is blocked from trading the same good
+if (shouldSkipCooldown(cooldownState, 'forestburg:fish', nextTurn)) {
+  // Skip this trade candidate due to cooldown
+  return false;
+}
+```
+
+**Key Features**:
+
+- **Per-Good Cooldown**: Cooldown applies to specific (townId, goodId) combinations
+- **Configurable Duration**: Default 1-turn cooldown, configurable per use case
+- **Smart Filtering**: Only blocks buying the same good, allows other trades
+- **Automatic Cleanup**: Expired cooldowns are automatically cleared each turn
+- **AI Integration**: Seamlessly integrated into AI decision-making process
+
+**Cooldown Behavior**:
+
+1. **Trade Execution**: When AI executes a trade, cooldown is marked for buyer's (townId, goodId)
+2. **Candidate Filtering**: AI decision engine filters out cooldown-blocked trade candidates
+3. **Alternative Opportunities**: AI can still trade other goods or act as seller while in cooldown
+4. **Expiration**: Cooldown automatically expires after specified interval, allowing trade again
+
+**Example Scenario**:
+
+```typescript
+// Turn 1: Forestburg buys fish from Riverdale
+const decision1 = decideAiTrade(state, 'forestburg', profile, goods, seed, cooldownState);
+// Trade executes, cooldown marked for 'forestburg:fish'
+
+// Turn 2: Forestburg tries to buy fish again
+const decision2 = decideAiTrade(state, 'forestburg', profile, goods, seed, cooldownState);
+// Cooldown blocks fish trade, but AI can trade other goods (ore, wood, etc.)
+
+// Turn 3: Cooldown expires, fish trading allowed again
+const decision3 = decideAiTrade(state, 'forestburg', profile, goods, seed, cooldownState);
+// Fish trading resumes normally
+```
+
+**Benefits**:
+
+- **Prevents Thrashing**: Eliminates immediate trade reversal behavior
+- **Maintains Profitability**: AI continues finding profitable trading opportunities
+- **Economic Stability**: Reduces price volatility from rapid buy/sell cycles
+- **Realistic Behavior**: Mimics real-world trading constraints and market dynamics
 - **Profile Handling**: Tests verify different AI profiles produce expected behaviors
 - **Error Scenarios**: Tests verify graceful handling of missing profiles and failed trades
 - **Phase Details**: Tests verify proper emission of phase hook data
