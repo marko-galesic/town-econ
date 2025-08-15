@@ -29,8 +29,6 @@ export function exampleStatsUpdatePipelineUsage() {
   // You can also register additional systems
   // pipeline.register(otherSystem);
 
-  console.log(`Pipeline has ${pipeline.systemCount} registered systems`);
-
   return pipeline;
 }
 

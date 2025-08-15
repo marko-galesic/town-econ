@@ -151,8 +151,6 @@ describe('TurnController - AI Actions', () => {
         ],
       };
 
-      console.log('Minimal state for skip test:', JSON.stringify(minimalState.towns, null, 2));
-
       // Run the turn
       const result = await controller.runTurn(minimalState);
 
@@ -168,8 +166,6 @@ describe('TurnController - AI Actions', () => {
       const aiActionsDetails = phaseLog
         .filter(p => p.phase === TurnPhase.AiActions)
         .map(p => p.detail);
-
-      console.log('AI actions details for skip test:', JSON.stringify(aiActionsDetails, null, 2));
 
       // Should have AI actions with skip decisions
       const skipActions = aiActionsDetails.filter(

@@ -102,28 +102,21 @@ export class TurnController {
     const phaseLog: TurnPhase[] = [];
 
     try {
-      console.log('TurnController.runTurn starting with turn:', state.turn);
-
       // Execute phases in order
       let currentState = await this.startTurn(state);
-      console.log('After startTurn - turn:', currentState.turn);
       phaseLog.push(TurnPhase.Start);
       this.onPhase?.(TurnPhase.Start);
 
       currentState = await this.playerAction(currentState);
-      console.log('After playerAction - turn:', currentState.turn);
       phaseLog.push(TurnPhase.PlayerAction);
 
       currentState = await this.aiActions(currentState);
-      console.log('After aiActions - turn:', currentState.turn);
       phaseLog.push(TurnPhase.AiActions);
 
       currentState = await this.updateStats(currentState);
-      console.log('After updateStats - turn:', currentState.turn);
       phaseLog.push(TurnPhase.UpdateStats);
 
       currentState = await this.endTurn(currentState);
-      console.log('After endTurn - turn:', currentState.turn);
       phaseLog.push(TurnPhase.End);
 
       return {
@@ -225,7 +218,6 @@ export class TurnController {
       const profile = this.aiProfiles[town.aiProfileId || 'greedy'] || this.aiProfiles['greedy'];
 
       if (!profile) {
-        console.warn(`No AI profile found for town ${town.id}, skipping`);
         continue;
       }
 
@@ -263,7 +255,6 @@ export class TurnController {
           // Each town can make up to their maxTradesPerTurn trades
         } catch (error) {
           // Log error but continue with other AI towns
-          console.warn(`AI trade failed for town ${town.id}:`, error);
           this.onPhase?.(TurnPhase.AiActions, {
             townId: town.id,
             decision,
@@ -288,20 +279,7 @@ export class TurnController {
    * @returns Updated game state after all update systems have been applied
    */
   private async updateStats(s: GameState): Promise<GameState> {
-    console.log('TurnController.updateStats called with turn:', s.turn);
-    console.log('Pipeline system count:', this.updatePipeline.systemCount);
-
     const s2 = this.updatePipeline.run(s);
-
-    console.log('After pipeline run - turn:', s2.turn);
-    console.log('After pipeline run - towns count:', s2.towns.length);
-    if (s2.towns.length > 0) {
-      console.log('After pipeline run - town 0 prosperity:', s2.towns[0]!.prosperityRaw);
-      console.log(
-        'After pipeline run - town 0 lastUpdatedTurn:',
-        s2.towns[0]!.revealed.lastUpdatedTurn,
-      );
-    }
 
     this.onPhase?.(TurnPhase.UpdateStats, { ran: this.updatePipeline.systemCount });
     return s2;

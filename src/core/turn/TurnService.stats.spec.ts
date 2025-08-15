@@ -73,16 +73,7 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('=== Testing TurnController directly ===');
-      console.log('Initial turn:', testState.turn);
-      console.log('Initial lastUpdatedTurn:', testState.towns[0]!.revealed.lastUpdatedTurn);
-      console.log('Pipeline system count:', pipeline.systemCount);
-
       const result = await controller.runTurn(testState);
-
-      console.log('Final turn:', result.state.turn);
-      console.log('Final lastUpdatedTurn:', result.state.towns[0]!.revealed.lastUpdatedTurn);
-      console.log('Phase log:', result.phaseLog);
 
       // This should work if the TurnController is working
       expect(result.state.turn).toBe(1);
@@ -113,15 +104,7 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('=== Testing TurnController method execution ===');
-      console.log('Initial turn:', testState.turn);
-      console.log('Initial lastUpdatedTurn:', testState.towns[0]!.revealed.lastUpdatedTurn);
-
       const result = await controller.runTurn(testState);
-
-      console.log('Final turn:', result.state.turn);
-      console.log('Final lastUpdatedTurn:', result.state.towns[0]!.revealed.lastUpdatedTurn);
-      console.log('Phase log:', result.phaseLog);
 
       // The startTurn method should increment the turn counter
       expect(result.state.turn).toBe(1);
@@ -153,11 +136,7 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('=== About to call runTurn ===');
       const result = await controller.runTurn(testState);
-      console.log('=== After runTurn ===');
-      console.log('Phase log:', result.phaseLog);
-      console.log('Final lastUpdatedTurn:', result.state.towns[0]!.revealed.lastUpdatedTurn);
 
       // If the updateStats method was called, we should see the debug output
       // and the lastUpdatedTurn should stay -1 since no reveal happened on turn 1
@@ -165,13 +144,7 @@ describe('TurnService Stats Integration', () => {
     });
 
     it('should verify TurnController instance and pipeline reference', () => {
-      const { controller, pipeline } = createTurnController(mockState);
-
-      console.log('=== TurnController Debug Info ===');
-      console.log('Controller constructor name:', controller.constructor.name);
-      console.log('Pipeline reference from factory:', pipeline);
-      console.log('Pipeline system count from factory:', pipeline.systemCount);
-      console.log('================================');
+      const { pipeline } = createTurnController(mockState);
 
       // The pipeline should be properly registered
       expect(pipeline.systemCount).toBe(1);
@@ -204,14 +177,7 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('Testing StatsUpdateSystem directly');
-      console.log('Input state turn:', testState.turn);
-      console.log('Input state lastUpdatedTurn:', testState.towns[0]!.revealed.lastUpdatedTurn);
-
       const result = statsSystem(testState);
-
-      console.log('Output state turn:', result.turn);
-      console.log('Output state lastUpdatedTurn:', result.towns[0]!.revealed.lastUpdatedTurn);
 
       // The system should work directly
       expect(result.towns[0]!.prosperityRaw).toBe(49); // 50 - 1
@@ -242,16 +208,8 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('Testing TurnController pipeline directly');
-      console.log('Pipeline system count:', pipeline.systemCount);
-      console.log('Input state turn:', testState.turn);
-      console.log('Input state lastUpdatedTurn:', testState.towns[0]!.revealed.lastUpdatedTurn);
-
       // Run the pipeline directly
       const result = pipeline.run(testState);
-
-      console.log('Output state turn:', result.turn);
-      console.log('Output state lastUpdatedTurn:', result.towns[0]!.revealed.lastUpdatedTurn);
 
       // The pipeline should work directly
       expect(result.towns[0]!.prosperityRaw).toBe(49); // 50 - 1
@@ -342,16 +300,7 @@ describe('TurnService Stats Integration', () => {
         ],
       };
 
-      console.log('Initial state - turn:', stateWithTowns.turn);
-      console.log(
-        'Initial state - town 0 lastUpdatedTurn:',
-        stateWithTowns.towns[0]!.revealed.lastUpdatedTurn,
-      );
-
       const { controller } = createTurnController(stateWithTowns);
-      console.log('Controller created, about to call runTurn');
-      console.log('Controller class:', controller.constructor.name);
-      console.log('Controller has updatePipeline property:', 'updatePipeline' in controller);
 
       // Turn 0: Should NOT reveal (interval=2, lastUpdatedTurn=-1, but updateStats called with turn 1)
       let result = await controller.runTurn(stateWithTowns);

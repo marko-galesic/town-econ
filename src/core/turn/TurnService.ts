@@ -50,9 +50,7 @@ export function createTurnController(
     { raw: { prosperityDecayPerTurn: 1 }, revealInterval: 2 },
     s => s.rngSeed,
   );
-  console.log('Created stats system:', typeof statsSystem);
   pipeline.register(statsSystem);
-  console.log('Pipeline system count after registration:', pipeline.systemCount);
 
   // Create default price model if none provided
   const priceModel = opts?.priceModel ?? createSimpleLinearPriceModel();

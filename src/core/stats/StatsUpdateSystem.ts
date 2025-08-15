@@ -30,28 +30,18 @@ export function createStatsUpdateSystem(
   _seedAccessor?: (_gameState: GameState) => string,
 ): (_gameState: GameState) => GameState {
   return (_gameState: GameState) => {
-    console.log('StatsUpdateSystem called with turn:', _gameState.turn);
-    console.log('StatsUpdateSystem towns count:', _gameState.towns.length);
-
     // Step 1: Apply raw stat updates (decay, etc.)
     const s1 = applyRawStatTurn(_gameState, { ...DEFAULT_RAW_RULES, ..._opts?.raw });
-    console.log('After raw stat update - town 0 prosperity:', s1.towns[0]?.prosperityRaw);
 
     // Step 2: Apply reveal pass with configured interval
     const policy: RevealPolicy = {
       interval: _opts?.revealInterval ?? DEFAULT_REVEAL_POLICY.interval,
     };
-    console.log('Reveal policy interval:', policy.interval);
 
     // Use provided seed accessor or fall back to rngSeed
     const seed = _seedAccessor ? _seedAccessor(s1) : s1.rngSeed;
-    console.log('Using seed:', seed);
 
     const s2 = applyRevealPass(s1, seed, policy);
-    console.log(
-      'After reveal pass - town 0 lastUpdatedTurn:',
-      s2.towns[0]?.revealed.lastUpdatedTurn,
-    );
 
     return s2;
   };
