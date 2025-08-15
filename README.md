@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 1029 tests passing)
+- `pnpm test` - Run test suite once (✅ 1145 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -70,6 +70,9 @@ town-econ/
 │   │   │   ├── Policy.ts # AI trade selection policy (random vs greedy)
 │   │   │   ├── AiEngine.ts # Core AI decision-making and trade request conversion
 │   │   │   └── index.ts # AI system exports
+│   │   ├── production/   # Production system configuration and rates
+│   │   │   ├── Config.ts # Production configuration loader
+│   │   │   └── Config.spec.ts # Production configuration test suite (7 tests)
 │   │   ├── trade/        # Trade system types, error handling, validation,
 │   │   │                 # execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -105,10 +108,12 @@ town-econ/
 │   │   ├── GameState.ts  # Main game state interface
 │   │   ├── Town.ts       # Town entity interface with treasury system
 │   │   ├── Goods.ts      # Goods and resources interface
+│   │   ├── Production.ts # Production rates and town multipliers interface
 │   │   └── Tiers.ts      # Military and prosperity tier types
 │   ├── data/             # Game data and configuration
 │   │   ├── goods.json    # Goods definitions and effects
 │   │   ├── towns.json    # Initial town configurations
+│   │   ├── production.json # Production rates and town multipliers configuration
 │   │   └── tierThresholds.json # Tier mapping thresholds for military and prosperity
 │   ├── core/stats/       # Statistics and tier mapping utilities
 │   │       ├── TierMap.ts # Tier mapping functions and interfaces
@@ -143,6 +148,78 @@ town-econ/
 ```
 
 ## 🎮 Core Features
+
+### Production System (`src/core/production/`)
+
+A data-driven production system that defines base production rates for goods and supports town-specific multipliers:
+
+#### Core Components
+
+- **`ProductionRates`**: Maps each GoodId to production rate per turn (e.g., fish: 3, wood: 2, ore: 1)
+- **`TownProductionMultiplier`**: Optional town-specific production multipliers for future customization
+- **`ProductionConfig`**: Main configuration interface with base rates and town multipliers
+- **`loadProductionConfig()`**: Pure function that loads production configuration from JSON data
+
+#### Configuration
+
+```typescript
+import { loadProductionConfig } from './src/core/production/Config';
+
+// Load production configuration
+const config = loadProductionConfig();
+
+// Access base production rates
+console.log(config.base.fish); // 3 units per turn
+console.log(config.base.wood); // 2 units per turn
+console.log(config.base.ore); // 1 unit per turn
+
+// Town multipliers (currently empty, ready for future use)
+console.log(config.townMultipliers); // {}
+```
+
+#### Data Structure
+
+```json
+{
+  "base": {
+    "fish": 3,
+    "wood": 2,
+    "ore": 1
+  },
+  "townMultipliers": {}
+}
+```
+
+#### Key Features
+
+- **Data-Driven**: JSON-based configuration for easy tuning without code changes
+- **Type Safety**: Full TypeScript support with `Record<GoodId, number>` for required base rates
+- **Future-Ready**: Town multipliers system ready for town-specific production bonuses
+- **Validation**: Comprehensive test suite ensures data integrity and type compliance
+- **Pure Functions**: Configuration loader is pure with no side effects
+- **Extensible**: Easy to add new goods or modify production rates
+
+#### Usage Example
+
+```typescript
+import { loadProductionConfig } from './src/core/production/Config';
+import type { ProductionConfig } from './src/types/Production';
+
+// Load configuration
+const productionConfig: ProductionConfig = loadProductionConfig();
+
+// Calculate production for a specific town (with future multiplier support)
+function calculateTownProduction(townId: string, goodId: GoodId): number {
+  const baseRate = productionConfig.base[goodId];
+  const multiplier = productionConfig.townMultipliers[townId]?.[goodId] ?? 1.0;
+
+  return Math.floor(baseRate * multiplier);
+}
+
+// Example usage
+const fishProduction = calculateTownProduction('riverdale', 'fish'); // 3
+const woodProduction = calculateTownProduction('forestburg', 'wood'); // 2
+```
 
 ### Immutable State Management (`src/core/stateApi.ts`)
 
@@ -1461,7 +1538,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1138 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, and **AI telemetry system**
+- **1145 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, **AI telemetry system**, and **production system configuration**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1517,6 +1594,9 @@ pnpm test src/core/turn/TurnController.ai.spec.ts
 
 # Run AI telemetry tests
 pnpm test src/core/ai/AiTelemetry.spec.ts
+
+# Run production configuration tests
+pnpm test src/core/production/Config.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts

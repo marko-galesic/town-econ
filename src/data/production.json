@@ -1,0 +1,8 @@
+{
+  "base": {
+    "fish": 3,
+    "wood": 2,
+    "ore": 1
+  },
+  "townMultipliers": {}
+}
