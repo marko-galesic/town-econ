@@ -46,8 +46,8 @@ describe('Market', () => {
     prosperityRaw: 30,
     treasury: 2000,
     revealed: {
-      militaryTier: 'fortress',
-      prosperityTier: 'wealthy',
+      militaryTier: 'host',
+      prosperityTier: 'opulent',
       lastUpdatedTurn: 4,
     },
   };
@@ -61,7 +61,7 @@ describe('Market', () => {
     prosperityRaw: 15,
     treasury: 500,
     revealed: {
-      militaryTier: 'outpost',
+      militaryTier: 'militia',
       prosperityTier: 'struggling',
       lastUpdatedTurn: 2,
     },
@@ -138,14 +138,20 @@ describe('Market', () => {
       const snapshot = snapshotMarket(frozenState);
 
       // Modify the snapshot to ensure it doesn't affect the original
-      snapshot.towns[0].prices.fish = 999;
-      snapshot.towns[0].stock.fish = 999;
-      snapshot.towns[0].treasury = 999;
+      const town0 = snapshot.towns[0];
+      if (town0) {
+        town0.prices.fish = 999;
+        town0.stock.fish = 999;
+        town0.treasury = 999;
+      }
 
       // Original state should remain unchanged
-      expect(frozenState.towns[0].prices.fish).toBe(2);
-      expect(frozenState.towns[0].resources.fish).toBe(10);
-      expect(frozenState.towns[0].treasury).toBe(1000);
+      const frozenTown0 = frozenState.towns[0];
+      if (frozenTown0) {
+        expect(frozenTown0.prices.fish).toBe(2);
+        expect(frozenTown0.resources.fish).toBe(10);
+        expect(frozenTown0.treasury).toBe(1000);
+      }
     });
   });
 
@@ -216,6 +222,9 @@ describe('Market', () => {
 
       // Scenario: AI wants to buy 50 fish from town 1
       const town1 = snapshot.towns[0];
+      if (!town1) {
+        throw new Error('Town 1 not found in snapshot');
+      }
       const fishPrice = town1.prices.fish;
       const fishStock = town1.stock.fish;
       const aiTreasury = 200;
@@ -234,20 +243,23 @@ describe('Market', () => {
       const snapshot = snapshotMarket(frozenState);
 
       const town2 = snapshot.towns[1];
+      if (!town2) {
+        throw new Error('Town 2 not found in snapshot');
+      }
       const aiTreasury = 100;
 
       // Check all goods in town 2
       const fishTrade = maxTradableStock(
         maxAffordable(30, town2.prices.fish, aiTreasury),
-        town2.stock.fish
+        town2.stock.fish,
       );
       const woodTrade = maxTradableStock(
         maxAffordable(30, town2.prices.wood, aiTreasury),
-        town2.stock.wood
+        town2.stock.wood,
       );
       const oreTrade = maxTradableStock(
         maxAffordable(30, town2.prices.ore, aiTreasury),
-        town2.stock.ore
+        town2.stock.ore,
       );
 
       // fish: price 3, stock 20, treasury 100 -> can afford 33, trade 20

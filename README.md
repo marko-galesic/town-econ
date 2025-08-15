@@ -533,6 +533,7 @@ The **Market module** provides AI with a read-only view of the current market st
 - **`maxTradableStock(qty, stock)`**: Helper to compute maximum tradable quantity given inventory constraints
 
 **Key Features**:
+
 - **Pure Functions**: No mutation of input state, deterministic snapshots
 - **Trading Constraints**: Built-in helpers for budget and inventory limitations
 - **Type Safety**: Full TypeScript support with comprehensive interfaces
@@ -577,8 +578,14 @@ const customAI: AiProfile = {
 ```
 
 **Market Module**:
+
 ```typescript
-import { snapshotMarket, maxAffordable, maxTradableStock, type MarketSnapshot } from './src/core/ai';
+import {
+  snapshotMarket,
+  maxAffordable,
+  maxTradableStock,
+  type MarketSnapshot,
+} from './src/core/ai';
 
 // Get current market state
 const market: MarketSnapshot = snapshotMarket(gameState);
@@ -589,7 +596,7 @@ for (const town of market.towns) {
   const affordableQty = maxAffordable(50, town.prices.fish, aiTreasury);
   // Check if town has enough stock
   const tradableQty = maxTradableStock(affordableQty, town.stock.fish);
-  
+
   if (tradableQty > 0) {
     // AI can trade this quantity
     console.log(`Can trade ${tradableQty} fish with ${town.id}`);
