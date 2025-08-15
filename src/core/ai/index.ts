@@ -4,3 +4,5 @@ export type { MarketTownView, MarketSnapshot } from './Market';
 export { snapshotMarket, maxAffordable, maxTradableStock } from './Market';
 export { scoreQuote } from './Valuation';
 export type { Quote } from './Valuation';
+export { generateCandidates } from './Candidates';
+export type { CandidateOptions } from './Candidates';

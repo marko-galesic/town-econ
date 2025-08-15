@@ -66,6 +66,7 @@ town-econ/
 │   │   │   ├── AiProfiles.ts # Default AI profiles (random, greedy)
 │   │   │   ├── Market.ts # Market snapshots and trading helpers for AI
 │   │   │   ├── Valuation.ts # Trade scoring system for AI decision making
+│   │   │   ├── Candidates.ts # Trade candidate generation for AI decision making
 │   │   │   └── index.ts # AI system exports
 │   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -605,6 +606,48 @@ for (const town of market.towns) {
 }
 ```
 
+**Trade Candidate Generation System**:
+
+The **Candidates module** generates feasible trade opportunities for AI decision-making by analyzing market conditions:
+
+```typescript
+import { generateCandidates, type CandidateOptions } from './src/core/ai';
+
+// Generate feasible trade candidates
+const options: CandidateOptions = { maxQuantityPerTrade: 50 };
+const candidates = generateCandidates(market, goods, options);
+
+// Each candidate represents a profitable trade opportunity
+candidates.forEach(candidate => {
+  console.log(
+    `${candidate.sellerId} → ${candidate.buyerId}: ${candidate.quantity} ${candidate.goodId}`,
+  );
+  console.log(`  Sell at ${candidate.unitSellPrice}, Buy at ${candidate.unitBuyPrice}`);
+  console.log(
+    `  Profit: ${(candidate.unitBuyPrice - candidate.unitSellPrice) * candidate.quantity}`,
+  );
+});
+```
+
+**Candidate Generation Logic**:
+
+The system analyzes all possible town pairs and goods combinations:
+
+- **Price Spread Filtering**: Only generates candidates where `priceA < priceB` (profitable direction)
+- **Stock Constraints**: Respects seller's available inventory for each good
+- **Treasury Constraints**: Respects buyer's available funds (buyer pays seller's unit price)
+- **Quantity Capping**: Limits trade size to `maxQuantityPerTrade` for game balance
+- **Feasibility Check**: Only returns candidates with quantity > 0
+
+**Key Features**:
+
+- **Pure Function**: No state mutation, deterministic output
+- **Constraint Validation**: Automatically respects stock, treasury, and trade limits
+- **Profit Filtering**: Only generates trades with positive price spreads
+- **Comprehensive Coverage**: Analyzes all town pairs and goods combinations
+- **Performance**: Efficient O(n² × m) algorithm where n = towns, m = goods
+- **Type Safety**: Full TypeScript support with comprehensive interfaces
+
 **Trade Valuation System**:
 
 The **Valuation module** provides AI with intelligent trade scoring for decision-making:
@@ -1111,7 +1154,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1012 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, and **AI trade valuation system**
+- **1020 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, and **AI trade candidate generation system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1155,6 +1198,9 @@ pnpm test src/core/trade/TradeExecutor.limits.spec.ts
 
 # Run AI valuation tests
 pnpm test src/core/ai/Valuation.spec.ts
+
+# Run AI trade candidate generation tests
+pnpm test src/core/ai/Candidates.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
