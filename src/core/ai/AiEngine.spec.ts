@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
 
-
 import { quoteToTradeRequest, decideAiTrade } from './AiEngine';
 import type { AiProfile } from './AiTypes';
 import * as Candidates from './Candidates';
@@ -30,18 +29,18 @@ describe('AiEngine', () => {
         goodId: 'fish',
         quantity: 100,
         unitSellPrice: 5.5,
-        unitBuyPrice: 6.0
+        unitBuyPrice: 6.0,
       };
 
       const result = quoteToTradeRequest(mockQuote);
 
       expect(result).toEqual({
-        fromTownId: 'town-a',        // buyer initiates the buy
+        fromTownId: 'town-a', // buyer initiates the buy
         toTownId: 'town-b',
         side: 'buy',
         goodId: 'fish',
         quantity: 100,
-        pricePerUnit: 5.5            // buyer pays seller's price
+        pricePerUnit: 5.5, // buyer pays seller's price
       });
     });
   });
@@ -57,7 +56,7 @@ describe('AiEngine', () => {
         military: 0.1,
       },
       maxTradesPerTurn: 3,
-      maxQuantityPerTrade: 50
+      maxQuantityPerTrade: 50,
     };
     const mockGoods: Record<GoodId, GoodConfig> = {
       fish: {
@@ -83,14 +82,14 @@ describe('AiEngine', () => {
           prosperityDelta: 2,
           militaryDelta: 1,
         },
-      }
+      },
     };
     const mockSeed = 'test-seed-123';
     const aiTownId = 'ai-town';
 
     it('returns skipped if no candidates', () => {
       const mockMarket: MarketSnapshot = {
-        towns: []
+        towns: [],
       };
       const mockCandidates: Quote[] = [];
 
@@ -101,13 +100,13 @@ describe('AiEngine', () => {
 
       expect(result).toEqual({
         skipped: true,
-        reason: 'no-candidate'
+        reason: 'no-candidate',
       });
     });
 
     it('returns request when candidates exist', () => {
       const mockMarket: MarketSnapshot = {
-        towns: []
+        towns: [],
       };
       const mockCandidates: Quote[] = [
         {
@@ -116,8 +115,8 @@ describe('AiEngine', () => {
           goodId: 'fish',
           quantity: 25,
           unitSellPrice: 4.0,
-          unitBuyPrice: 5.0
-        }
+          unitBuyPrice: 5.0,
+        },
       ];
       const mockChosenQuote: Quote = mockCandidates[0]!;
 
@@ -134,15 +133,15 @@ describe('AiEngine', () => {
           side: 'buy',
           goodId: 'fish',
           quantity: 25,
-          pricePerUnit: 4.0
+          pricePerUnit: 4.0,
         },
-        reason: 'greedy'
+        reason: 'greedy',
       });
     });
 
     it('filters candidates to only include AI town actions', () => {
       const mockMarket: MarketSnapshot = {
-        towns: []
+        towns: [],
       };
       const mockCandidates: Quote[] = [
         {
@@ -151,7 +150,7 @@ describe('AiEngine', () => {
           goodId: 'fish',
           quantity: 25,
           unitSellPrice: 4.0,
-          unitBuyPrice: 5.0
+          unitBuyPrice: 5.0,
         },
         {
           buyerId: 'other-town',
@@ -159,7 +158,7 @@ describe('AiEngine', () => {
           goodId: 'wood',
           quantity: 30,
           unitSellPrice: 3.0,
-          unitBuyPrice: 4.0
+          unitBuyPrice: 4.0,
         },
         {
           buyerId: 'town-c',
@@ -167,8 +166,8 @@ describe('AiEngine', () => {
           goodId: 'ore',
           quantity: 40,
           unitSellPrice: 6.0,
-          unitBuyPrice: 7.0
-        }
+          unitBuyPrice: 7.0,
+        },
       ];
 
       vi.mocked(Market.snapshotMarket).mockReturnValue(mockMarket);
@@ -182,17 +181,17 @@ describe('AiEngine', () => {
         mockProfile,
         expect.arrayContaining([
           expect.objectContaining({ buyerId: 'ai-town' }),
-          expect.objectContaining({ sellerId: 'ai-town' })
+          expect.objectContaining({ sellerId: 'ai-town' }),
         ]),
         mockGoods,
         mockSeed,
-        aiTownId
+        aiTownId,
       );
     });
 
     it('is deterministic with fixed seed', () => {
       const mockMarket: MarketSnapshot = {
-        towns: []
+        towns: [],
       };
       const mockCandidates: Quote[] = [
         {
@@ -201,8 +200,8 @@ describe('AiEngine', () => {
           goodId: 'fish',
           quantity: 25,
           unitSellPrice: 4.0,
-          unitBuyPrice: 5.0
-        }
+          unitBuyPrice: 5.0,
+        },
       ];
 
       vi.mocked(Market.snapshotMarket).mockReturnValue(mockMarket);

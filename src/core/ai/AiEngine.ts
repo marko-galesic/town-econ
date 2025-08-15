@@ -13,12 +13,12 @@ import type { Quote } from './Valuation';
  */
 export function quoteToTradeRequest(q: Quote): TradeRequest {
   return {
-    fromTownId: q.buyerId,        // buyer initiates the buy
+    fromTownId: q.buyerId, // buyer initiates the buy
     toTownId: q.sellerId,
     side: 'buy',
     goodId: q.goodId,
     quantity: q.quantity,
-    pricePerUnit: q.unitSellPrice  // buyer pays seller's price (validation rule)
+    pricePerUnit: q.unitSellPrice, // buyer pays seller's price (validation rule)
   };
 }
 
@@ -30,16 +30,16 @@ export function decideAiTrade(
   aiTownId: string,
   profile: AiProfile,
   goods: Record<GoodId, GoodConfig>,
-  seed: string
+  seed: string,
 ): AiDecision {
   const market = snapshotMarket(state);
   const candidates = generateCandidates(market, goods, {
-    maxQuantityPerTrade: profile.maxQuantityPerTrade
+    maxQuantityPerTrade: profile.maxQuantityPerTrade,
   });
 
   // Filter candidates so AI only acts for itself
-  const aiCandidates = candidates.filter(candidate =>
-    candidate.buyerId === aiTownId || candidate.sellerId === aiTownId
+  const aiCandidates = candidates.filter(
+    candidate => candidate.buyerId === aiTownId || candidate.sellerId === aiTownId,
   );
 
   if (aiCandidates.length === 0) {
@@ -54,6 +54,6 @@ export function decideAiTrade(
 
   return {
     request: quoteToTradeRequest(chosen),
-    reason: profile.mode
+    reason: profile.mode,
   };
 }

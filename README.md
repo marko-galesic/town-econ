@@ -660,11 +660,11 @@ import { decideAiTrade, quoteToTradeRequest, type AiDecision } from './src/core/
 
 // Make AI trade decision for a specific town
 const decision: AiDecision = decideAiTrade(
-  gameState,        // Current game state
-  'ai-town-id',     // AI town identifier
-  aiProfile,        // AI behavior profile
-  goods,            // Goods configuration
-  'turn-123-seed'   // Deterministic seed
+  gameState, // Current game state
+  'ai-town-id', // AI town identifier
+  aiProfile, // AI behavior profile
+  goods, // Goods configuration
+  'turn-123-seed', // Deterministic seed
 );
 
 if (decision.skipped) {
