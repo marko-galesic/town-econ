@@ -68,8 +68,10 @@ town-econ/
 │   │   │   ├── Valuation.ts # Trade scoring system for AI decision making
 │   │   │   ├── Candidates.ts # Trade candidate generation for AI decision making
 │   │   │   ├── Policy.ts # AI trade selection policy (random vs greedy)
+│   │   │   ├── AiEngine.ts # Core AI decision-making and trade request conversion
 │   │   │   └── index.ts # AI system exports
-│   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
+│   │   ├── trade/        # Trade system types, error handling, validation,
+│   │   │                 # execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
 │   │   │   ├── TradeErrors.ts # Trade validation and execution errors
 │   │   │   ├── TradeValidator.ts # Pure trade validation with precise error paths
@@ -108,8 +110,7 @@ town-econ/
 │   │   ├── goods.json    # Goods definitions and effects
 │   │   ├── towns.json    # Initial town configurations
 │   │   └── tierThresholds.json # Tier mapping thresholds for military and prosperity
-│   ├── core/
-│   │   └── stats/        # Statistics and tier mapping utilities
+│   ├── core/stats/       # Statistics and tier mapping utilities
 │   │       ├── TierMap.ts # Tier mapping functions and interfaces
 │   │       ├── TierMap.spec.ts # Tier mapping test suite
 │   │       ├── FuzzyTier.ts # Fuzzy tier mapping with deterministic jitter
@@ -124,7 +125,8 @@ town-econ/
 │   │       ├── StatsUpdateSystem.ts # Integrated stats update system for UpdatePipeline
 │   │       ├── StatsUpdateSystem.spec.ts # Stats update system test suite (11 tests)
 │   │       ├── StatsUpdateSystem.example.ts # Usage examples with UpdatePipeline
-│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence, RevealSystem, RawStatSystem, StatsUpdateSystem)
+│   │       └── index.ts # Stats module exports (TierMap, FuzzyTier, RevealCadence,
+│   │                     # RevealSystem, RawStatSystem, StatsUpdateSystem)
 │   ├── lib/              # Utility functions and business logic
 │   │   ├── hello.ts      # Example function
 │   │   └── hello.spec.ts # Tests
@@ -648,6 +650,52 @@ if (selectedTrade) {
 - **Seed Stability**: Choice stable for (seed, aiTownId, candidate set) combination
 - **Mode Flexibility**: Easy switching between random and greedy behaviors
 - **Integration Ready**: Designed to work with existing AI decision systems
+
+**AI Engine System**:
+
+The **AiEngine module** provides the core AI decision-making logic that converts trade quotes into executable trade requests:
+
+```typescript
+import { decideAiTrade, quoteToTradeRequest, type AiDecision } from './src/core/ai';
+
+// Make AI trade decision for a specific town
+const decision: AiDecision = decideAiTrade(
+  gameState,        // Current game state
+  'ai-town-id',     // AI town identifier
+  aiProfile,        // AI behavior profile
+  goods,            // Goods configuration
+  'turn-123-seed'   // Deterministic seed
+);
+
+if (decision.skipped) {
+  console.log(`AI skipped: ${decision.reason}`);
+} else {
+  console.log(`AI decided to trade: ${decision.reason}`);
+  // Execute the trade request via TradeService
+  const tradeResult = await tradeService.execute(decision.request);
+}
+```
+
+**Core Functions**:
+
+- **`decideAiTrade()`**: Main AI decision function that analyzes market and chooses actions
+- **`quoteToTradeRequest()`**: Converts Quote objects into executable TradeRequest objects
+
+**Decision Flow**:
+
+1. **Market Analysis**: Creates market snapshot from current game state
+2. **Candidate Generation**: Generates feasible trade opportunities
+3. **AI Filtering**: Filters candidates to only include AI town actions
+4. **Trade Selection**: Applies AI profile policy (random/greedy) to choose trade
+5. **Request Conversion**: Converts chosen quote to executable trade request
+
+**Key Features**:
+
+- **Self-Contained**: AI only acts for its own town (buyerId or sellerId matches aiTownId)
+- **Deterministic**: Fixed seed produces consistent decisions across turns
+- **Profile-Driven**: Behavior adapts to AI profile mode and trade limits
+- **Trade-Ready**: Outputs valid TradeRequest objects ready for TradeService execution
+- **Integration**: Designed to work seamlessly with TurnController.aiActions phase
 
 **Trade Candidate Generation System**:
 
@@ -1390,9 +1438,3 @@ For questions or issues:
 - Ensure your environment matches the prerequisites
 - Verify all tests pass: `pnpm test`
 - Confirm linting compliance: `pnpm lint`
-   
-   
-   
-   
-   
-   
