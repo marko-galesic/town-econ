@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 1145 tests passing)
+- `pnpm test` - Run test suite once (✅ 1155 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -72,7 +72,10 @@ town-econ/
 │   │   │   └── index.ts # AI system exports
 │   │   ├── production/   # Production system configuration and rates
 │   │   │   ├── Config.ts # Production configuration loader
-│   │   │   └── Config.spec.ts # Production configuration test suite (7 tests)
+│   │   │   ├── Config.spec.ts # Production configuration test suite (7 tests)
+│   │   │   ├── ProductionSystem.ts # Production calculation and application system
+│   │   │   ├── ProductionSystem.spec.ts # Production system test suite (10 tests)
+│   │   │   └── index.ts # Production system exports
 │   │   ├── trade/        # Trade system types, error handling, validation,
 │   │   │                 # execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -151,14 +154,15 @@ town-econ/
 
 ### Production System (`src/core/production/`)
 
-A data-driven production system that defines base production rates for goods and supports town-specific multipliers:
+A comprehensive production system that calculates and applies production to all towns at the end of each turn, with support for town-specific multipliers and configurable resource clamping:
 
 #### Core Components
 
 - **`ProductionRates`**: Maps each GoodId to production rate per turn (e.g., fish: 3, wood: 2, ore: 1)
 - **`TownProductionMultiplier`**: Optional town-specific production multipliers for future customization
 - **`ProductionConfig`**: Main configuration interface with base rates and town multipliers
-- **`loadProductionConfig()`**: Pure function that loads production configuration from JSON data
+- **`ProductionOptions`**: Configurable options including resource clamping minimums
+- **`applyProductionTurn()`**: Pure function that applies production to all towns while preserving immutability
 
 #### Configuration
 
@@ -190,35 +194,70 @@ console.log(config.townMultipliers); // {}
 }
 ```
 
+#### Production Calculation
+
+The system calculates production using the formula: `floor(baseRate * townMultiplier)`
+
+```typescript
+import { applyProductionTurn } from './src/core/production/ProductionSystem';
+
+// Apply production for one turn to all towns
+const updatedState = applyProductionTurn(gameState, productionConfig);
+
+// With custom options (e.g., minimum resource clamping)
+const clampedState = applyProductionTurn(gameState, productionConfig, { clampMin: 10 });
+```
+
 #### Key Features
 
-- **Data-Driven**: JSON-based configuration for easy tuning without code changes
-- **Type Safety**: Full TypeScript support with `Record<GoodId, number>` for required base rates
-- **Future-Ready**: Town multipliers system ready for town-specific production bonuses
-- **Validation**: Comprehensive test suite ensures data integrity and type compliance
-- **Pure Functions**: Configuration loader is pure with no side effects
-- **Extensible**: Easy to add new goods or modify production rates
+- **Deterministic Production**: Uses `Math.floor()` for consistent integer production amounts
+- **Town Multipliers**: Support for town-specific production bonuses (defaults to 1.0 when missing)
+- **Resource Clamping**: Optional minimum resource values to prevent towns from falling below thresholds
+- **Immutable Design**: Never mutates input state, returns new game state objects
+- **Missing Data Handling**: Gracefully handles missing goods in town resources (defaults to 0)
+- **Type Safety**: Full TypeScript support with comprehensive interfaces
+- **Production Ready**: 100% test coverage with comprehensive edge case handling
 
 #### Usage Example
 
 ```typescript
-import { loadProductionConfig } from './src/core/production/Config';
+import { applyProductionTurn, loadProductionConfig } from './src/core/production';
 import type { ProductionConfig } from './src/types/Production';
 
 // Load configuration
 const productionConfig: ProductionConfig = loadProductionConfig();
 
-// Calculate production for a specific town (with future multiplier support)
-function calculateTownProduction(townId: string, goodId: GoodId): number {
-  const baseRate = productionConfig.base[goodId];
-  const multiplier = productionConfig.townMultipliers[townId]?.[goodId] ?? 1.0;
+// Apply production for one turn
+const updatedState = applyProductionTurn(gameState, productionConfig);
 
-  return Math.floor(baseRate * multiplier);
-}
+// With custom clamping options
+const updatedState = applyProductionTurn(gameState, productionConfig, { clampMin: 5 });
 
-// Example usage
-const fishProduction = calculateTownProduction('riverdale', 'fish'); // 3
-const woodProduction = calculateTownProduction('forestburg', 'wood'); // 2
+// Production calculation examples:
+// - Fish: base 3 × multiplier 1.0 = floor(3.0) = 3 units
+// - Wood: base 2 × multiplier 1.5 = floor(3.0) = 3 units
+// - Ore: base 1 × multiplier 0.8 = floor(0.8) = 0 units
+```
+
+#### Integration with Turn System
+
+The production system is designed to integrate seamlessly with the turn-based progression:
+
+```typescript
+import { createTurnController } from './src/core/turn';
+import { applyProductionTurn, loadProductionConfig } from './src/core/production';
+
+// Create turn controller
+const { controller } = createTurnController(gameState);
+
+// Load production configuration
+const productionConfig = loadProductionConfig();
+
+// Apply production at end of turn
+const updatedState = applyProductionTurn(gameState, productionConfig);
+
+// Run turn with production updates
+const result = await controller.runTurn(updatedState);
 ```
 
 ### Immutable State Management (`src/core/stateApi.ts`)
@@ -1538,7 +1577,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1145 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, **AI telemetry system**, and **production system configuration**
+- **1155 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, **AI telemetry system**, **production system configuration**, and **production system implementation**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1597,6 +1636,9 @@ pnpm test src/core/ai/AiTelemetry.spec.ts
 
 # Run production configuration tests
 pnpm test src/core/production/Config.spec.ts
+
+# Run production system tests
+pnpm test src/core/production/ProductionSystem.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
