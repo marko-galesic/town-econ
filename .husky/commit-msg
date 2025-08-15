@@ -1,0 +1,46 @@
+#!/usr/bin/env sh
+
+# Conventional Commits validation
+# This hook checks if commit messages follow the Conventional Commits format
+# Format: <type>[optional scope]: <description>
+# Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+# Get the commit message from the first argument
+commit_msg=$(cat "$1")
+
+# Conventional Commits regex pattern
+# Matches: type(scope): description
+# Examples: feat: add new feature, fix(auth): resolve login issue, docs: update README
+conventional_regex='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?: .+'
+
+# Check if commit message matches conventional format
+if ! echo "$commit_msg" | grep -qE "$conventional_regex"; then
+    echo "❌ Commit message does not follow Conventional Commits format!"
+    echo ""
+    echo "Your message: $commit_msg"
+    echo ""
+    echo "Expected format: <type>[optional scope]: <description>"
+    echo ""
+    echo "Valid types:"
+    echo "  feat     - A new feature"
+    echo "  fix      - A bug fix"
+    echo "  docs     - Documentation only changes"
+    echo "  style    - Changes that do not affect the meaning of the code"
+    echo "  refactor - A code change that neither fixes a bug nor adds a feature"
+    echo "  perf     - A code change that improves performance"
+    echo "  test     - Adding missing tests or correcting existing tests"
+    echo "  build    - Changes that affect the build system or external dependencies"
+    echo "  ci       - Changes to CI configuration files and scripts"
+    echo "  chore    - Other changes that don't modify src or test files"
+    echo "  revert   - Reverts a previous commit"
+    echo ""
+    echo "Examples:"
+    echo "  feat: add user authentication"
+    echo "  fix(auth): resolve login validation issue"
+    echo "  docs: update API documentation"
+    echo "  style: format code with prettier"
+    echo ""
+    exit 1
+fi
+
+echo "✅ Commit message follows Conventional Commits format"
