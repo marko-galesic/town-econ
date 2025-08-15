@@ -1,5 +1,7 @@
 import type { GameState } from '../../types/GameState';
-import type { GoodId, GoodConfig } from '../../types/Goods';
+import type { GoodConfig } from '../../types/Goods';
+import { decideAiTrade } from '../ai/AiEngine';
+import type { AiProfile } from '../ai/AiTypes';
 import { advanceTurn } from '../stateApi';
 import type { PriceModel } from '../trade/PriceModel';
 import { performTrade } from '../trade/TradeService';
@@ -30,7 +32,11 @@ export interface TurnControllerOptions {
   /** Price model for trade price adjustments */
   priceModel: PriceModel;
   /** Configuration for all goods in the game */
-  goods: Record<GoodId, GoodConfig>;
+  goods: Record<string, GoodConfig>;
+  /** AI profiles for automated town behavior */
+  aiProfiles: Record<string, AiProfile>;
+  /** ID of the player's town (AI towns are all others) */
+  playerTownId: string;
 }
 
 /**
@@ -44,7 +50,9 @@ export class TurnController {
   // eslint-disable-next-line no-unused-vars
   private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
   private readonly priceModel: PriceModel;
-  private readonly goods: Record<GoodId, GoodConfig>;
+  private readonly goods: Record<string, GoodConfig>;
+  private readonly aiProfiles: Record<string, AiProfile>;
+  private readonly playerTownId: string;
 
   constructor(
     private readonly playerQ: PlayerActionQueue,
@@ -64,10 +72,18 @@ export class TurnController {
     if (!options.goods) {
       throw new Error('Goods configuration is required');
     }
+    if (!options.aiProfiles) {
+      throw new Error('AI profiles are required');
+    }
+    if (!options.playerTownId) {
+      throw new Error('Player town ID is required');
+    }
 
     this.onPhase = options.onPhase || undefined;
     this.priceModel = options.priceModel;
     this.goods = options.goods;
+    this.aiProfiles = options.aiProfiles;
+    this.playerTownId = options.playerTownId;
   }
   /**
    * Runs a complete game turn, executing all phases in sequence.
@@ -190,14 +206,74 @@ export class TurnController {
   }
 
   /**
-   * AI actions phase - currently no logic implemented.
+   * AI actions phase - processes AI trade decisions for each AI town.
    * @param s - Current game state
-   * @returns Same game state (no changes yet)
+   * @returns Updated game state after AI actions
    */
   private async aiActions(s: GameState): Promise<GameState> {
-    const detail = { decided: false };
-    this.onPhase?.(TurnPhase.AiActions, detail);
-    return s;
+    let currentState = s;
+    const aiTowns = s.towns.filter(town => town.id !== this.playerTownId);
+
+    for (const town of aiTowns) {
+      // Get AI profile for this town, defaulting to 'greedy' if not specified
+      const profile = this.aiProfiles[town.aiProfileId || 'greedy'] || this.aiProfiles['greedy'];
+
+      if (!profile) {
+        console.warn(`No AI profile found for town ${town.id}, skipping`);
+        continue;
+      }
+
+      // Decide on trade action
+      const decision = decideAiTrade(
+        currentState,
+        town.id,
+        profile,
+        this.goods,
+        currentState.rngSeed,
+      );
+
+      if (decision.request) {
+        try {
+          // Execute the trade
+          const tradeResult = await performTrade(
+            currentState,
+            decision.request,
+            this.priceModel,
+            this.goods,
+          );
+          currentState = tradeResult.state;
+
+          // Notify observer with trade details
+          this.onPhase?.(TurnPhase.AiActions, {
+            townId: town.id,
+            decision,
+            tradeResult: {
+              unitPriceApplied: tradeResult.unitPriceApplied,
+              deltas: tradeResult.deltas,
+            },
+          });
+
+          // Note: maxTradesPerTurn is per-town, not global
+          // Each town can make up to their maxTradesPerTurn trades
+        } catch (error) {
+          // Log error but continue with other AI towns
+          console.warn(`AI trade failed for town ${town.id}:`, error);
+          this.onPhase?.(TurnPhase.AiActions, {
+            townId: town.id,
+            decision,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      } else {
+        // AI decided to skip trading
+        this.onPhase?.(TurnPhase.AiActions, {
+          townId: town.id,
+          decision,
+        });
+      }
+    }
+
+    return currentState;
   }
 
   /**

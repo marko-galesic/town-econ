@@ -1,4 +1,6 @@
 import type { GameState } from '../../types/GameState';
+import { GREEDY, RANDOM } from '../ai/AiProfiles';
+import type { AiProfile } from '../ai/AiTypes';
 import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
 /**
@@ -31,11 +33,23 @@ export function createMockGameState(): GameState {
 }
 
 /**
+ * Creates default AI profiles for testing.
+ */
+export function createDefaultAiProfiles(): Record<string, AiProfile> {
+  return {
+    greedy: GREEDY,
+    random: RANDOM,
+  };
+}
+
+/**
  * Creates default TurnController options for testing.
  */
 export function createDefaultTurnControllerOptions() {
   return {
     priceModel: createSimpleLinearPriceModel(),
     goods: createMockGameState().goods,
+    aiProfiles: createDefaultAiProfiles(),
+    playerTownId: 'riverdale',
   };
 }

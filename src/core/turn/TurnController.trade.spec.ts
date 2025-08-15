@@ -32,6 +32,16 @@ describe('TurnController - Trade Actions', () => {
     controller = new TurnController(playerQ, pipeline, {
       priceModel,
       goods: gameState.goods,
+      aiProfiles: {
+        greedy: {
+          id: 'greedy',
+          mode: 'greedy',
+          weights: { priceSpread: 0.8, prosperity: 0.15, military: 0.05 },
+          maxTradesPerTurn: 1,
+          maxQuantityPerTrade: 5,
+        },
+      },
+      playerTownId: 'riverdale',
       onPhase,
     });
   });

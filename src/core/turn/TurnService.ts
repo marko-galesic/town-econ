@@ -1,4 +1,6 @@
 import type { GameState } from '../../types/GameState';
+import { GREEDY, RANDOM } from '../ai/AiProfiles';
+import type { AiProfile } from '../ai/AiTypes';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
 import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
@@ -16,6 +18,10 @@ export interface TurnServiceOptions {
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
   /** Optional price model - if not provided, creates a default simple linear model */
   priceModel?: ReturnType<typeof createSimpleLinearPriceModel>;
+  /** Optional AI profiles - if not provided, uses default profiles */
+  aiProfiles?: Record<string, AiProfile>;
+  /** ID of the player's town - if not provided, defaults to the first town */
+  playerTownId?: string;
 }
 
 /**
@@ -51,10 +57,22 @@ export function createTurnController(
   // Create default price model if none provided
   const priceModel = opts?.priceModel ?? createSimpleLinearPriceModel();
 
+  // Create default AI profiles if none provided
+  const aiProfiles = opts?.aiProfiles ?? {
+    greedy: GREEDY,
+    random: RANDOM,
+  };
+
+  // Determine player town ID - default to first town if not specified
+  const playerTownId =
+    opts?.playerTownId ?? (state.towns.length > 0 ? state.towns[0]!.id : 'riverdale');
+
   const controllerOptions = {
     ...(opts?.onPhase && { onPhase: opts.onPhase }),
     priceModel,
     goods: state.goods,
+    aiProfiles,
+    playerTownId,
   };
 
   const controller = new TurnController(playerQ, pipeline, controllerOptions);

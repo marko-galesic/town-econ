@@ -697,6 +697,100 @@ if (decision.skipped) {
 - **Trade-Ready**: Outputs valid TradeRequest objects ready for TradeService execution
 - **Integration**: Designed to work seamlessly with TurnController.aiActions phase
 
+**AI Actions Phase Integration**:
+
+The **TurnController.aiActions phase** integrates AI decision-making into the turn system, allowing AI towns to execute trades automatically:
+
+```typescript
+// AI Actions phase processes each AI town independently
+private async aiActions(s: GameState): Promise<GameState> {
+  const aiTowns = s.towns.filter(town => town.id !== this.playerTownId);
+
+  for (const town of aiTowns) {
+    const profile = this.aiProfiles[town.aiProfileId || 'greedy'] || this.aiProfiles['greedy'];
+    const decision = decideAiTrade(currentState, town.id, profile, this.goods, currentState.rngSeed);
+
+    if (decision.request) {
+      // Execute trade and update state
+      const tradeResult = await performTrade(currentState, decision.request, this.priceModel, this.goods);
+      currentState = tradeResult.state;
+
+      // Emit phase details with trade results
+      this.onPhase?.(TurnPhase.AiActions, {
+        townId: town.id,
+        decision,
+        tradeResult: {
+          unitPriceApplied: tradeResult.unitPriceApplied,
+          deltas: tradeResult.deltas,
+        }
+      });
+    } else {
+      // AI decided to skip trading
+      this.onPhase?.(TurnPhase.AiActions, {
+        townId: town.id,
+        decision
+      });
+    }
+  }
+
+  return currentState;
+}
+```
+
+**Key Features**:
+
+- **Per-Town Processing**: Each AI town is processed independently with its own profile
+- **Trade Execution**: Successful decisions result in immediate trade execution via TradeService
+- **State Updates**: Game state is updated after each trade, affecting subsequent AI decisions
+- **Phase Hooks**: Detailed phase information is emitted for each AI action (trade or skip)
+- **Error Handling**: Failed trades are logged but don't stop processing of other AI towns
+- **Profile Fallback**: Towns without profiles default to 'greedy' behavior
+- **Deterministic**: Fixed RNG seed ensures consistent AI behavior across identical game states
+
+**AI Profile Integration**:
+
+AI towns can be configured with different profiles that control their trading behavior:
+
+```typescript
+// Default AI profiles available
+const GREEDY: AiProfile = {
+  id: 'greedy',
+  mode: 'greedy',
+  weights: { price: 0.7, stats: 0.3 },
+  maxTradesPerTurn: 1,
+  maxQuantityPerTrade: 10,
+};
+
+const RANDOM: AiProfile = {
+  id: 'random',
+  mode: 'random',
+  weights: { price: 0.5, stats: 0.5 },
+  maxTradesPerTurn: 1,
+  maxQuantityPerTrade: 10,
+};
+```
+
+**Turn System Integration**:
+
+The AI Actions phase is fully integrated into the turn system:
+
+1. **Start Phase**: Initialize turn state
+2. **Player Action Phase**: Process player trade requests
+3. **AI Actions Phase**: Process AI town decisions and execute trades
+4. **Update Stats Phase**: Apply stat updates and pipeline systems
+5. **End Phase**: Finalize turn and prepare for next turn
+
+**Testing Coverage**:
+
+Comprehensive test suite covers all AI actions functionality:
+
+- **Deterministic Behavior**: Tests verify consistent results with fixed seeds
+- **Trade Execution**: Tests verify successful trade execution and state updates
+- **Skip Scenarios**: Tests verify AI properly skips when no profitable trades exist
+- **Profile Handling**: Tests verify different AI profiles produce expected behaviors
+- **Error Scenarios**: Tests verify graceful handling of missing profiles and failed trades
+- **Phase Details**: Tests verify proper emission of phase hook data
+
 **Trade Candidate Generation System**:
 
 The **Candidates module** generates feasible trade opportunities for AI decision-making by analyzing market conditions:
@@ -1245,7 +1339,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1029 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, and **AI trade selection policy system**
+- **1036 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, and **AI actions phase integration**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1295,6 +1389,9 @@ pnpm test src/core/ai/Candidates.spec.ts
 
 # Run AI trade selection policy tests
 pnpm test src/core/ai/Policy.spec.ts
+
+# Run AI actions phase tests
+pnpm test src/core/turn/TurnController.ai.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
