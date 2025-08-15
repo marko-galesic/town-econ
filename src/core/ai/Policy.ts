@@ -61,9 +61,11 @@ export function chooseTrade(
       }
     }
 
-    return bestQuote ? {
-      quote: bestQuote,
-      score: bestScore,
-    } : undefined;
+    return bestQuote
+      ? {
+          quote: bestQuote,
+          score: bestScore,
+        }
+      : undefined;
   }
 }

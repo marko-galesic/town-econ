@@ -248,12 +248,14 @@ describe('TurnController - AI Actions', () => {
       );
       expect(tradeActions.length).toBeGreaterThan(0);
 
-              // Find greedy AI action (should have score)
-        const greedyAction = tradeActions.find(
-          detail => detail && typeof detail === 'object' &&
+      // Find greedy AI action (should have score)
+      const greedyAction = tradeActions.find(
+        detail =>
+          detail &&
+          typeof detail === 'object' &&
           'trace' in detail &&
-          (detail as { trace: { mode: string } }).trace.mode === 'greedy'
-        );
+          (detail as { trace: { mode: string } }).trace.mode === 'greedy',
+      );
       expect(greedyAction).toBeDefined();
       expect(greedyAction).toMatchObject({
         trace: expect.objectContaining({
@@ -264,12 +266,14 @@ describe('TurnController - AI Actions', () => {
         }),
       });
 
-              // Find random AI action (should not have score)
-        const randomAction = tradeActions.find(
-          detail => detail && typeof detail === 'object' &&
+      // Find random AI action (should not have score)
+      const randomAction = tradeActions.find(
+        detail =>
+          detail &&
+          typeof detail === 'object' &&
           'trace' in detail &&
-          (detail as { trace: { mode: string } }).trace.mode === 'random'
-        );
+          (detail as { trace: { mode: string } }).trace.mode === 'random',
+      );
       expect(randomAction).toBeDefined();
       expect(randomAction).toMatchObject({
         trace: expect.objectContaining({
@@ -280,7 +284,9 @@ describe('TurnController - AI Actions', () => {
         }),
       });
       // Random AI should not have score in trace
-      expect((randomAction as { trace: { chosen?: { score?: number } } }).trace.chosen).not.toHaveProperty('score');
+      expect(
+        (randomAction as { trace: { chosen?: { score?: number } } }).trace.chosen,
+      ).not.toHaveProperty('score');
     });
 
     it('should respect maxTradesPerTurn limit', async () => {

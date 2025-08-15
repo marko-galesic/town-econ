@@ -214,14 +214,14 @@ export class TurnController {
     // Clear cooldowns that expired before this turn started
     clearExpiredCooldowns(this.cooldownState, s.turn - 1);
 
-          // If there are no AI towns, emit a simple phase hook and return
-      if (aiTowns.length === 0) {
-        this.onPhase?.(TurnPhase.AiActions, { decided: false });
-        return currentState;
-      }
+    // If there are no AI towns, emit a simple phase hook and return
+    if (aiTowns.length === 0) {
+      this.onPhase?.(TurnPhase.AiActions, { decided: false });
+      return currentState;
+    }
 
-      // Emit phase hook before AI actions execution
-      this.onPhase?.(TurnPhase.AiActions, { phase: 'start', aiTownCount: aiTowns.length });
+    // Emit phase hook before AI actions execution
+    this.onPhase?.(TurnPhase.AiActions, { phase: 'start', aiTownCount: aiTowns.length });
 
     for (const town of aiTowns) {
       // Get AI profile for this town, defaulting to 'greedy' if not specified
