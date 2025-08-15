@@ -37,15 +37,16 @@ export interface Quote {
 export function scoreQuote(
   q: Quote,
   goods: Record<GoodId, GoodConfig>,
-  profile: AiProfile
+  profile: AiProfile,
 ): number {
   // Base score from price spread
   const base = (q.unitBuyPrice - q.unitSellPrice) * q.quantity;
 
   // Stat bonus from good effects
   const effects = goods[q.goodId].effects;
-  const statBonus = profile.weights.prosperity * effects.prosperityDelta +
-                   profile.weights.military * effects.militaryDelta;
+  const statBonus =
+    profile.weights.prosperity * effects.prosperityDelta +
+    profile.weights.military * effects.militaryDelta;
 
   // Final weighted score
   return profile.weights.priceSpread * base + statBonus;

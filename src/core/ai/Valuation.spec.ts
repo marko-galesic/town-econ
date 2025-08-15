@@ -13,25 +13,25 @@ describe('Valuation', () => {
       name: 'Fish',
       effects: {
         prosperityDelta: 2,
-        militaryDelta: 1
-      }
+        militaryDelta: 1,
+      },
     },
     wood: {
       id: 'wood',
       name: 'Wood',
       effects: {
         prosperityDelta: 1,
-        militaryDelta: 2
-      }
+        militaryDelta: 2,
+      },
     },
     ore: {
       id: 'ore',
       name: 'Ore',
       effects: {
         prosperityDelta: 3,
-        militaryDelta: 3
-      }
-    }
+        militaryDelta: 3,
+      },
+    },
   };
 
   const mockProfile: AiProfile = {
@@ -40,10 +40,10 @@ describe('Valuation', () => {
     weights: {
       priceSpread: 0.7,
       prosperity: 0.2,
-      military: 0.1
+      military: 0.1,
     },
     maxTradesPerTurn: 3,
-    maxQuantityPerTrade: 10
+    maxQuantityPerTrade: 10,
   };
 
   const baseQuote: Quote = {
@@ -52,7 +52,7 @@ describe('Valuation', () => {
     goodId: 'fish',
     unitSellPrice: 10,
     unitBuyPrice: 15,
-    quantity: 5
+    quantity: 5,
   };
 
   describe('scoreQuote', () => {
@@ -69,7 +69,7 @@ describe('Valuation', () => {
     it('should include prosperity effects in scoring', () => {
       const prosperityProfile: AiProfile = {
         ...mockProfile,
-        weights: { priceSpread: 0.5, prosperity: 0.4, military: 0.1 }
+        weights: { priceSpread: 0.5, prosperity: 0.4, military: 0.1 },
       };
 
       const fishQuote: Quote = { ...baseQuote, goodId: 'fish' }; // prosperityDelta: 2
@@ -84,7 +84,7 @@ describe('Valuation', () => {
     it('should include military effects in scoring', () => {
       const militaryProfile: AiProfile = {
         ...mockProfile,
-        weights: { priceSpread: 0.5, prosperity: 0.1, military: 0.4 }
+        weights: { priceSpread: 0.5, prosperity: 0.1, military: 0.4 },
       };
 
       const woodQuote: Quote = { ...baseQuote, goodId: 'wood' }; // militaryDelta: 2
@@ -101,7 +101,8 @@ describe('Valuation', () => {
       const score = scoreQuote(zeroSpreadQuote, mockGoods, mockProfile);
 
       // With zero spread, only stat bonus remains
-      const expectedStatBonus = mockProfile.weights.prosperity * 2 + mockProfile.weights.military * 1;
+      const expectedStatBonus =
+        mockProfile.weights.prosperity * 2 + mockProfile.weights.military * 1;
       expect(score).toBe(expectedStatBonus);
     });
 
@@ -118,7 +119,8 @@ describe('Valuation', () => {
       const score = scoreQuote(zeroQuantityQuote, mockGoods, mockProfile);
 
       // With zero quantity, only stat bonus remains
-      const expectedStatBonus = mockProfile.weights.prosperity * 2 + mockProfile.weights.military * 1;
+      const expectedStatBonus =
+        mockProfile.weights.prosperity * 2 + mockProfile.weights.military * 1;
       expect(score).toBe(expectedStatBonus);
     });
 
@@ -145,7 +147,8 @@ describe('Valuation', () => {
       const score = scoreQuote(oreQuote, mockGoods, mockProfile);
 
       // Ore should have the highest stat bonus
-      const expectedStatBonus = mockProfile.weights.prosperity * 3 + mockProfile.weights.military * 3;
+      const expectedStatBonus =
+        mockProfile.weights.prosperity * 3 + mockProfile.weights.military * 3;
       const expectedBase = mockProfile.weights.priceSpread * (15 - 10) * 5;
       const expectedScore = expectedBase + expectedStatBonus;
 
