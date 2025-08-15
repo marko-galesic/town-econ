@@ -64,6 +64,7 @@ town-econ/
 │   │   ├── ai/           # AI configuration and behavior profiles
 │   │   │   ├── AiTypes.ts # AI mode, profile, and decision interfaces
 │   │   │   ├── AiProfiles.ts # Default AI profiles (random, greedy)
+│   │   │   ├── Market.ts # Market snapshots and trading helpers for AI
 │   │   │   └── index.ts # AI system exports
 │   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -521,6 +522,23 @@ A flexible AI configuration and behavior profile system for guiding AI decision-
 - **`AiDecision`**: Decision result interface with optional trade requests and reasoning
 - **Default Profiles**: Pre-configured `RANDOM` and `GREEDY` profiles for immediate use
 
+#### Market Module
+
+The **Market module** provides AI with a read-only view of the current market state for informed decision-making:
+
+- **`MarketSnapshot`**: Complete market overview across all towns
+- **`MarketTownView`**: Individual town market data (prices, stock, treasury)
+- **`snapshotMarket(state)`**: Pure function that creates market snapshots from GameState
+- **`maxAffordable(qty, price, treasury)`**: Helper to compute maximum affordable quantity given budget constraints
+- **`maxTradableStock(qty, stock)`**: Helper to compute maximum tradable quantity given inventory constraints
+
+**Key Features**:
+- **Pure Functions**: No mutation of input state, deterministic snapshots
+- **Trading Constraints**: Built-in helpers for budget and inventory limitations
+- **Type Safety**: Full TypeScript support with comprehensive interfaces
+- **Performance**: Efficient snapshot creation with deep copying
+- **AI Ready**: Designed specifically for AI decision-making systems
+
 #### AI Profiles
 
 **Random Profile (`RANDOM`)**:
@@ -556,6 +574,27 @@ const customAI: AiProfile = {
   maxTradesPerTurn: 2,
   maxQuantityPerTrade: 10,
 };
+```
+
+**Market Module**:
+```typescript
+import { snapshotMarket, maxAffordable, maxTradableStock, type MarketSnapshot } from './src/core/ai';
+
+// Get current market state
+const market: MarketSnapshot = snapshotMarket(gameState);
+
+// Find best trading opportunities
+for (const town of market.towns) {
+  // Check if we can afford fish
+  const affordableQty = maxAffordable(50, town.prices.fish, aiTreasury);
+  // Check if town has enough stock
+  const tradableQty = maxTradableStock(affordableQty, town.stock.fish);
+  
+  if (tradableQty > 0) {
+    // AI can trade this quantity
+    console.log(`Can trade ${tradableQty} fish with ${town.id}`);
+  }
+}
 ```
 
 #### Key Features
