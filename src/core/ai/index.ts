@@ -6,3 +6,4 @@ export { scoreQuote } from './Valuation';
 export type { Quote } from './Valuation';
 export { generateCandidates } from './Candidates';
 export type { CandidateOptions } from './Candidates';
+export { chooseTrade } from './Policy';

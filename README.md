@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 1012 tests passing)
+- `pnpm test` - Run test suite once (✅ 1029 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -67,6 +67,7 @@ town-econ/
 │   │   │   ├── Market.ts # Market snapshots and trading helpers for AI
 │   │   │   ├── Valuation.ts # Trade scoring system for AI decision making
 │   │   │   ├── Candidates.ts # Trade candidate generation for AI decision making
+│   │   │   ├── Policy.ts # AI trade selection policy (random vs greedy)
 │   │   │   └── index.ts # AI system exports
 │   │   ├── trade/        # Trade system types, error handling, validation, execution, and price modeling
 │   │   │   ├── TradeTypes.ts # Trade request/response interfaces
@@ -605,6 +606,48 @@ for (const town of market.towns) {
   }
 }
 ```
+
+**AI Trade Selection Policy System**:
+
+The **Policy module** provides deterministic trade selection logic for AI decision-making:
+
+```typescript
+import { chooseTrade } from './src/core/ai';
+
+// Choose trade based on AI profile and seed
+const selectedTrade = chooseTrade(
+  aiProfile, // AI behavior profile (random or greedy)
+  candidates, // Available trade quotes
+  goods, // Goods configuration for scoring
+  'turn-123-seed', // Deterministic seed
+  'ai-town-id', // AI town identifier
+);
+
+// Returns selected Quote or undefined if no candidates
+if (selectedTrade) {
+  console.log(`AI chose: ${selectedTrade.goodId} from ${selectedTrade.sellerId}`);
+}
+```
+
+**Policy Modes**:
+
+- **Random Mode**: Uses deterministic random selection based on seed and AI town ID
+  - Same (seed, aiTownId, candidate set) always produces same result
+  - Different seeds or aiTownIds produce different selections
+  - Uses existing `seededRand` from stats module for consistency
+
+- **Greedy Mode**: Selects highest-scoring quote using `scoreQuote` function
+  - Computes score for each candidate based on price spread and stat effects
+  - Maintains stable order for ties (first candidate wins)
+  - Ignores seed parameter for consistent greedy behavior
+
+**Key Features**:
+
+- **Deterministic**: Same inputs always produce same outputs
+- **Per-Town Variation**: Different AI towns get different selections even with same seed
+- **Seed Stability**: Choice stable for (seed, aiTownId, candidate set) combination
+- **Mode Flexibility**: Easy switching between random and greedy behaviors
+- **Integration Ready**: Designed to work with existing AI decision systems
 
 **Trade Candidate Generation System**:
 
@@ -1154,7 +1197,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1020 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, and **AI trade candidate generation system**
+- **1029 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, and **AI trade selection policy system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1201,6 +1244,9 @@ pnpm test src/core/ai/Valuation.spec.ts
 
 # Run AI trade candidate generation tests
 pnpm test src/core/ai/Candidates.spec.ts
+
+# Run AI trade selection policy tests
+pnpm test src/core/ai/Policy.spec.ts
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
