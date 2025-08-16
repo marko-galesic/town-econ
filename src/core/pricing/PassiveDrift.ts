@@ -2,6 +2,7 @@ import type { GameState } from '../../types/GameState';
 import type { GoodId } from '../../types/Goods';
 
 import type { PriceCurveTable } from './Config';
+import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
 
 /**
@@ -69,13 +70,17 @@ export function applyPassiveDrift(
       const driftAmount = Math.round(rate * priceDiff);
       const newPrice = currentPrice + driftAmount;
 
-      // Clamp to valid range
-      const clampedPrice = Math.max(
+      // Apply prosperity and scale multipliers to the drifted price
+      const adjustedPrice = applyProsperityAndScale(
+        newPrice,
+        town.revealed.prosperityTier,
+        undefined, // Use default multipliers
+        1.0, // Default size factor
         curveConfig.minPrice ?? 1,
-        Math.min(curveConfig.maxPrice ?? 9999, newPrice),
+        curveConfig.maxPrice ?? 9999,
       );
 
-      updatedPrices[goodIdTyped] = clampedPrice;
+      updatedPrices[goodIdTyped] = adjustedPrice;
     }
 
     // Return updated town with new prices

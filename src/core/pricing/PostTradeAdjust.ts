@@ -2,6 +2,7 @@ import type { GameState } from '../../types/GameState';
 import type { ValidatedTrade } from '../trade/TradeValidator';
 
 import type { PriceCurveTable } from './Config';
+import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
 import { readTownPriceState, writeTownPrice } from './TownPriceIO';
 
@@ -60,13 +61,32 @@ export function applyPostTradeCurve(
   const next1 = math.nextPrice(t1State, cfg);
   const next2 = math.nextPrice(t2State, cfg);
 
-  // Update both towns with new prices
+  // Apply prosperity and scale multipliers to both prices
+  const adjusted1 = applyProsperityAndScale(
+    next1,
+    findTown(state, from.id).revealed.prosperityTier,
+    undefined, // Use default multipliers
+    1.0, // Default size factor
+    cfg.minPrice ?? 1,
+    cfg.maxPrice ?? 9999,
+  );
+
+  const adjusted2 = applyProsperityAndScale(
+    next2,
+    findTown(state, to.id).revealed.prosperityTier,
+    undefined, // Use default multipliers
+    1.0, // Default size factor
+    cfg.minPrice ?? 1,
+    cfg.maxPrice ?? 9999,
+  );
+
+  // Update both towns with adjusted prices
   const updatedTowns = state.towns.map(town => {
     if (town.id === from.id) {
-      return writeTownPrice(town, goodId, next1);
+      return writeTownPrice(town, goodId, adjusted1);
     }
     if (town.id === to.id) {
-      return writeTownPrice(town, goodId, next2);
+      return writeTownPrice(town, goodId, adjusted2);
     }
     return town;
   });
