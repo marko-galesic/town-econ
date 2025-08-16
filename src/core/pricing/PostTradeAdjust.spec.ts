@@ -250,11 +250,11 @@ describe('PostTradeAdjust', () => {
     });
 
     it('should throw error for missing price curve configuration', () => {
-      const invalidCurves: PriceCurveTable = {
+      const invalidCurves = {
         wood: mockPriceCurves.wood,
         ore: mockPriceCurves.ore,
-        fish: mockPriceCurves.fish,
-      };
+        // fish is intentionally omitted to test missing configuration
+      } as PriceCurveTable;
 
       const stateAfterTrade: GameState = {
         ...mockGameState,
