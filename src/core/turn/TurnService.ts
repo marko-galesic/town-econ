@@ -1,6 +1,8 @@
 import type { GameState } from '../../types/GameState';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
+import { loadProductionConfig } from '../production/Config';
+import { applyProductionTurn } from '../production/ProductionSystem';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
 import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
@@ -51,6 +53,10 @@ export function createTurnController(
     s => s.rngSeed,
   );
   pipeline.register(statsSystem);
+
+  // Register the production system
+  const prodCfg = loadProductionConfig();
+  pipeline.register(s => applyProductionTurn(s, prodCfg));
 
   // Create default price model if none provided
   const priceModel = opts?.priceModel ?? createSimpleLinearPriceModel();

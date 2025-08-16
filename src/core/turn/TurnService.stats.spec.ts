@@ -21,8 +21,8 @@ describe('TurnService Stats Integration', () => {
     it('should register StatsUpdateSystem in the pipeline by default', () => {
       const { pipeline } = createTurnController(mockState);
 
-      // The pipeline should have the stats system registered
-      expect(pipeline.systemCount).toBe(1);
+      // The pipeline should have the stats system and production system registered
+      expect(pipeline.systemCount).toBe(2);
     });
 
     it('should test TurnController directly without factory', async () => {
@@ -146,8 +146,8 @@ describe('TurnService Stats Integration', () => {
     it('should verify TurnController instance and pipeline reference', () => {
       const { pipeline } = createTurnController(mockState);
 
-      // The pipeline should be properly registered
-      expect(pipeline.systemCount).toBe(1);
+      // The pipeline should have the stats system and production system registered
+      expect(pipeline.systemCount).toBe(2);
     });
 
     it('should test StatsUpdateSystem directly', () => {
