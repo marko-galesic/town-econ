@@ -69,17 +69,6 @@ describe('validateGameState', () => {
     expect(() => validateGameState(validGameState)).not.toThrow();
   });
 
-  it('debug: should show what happens when validating validGameState', () => {
-    try {
-      validateGameState(validGameState);
-      console.log('DEBUG - Validation passed successfully');
-    } catch (error) {
-      const validationError = error as ValidationError;
-      console.log('DEBUG - Validation failed with path:', validationError.path);
-      console.log('DEBUG - Validation failed with message:', validationError.message);
-    }
-  });
-
   describe('missing keys', () => {
     it('should throw with path when turn is missing', () => {
       const invalidState = JSON.parse(JSON.stringify(validGameState)) as InvalidGameState;
