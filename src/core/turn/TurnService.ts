@@ -1,8 +1,7 @@
 import type { GameState } from '../../types/GameState';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
-import { loadPriceCurves } from '../pricing/Config';
-import { createLogRatioPriceMath } from '../pricing/Curves';
+import { createPricingService } from '../pricing/PricingService';
 import { loadProductionConfig } from '../production/Config';
 import { applyProductionTurn } from '../production/ProductionSystem';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
@@ -57,6 +56,10 @@ export function createTurnController(
   const prodCfg = loadProductionConfig();
   pipeline.register(s => applyProductionTurn(s, prodCfg));
 
+  // Register the pricing service for per-turn drift
+  const pricingService = createPricingService();
+  pipeline.register(s => pricingService.perTurnDrift(s));
+
   // Create default AI profiles if none provided
   const aiProfiles = opts?.aiProfiles ?? {
     greedy: GREEDY,
@@ -72,8 +75,7 @@ export function createTurnController(
     goods: state.goods,
     aiProfiles,
     playerTownId,
-    priceCurves: loadPriceCurves(),
-    priceMath: createLogRatioPriceMath(),
+    pricingService,
   };
 
   const controller = new TurnController(playerQ, pipeline, controllerOptions);

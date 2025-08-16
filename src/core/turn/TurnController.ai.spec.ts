@@ -3,8 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
 import { initGameState } from '../initGameState';
-import { loadPriceCurves } from '../pricing/Config';
-import { createLogRatioPriceMath } from '../pricing/Curves';
+import { createPricingService } from '../pricing/PricingService';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -40,9 +39,8 @@ describe('TurnController - AI Actions', () => {
       goods: gameState.goods,
       aiProfiles,
       playerTownId: 'riverdale', // Riverdale is the player town
+      pricingService: createPricingService(),
       onPhase,
-      priceCurves: loadPriceCurves(),
-      priceMath: createLogRatioPriceMath(),
     });
   });
 
@@ -335,8 +333,7 @@ describe('TurnController - AI Actions', () => {
         onPhase: (phase, detail) => {
           phaseLog.push({ phase, detail });
         },
-        priceCurves: loadPriceCurves(),
-        priceMath: createLogRatioPriceMath(),
+        pricingService: createPricingService(),
       });
 
       // Run the turn
@@ -556,8 +553,7 @@ describe('TurnController - AI Actions', () => {
         onPhase: () => {
           // Create a new phase log for the fresh controller
         },
-        priceCurves: loadPriceCurves(),
-        priceMath: createLogRatioPriceMath(),
+        pricingService: createPricingService(),
       });
 
       // Run the turn with the fresh controller

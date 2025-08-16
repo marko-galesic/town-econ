@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
-import { loadPriceCurves } from '../pricing/Config';
-import { createLogRatioPriceMath } from '../pricing/Curves';
+import { createPricingService } from '../pricing/PricingService';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -51,8 +50,7 @@ describe('TurnController', () => {
         },
       },
       playerTownId: 'test-town',
-      priceCurves: loadPriceCurves(),
-      priceMath: createLogRatioPriceMath(),
+      pricingService: createPricingService(),
     });
   });
 

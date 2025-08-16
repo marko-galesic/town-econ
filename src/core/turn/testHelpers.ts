@@ -1,8 +1,7 @@
 import type { GameState } from '../../types/GameState';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
-import { loadPriceCurves } from '../pricing/Config';
-import { createLogRatioPriceMath } from '../pricing/Curves';
+import { createPricingService } from '../pricing/PricingService';
 
 /**
  * Creates a minimal mock game state for testing purposes.
@@ -51,7 +50,6 @@ export function createDefaultTurnControllerOptions() {
     goods: createMockGameState().goods,
     aiProfiles: createDefaultAiProfiles(),
     playerTownId: 'riverdale',
-    priceCurves: loadPriceCurves(),
-    priceMath: createLogRatioPriceMath(),
+    pricingService: createPricingService(),
   };
 }

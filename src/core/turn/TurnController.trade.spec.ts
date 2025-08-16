@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { initGameState } from '../initGameState';
-import { loadPriceCurves } from '../pricing/Config';
-import { createLogRatioPriceMath } from '../pricing/Curves';
+import { createPricingService } from '../pricing/PricingService';
 import type { TradeRequest } from '../trade/TradeTypes';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
@@ -42,8 +41,7 @@ describe('TurnController - Trade Actions', () => {
       },
       playerTownId: 'riverdale',
       onPhase,
-      priceCurves: loadPriceCurves(),
-      priceMath: createLogRatioPriceMath(),
+      pricingService: createPricingService(),
     });
   });
 

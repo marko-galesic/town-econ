@@ -1,13 +1,13 @@
 import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
-import type { PriceCurveTable } from '../pricing/Config';
-import { applyPostTradeCurve } from '../pricing/PostTradeAdjust';
-import type { PriceMath } from '../pricing/PriceCurve';
+import type { createPricingService } from '../pricing/PricingService';
 
 import { executeTrade } from './TradeExecutor';
 import type { TradeLimits } from './TradeLimits';
 import type { TradeRequest, TradeResult } from './TradeTypes';
 import { validateTrade } from './TradeValidator';
+
+type PricingService = ReturnType<typeof createPricingService>;
 
 /**
  * TradeService provides a single entry point for performing complete trade transactions.
@@ -29,8 +29,7 @@ export class TradeService {
   static async performTrade(
     state: GameState,
     request: TradeRequest,
-    tables: PriceCurveTable,
-    math: PriceMath,
+    pricingService: PricingService,
     goods: Record<GoodId, GoodConfig>,
     limits?: TradeLimits,
   ): Promise<TradeResult> {
@@ -40,8 +39,8 @@ export class TradeService {
     // Step 2: Execute the trade and get intermediate result
     const executionResult = executeTrade(state, validatedTrade, goods, limits);
 
-    // Step 3: Apply post-trade price adjustments using curve-based pricing
-    const finalState = applyPostTradeCurve(executionResult.state, validatedTrade, tables, math);
+    // Step 3: Apply post-trade price adjustments using the pricing service
+    const finalState = pricingService.afterTrade(executionResult.state, validatedTrade);
 
     // Return the final result with updated state
     return {
@@ -64,10 +63,9 @@ export class TradeService {
 export async function performTrade(
   state: GameState,
   request: TradeRequest,
-  tables: PriceCurveTable,
-  math: PriceMath,
+  pricingService: PricingService,
   goods: Record<GoodId, GoodConfig>,
   limits?: TradeLimits,
 ): Promise<TradeResult> {
-  return TradeService.performTrade(state, request, tables, math, goods, limits);
+  return TradeService.performTrade(state, request, pricingService, goods, limits);
 }
