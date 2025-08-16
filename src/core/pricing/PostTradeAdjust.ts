@@ -4,6 +4,7 @@ import type { ValidatedTrade } from '../trade/TradeValidator';
 import type { PriceCurveTable } from './Config';
 import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
+import { smoothPrice, DEFAULT_SMOOTH } from './Smoothing';
 import { readTownPriceState, writeTownPrice } from './TownPriceIO';
 
 /**
@@ -61,9 +62,13 @@ export function applyPostTradeCurve(
   const next1 = math.nextPrice(t1State, cfg);
   const next2 = math.nextPrice(t2State, cfg);
 
-  // Apply prosperity and scale multipliers to both prices
+  // Apply EMA smoothing before prosperity/scale adjustments
+  const smoothed1 = smoothPrice(t1State.price, next1, DEFAULT_SMOOTH);
+  const smoothed2 = smoothPrice(t2State.price, next2, DEFAULT_SMOOTH);
+
+  // Apply prosperity and scale multipliers to both smoothed prices
   const adjusted1 = applyProsperityAndScale(
-    next1,
+    smoothed1,
     findTown(state, from.id).revealed.prosperityTier,
     undefined, // Use default multipliers
     1.0, // Default size factor
@@ -72,7 +77,7 @@ export function applyPostTradeCurve(
   );
 
   const adjusted2 = applyProsperityAndScale(
-    next2,
+    smoothed2,
     findTown(state, to.id).revealed.prosperityTier,
     undefined, // Use default multipliers
     1.0, // Default size factor

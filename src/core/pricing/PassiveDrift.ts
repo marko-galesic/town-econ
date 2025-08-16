@@ -4,6 +4,7 @@ import type { GoodId } from '../../types/Goods';
 import type { PriceCurveTable } from './Config';
 import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
+import { smoothPrice, DEFAULT_SMOOTH } from './Smoothing';
 
 /**
  * Configuration options for passive price drift behavior.
@@ -65,10 +66,13 @@ export function applyPassiveDrift(
       // Compute target price from current stock using price curve
       const targetPrice = math.nextPrice({ stock: currentStock, price: currentPrice }, curveConfig);
 
-      // Apply drift: move current price toward target by rate
-      const priceDiff = targetPrice - currentPrice;
+      // Apply EMA smoothing before drift adjustments
+      const smoothedPrice = smoothPrice(currentPrice, targetPrice, DEFAULT_SMOOTH);
+
+      // Apply drift: move smoothed price toward target by rate
+      const priceDiff = targetPrice - smoothedPrice;
       const driftAmount = Math.round(rate * priceDiff);
-      const newPrice = currentPrice + driftAmount;
+      const newPrice = smoothedPrice + driftAmount;
 
       // Apply prosperity and scale multipliers to the drifted price
       const adjustedPrice = applyProsperityAndScale(

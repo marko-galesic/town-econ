@@ -6,3 +6,5 @@ export { applyPassiveDrift, DEFAULT_DRIFT } from './PassiveDrift';
 export type { DriftOptions } from './PassiveDrift';
 export { applyProsperityAndScale, DEFAULT_PROSPERITY_MULT } from './Multipliers';
 export type { ProsperityMultipliers, TownScale } from './Multipliers';
+export { smoothPrice, DEFAULT_SMOOTH } from './Smoothing';
+export type { Smoothing } from './Smoothing';
