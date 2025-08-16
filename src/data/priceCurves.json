@@ -1,0 +1,5 @@
+{
+  "fish": { "basePrice": 12, "targetStock": 40, "elasticity": 0.8, "minPrice": 3, "maxPrice": 60 },
+  "wood": { "basePrice": 10, "targetStock": 30, "elasticity": 0.7, "minPrice": 2, "maxPrice": 50 },
+  "ore": { "basePrice": 15, "targetStock": 20, "elasticity": 0.9, "minPrice": 5, "maxPrice": 80 }
+}
