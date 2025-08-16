@@ -1,10 +1,11 @@
 import type { GameState } from '../../types/GameState';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 import { loadProductionConfig } from '../production/Config';
 import { applyProductionTurn } from '../production/ProductionSystem';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -18,8 +19,6 @@ export interface TurnServiceOptions {
   /** Optional callback for observing phase execution */
   // eslint-disable-next-line no-unused-vars
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
-  /** Optional price model - if not provided, creates a default simple linear model */
-  priceModel?: ReturnType<typeof createSimpleLinearPriceModel>;
   /** Optional AI profiles - if not provided, uses default profiles */
   aiProfiles?: Record<string, AiProfile>;
   /** ID of the player's town - if not provided, defaults to the first town */
@@ -58,9 +57,6 @@ export function createTurnController(
   const prodCfg = loadProductionConfig();
   pipeline.register(s => applyProductionTurn(s, prodCfg));
 
-  // Create default price model if none provided
-  const priceModel = opts?.priceModel ?? createSimpleLinearPriceModel();
-
   // Create default AI profiles if none provided
   const aiProfiles = opts?.aiProfiles ?? {
     greedy: GREEDY,
@@ -73,10 +69,11 @@ export function createTurnController(
 
   const controllerOptions = {
     ...(opts?.onPhase && { onPhase: opts.onPhase }),
-    priceModel,
     goods: state.goods,
     aiProfiles,
     playerTownId,
+    priceCurves: loadPriceCurves(),
+    priceMath: createLogRatioPriceMath(),
   };
 
   const controller = new TurnController(playerQ, pipeline, controllerOptions);

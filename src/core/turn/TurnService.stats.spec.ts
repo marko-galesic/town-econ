@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 import { createStatsUpdateSystem } from '../stats/StatsUpdateSystem';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { createMockGameState } from './testHelpers';
@@ -38,7 +39,6 @@ describe('TurnService Stats Integration', () => {
       pipeline.register(statsSystem);
 
       const controller = new TurnController(playerQ, pipeline, {
-        priceModel: createSimpleLinearPriceModel(),
         goods: mockState.goods,
         aiProfiles: {
           greedy: {
@@ -50,6 +50,8 @@ describe('TurnService Stats Integration', () => {
           },
         },
         playerTownId: 'town1',
+        priceCurves: loadPriceCurves(),
+        priceMath: createLogRatioPriceMath(),
       });
 
       const testState: GameState = {

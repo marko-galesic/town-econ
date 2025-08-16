@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 
-import { createSimpleLinearPriceModel } from './PriceModel';
 import { TradeValidationError } from './TradeErrors';
 import { performTrade } from './TradeService';
 import type { TradeRequest } from './TradeTypes';
@@ -11,7 +12,8 @@ import type { TradeRequest } from './TradeTypes';
 describe('TradeService', () => {
   let state: GameState;
   let goods: Record<GoodId, GoodConfig>;
-  let priceModel: ReturnType<typeof createSimpleLinearPriceModel>;
+  let priceTables: ReturnType<typeof loadPriceCurves>;
+  let priceMath: ReturnType<typeof createLogRatioPriceMath>;
 
   beforeEach(() => {
     // Set up a simple game state with two towns
@@ -96,8 +98,9 @@ describe('TradeService', () => {
     // Set up goods configuration
     goods = state.goods;
 
-    // Set up price model
-    priceModel = createSimpleLinearPriceModel({ baseStep: 1, min: 0, max: 100 });
+    // Set up price curves and math
+    priceTables = loadPriceCurves();
+    priceMath = createLogRatioPriceMath();
   });
 
   describe('performTrade', () => {
@@ -112,7 +115,7 @@ describe('TradeService', () => {
           pricePerUnit: 12, // Must match toTown's price
         };
 
-        const result = await performTrade(state, request, priceModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         // Verify final state changes
         expect(result.state.towns).toHaveLength(2);
@@ -155,7 +158,7 @@ describe('TradeService', () => {
           pricePerUnit: 6, // Must match toTown's price
         };
 
-        const result = await performTrade(state, request, priceModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         // Verify final state changes
         expect(result.state.towns).toHaveLength(2);
@@ -200,27 +203,24 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        const result = await performTrade(state, request, priceModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         // Verify price adjustments occurred
         const town1 = result.state.towns.find(t => t.id === 'town1')!;
         const town2 = result.state.towns.find(t => t.id === 'town2')!;
 
         // Town 1 bought wood (inventory increased), so price should decrease
-        expect(town1.prices.wood).toBe(9); // 10 - 1 (baseStep)
+        expect(town1.prices.wood).toBeLessThan(10); // Price should decrease due to increased stock
 
-        // Town 2 sold wood (inventory decreased), so price should increase
-        expect(town2.prices.wood).toBe(13); // 12 + 1 (baseStep)
+        // Town 2 sold wood (inventory decreased), but still above target stock (30), so price should decrease
+        expect(town2.prices.wood).toBeLessThan(12); // Price should decrease due to still having excess supply
 
         // Fish prices should remain unchanged
         expect(town1.prices.fish).toBe(5);
         expect(town2.prices.fish).toBe(6);
       });
 
-      it('should respect price model constraints', async () => {
-        // Create a price model with tight constraints
-        const constrainedModel = createSimpleLinearPriceModel({ baseStep: 5, min: 8, max: 15 });
-
+      it('should respect price curve constraints', async () => {
         const request: TradeRequest = {
           fromTownId: 'town1',
           toTownId: 'town2',
@@ -230,16 +230,16 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        const result = await performTrade(state, request, constrainedModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         const town1 = result.state.towns.find(t => t.id === 'town1')!;
         const town2 = result.state.towns.find(t => t.id === 'town2')!;
 
-        // Town 1 price should be clamped to minimum
-        expect(town1.prices.wood).toBe(8); // 10 - 5 = 5, but clamped to min 8
-
-        // Town 2 price should be clamped to maximum
-        expect(town2.prices.wood).toBe(15); // 12 + 5 = 17, but clamped to max 15
+        // Prices should be within the configured bounds from price curves
+        expect(town1.prices.wood).toBeGreaterThanOrEqual(1); // minPrice from config
+        expect(town1.prices.wood).toBeLessThanOrEqual(9999); // maxPrice from config
+        expect(town2.prices.wood).toBeGreaterThanOrEqual(1); // minPrice from config
+        expect(town2.prices.wood).toBeLessThanOrEqual(9999); // maxPrice from config
       });
     });
 
@@ -254,9 +254,9 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        await expect(performTrade(state, invalidRequest, priceModel, goods)).rejects.toThrow(
-          TradeValidationError,
-        );
+        await expect(
+          performTrade(state, invalidRequest, priceTables, priceMath, goods),
+        ).rejects.toThrow(TradeValidationError);
       });
 
       it('should propagate TradeValidationError for insufficient resources', async () => {
@@ -269,9 +269,9 @@ describe('TradeService', () => {
           pricePerUnit: 6,
         };
 
-        await expect(performTrade(state, invalidRequest, priceModel, goods)).rejects.toThrow(
-          TradeValidationError,
-        );
+        await expect(
+          performTrade(state, invalidRequest, priceTables, priceMath, goods),
+        ).rejects.toThrow(TradeValidationError);
       });
 
       it('should propagate TradeValidationError for insufficient treasury', async () => {
@@ -284,9 +284,9 @@ describe('TradeService', () => {
           pricePerUnit: 12, // Total cost: 1200, but town1 only has 1000
         };
 
-        await expect(performTrade(state, invalidRequest, priceModel, goods)).rejects.toThrow(
-          TradeValidationError,
-        );
+        await expect(
+          performTrade(state, invalidRequest, priceTables, priceMath, goods),
+        ).rejects.toThrow(TradeValidationError);
       });
 
       it('should propagate TradeValidationError for price mismatch', async () => {
@@ -299,9 +299,9 @@ describe('TradeService', () => {
           pricePerUnit: 10, // Doesn't match town2's price of 12
         };
 
-        await expect(performTrade(state, invalidRequest, priceModel, goods)).rejects.toThrow(
-          TradeValidationError,
-        );
+        await expect(
+          performTrade(state, invalidRequest, priceTables, priceMath, goods),
+        ).rejects.toThrow(TradeValidationError);
       });
     });
 
@@ -317,7 +317,7 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        await performTrade(state, request, priceModel, goods);
+        await performTrade(state, request, priceTables, priceMath, goods);
 
         // Original state should remain unchanged
         expect(state).toEqual(originalState);
@@ -333,7 +333,7 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        const result = await performTrade(state, request, priceModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         // Result state should be a different object
         expect(result.state).not.toBe(state);
@@ -356,7 +356,7 @@ describe('TradeService', () => {
           pricePerUnit: 12,
         };
 
-        const result = await performTrade(state, request, priceModel, goods);
+        const result = await performTrade(state, request, priceTables, priceMath, goods);
 
         // Deltas should match the final state
         const town1 = result.state.towns.find(t => t.id === 'town1')!;

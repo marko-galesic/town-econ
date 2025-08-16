@@ -1,0 +1,75 @@
+import type { GameState } from '../../types/GameState';
+import type { ValidatedTrade } from '../trade/TradeValidator';
+
+import type { PriceCurveTable } from './Config';
+import type { PriceMath } from './PriceCurve';
+import { readTownPriceState, writeTownPrice } from './TownPriceIO';
+
+/**
+ * Helper function to find a town by ID in the game state
+ */
+function findTown(state: GameState, townId: string) {
+  const town = state.towns.find(t => t.id === townId);
+  if (!town) {
+    throw new Error(`Town with ID '${townId}' not found`);
+  }
+  return town;
+}
+
+/**
+ * Helper function to update multiple towns in the game state
+ */
+function withTownsUpdated(state: GameState, updatedTowns: GameState['towns']): GameState {
+  return {
+    ...state,
+    towns: updatedTowns,
+  };
+}
+
+/**
+ * Applies post-trade price adjustments using curve-based pricing.
+ *
+ * This function reads the current stock levels (which have already been updated
+ * by the trade executor) and applies the appropriate price curves to both towns.
+ *
+ * @param state - Current game state
+ * @param vt - Validated trade that was executed
+ * @param tables - Price curve configuration tables
+ * @param math - Price math implementation for computing next prices
+ * @returns Updated game state with adjusted prices
+ */
+export function applyPostTradeCurve(
+  state: GameState,
+  vt: ValidatedTrade,
+  tables: PriceCurveTable,
+  math: PriceMath,
+): GameState {
+  const { goodId, from, to } = vt;
+
+  // Get the price curve configuration for this good
+  const cfg = tables[goodId];
+  if (!cfg) {
+    throw new Error(`No price curve configuration found for good: ${goodId}`);
+  }
+
+  // Read current price states for both towns (stock already updated by executor)
+  const t1State = readTownPriceState(findTown(state, from.id), goodId);
+  const t2State = readTownPriceState(findTown(state, to.id), goodId);
+
+  // Compute next prices using the curve-based math
+  const next1 = math.nextPrice(t1State, cfg);
+  const next2 = math.nextPrice(t2State, cfg);
+
+  // Update both towns with new prices
+  const updatedTowns = state.towns.map(town => {
+    if (town.id === from.id) {
+      return writeTownPrice(town, goodId, next1);
+    }
+    if (town.id === to.id) {
+      return writeTownPrice(town, goodId, next2);
+    }
+    return town;
+  });
+
+  return withTownsUpdated(state, updatedTowns);
+}

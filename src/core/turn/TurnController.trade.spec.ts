@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { initGameState } from '../initGameState';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 import type { TradeRequest } from '../trade/TradeTypes';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
@@ -15,14 +16,13 @@ describe('TurnController - Trade Actions', () => {
   let playerQ: PlayerActionQueue;
   let pipeline: UpdatePipeline;
   let gameState: ReturnType<typeof initGameState>;
-  let priceModel: ReturnType<typeof createSimpleLinearPriceModel>;
+
   let phaseLog: Array<{ phase: TurnPhase; detail?: unknown }>;
 
   beforeEach(() => {
     gameState = initGameState();
     playerQ = new PlayerActionQueue();
     pipeline = new UpdatePipeline();
-    priceModel = createSimpleLinearPriceModel();
 
     phaseLog = [];
     const onPhase = (phase: TurnPhase, detail?: unknown) => {
@@ -30,7 +30,6 @@ describe('TurnController - Trade Actions', () => {
     };
 
     controller = new TurnController(playerQ, pipeline, {
-      priceModel,
       goods: gameState.goods,
       aiProfiles: {
         greedy: {
@@ -43,6 +42,8 @@ describe('TurnController - Trade Actions', () => {
       },
       playerTownId: 'riverdale',
       onPhase,
+      priceCurves: loadPriceCurves(),
+      priceMath: createLogRatioPriceMath(),
     });
   });
 

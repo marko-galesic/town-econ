@@ -1,8 +1,9 @@
 import type { GameState } from '../../types/GameState';
 import type { GoodId, GoodConfig } from '../../types/Goods';
+import type { PriceCurveTable } from '../pricing/Config';
+import { applyPostTradeCurve } from '../pricing/PostTradeAdjust';
+import type { PriceMath } from '../pricing/PriceCurve';
 
-import { applyPostTradePricing } from './PriceAdjustment';
-import type { PriceModel } from './PriceModel';
 import { executeTrade } from './TradeExecutor';
 import type { TradeLimits } from './TradeLimits';
 import type { TradeRequest, TradeResult } from './TradeTypes';
@@ -28,7 +29,8 @@ export class TradeService {
   static async performTrade(
     state: GameState,
     request: TradeRequest,
-    priceModel: PriceModel,
+    tables: PriceCurveTable,
+    math: PriceMath,
     goods: Record<GoodId, GoodConfig>,
     limits?: TradeLimits,
   ): Promise<TradeResult> {
@@ -38,8 +40,8 @@ export class TradeService {
     // Step 2: Execute the trade and get intermediate result
     const executionResult = executeTrade(state, validatedTrade, goods, limits);
 
-    // Step 3: Apply post-trade price adjustments
-    const finalState = applyPostTradePricing(executionResult.state, validatedTrade, priceModel);
+    // Step 3: Apply post-trade price adjustments using curve-based pricing
+    const finalState = applyPostTradeCurve(executionResult.state, validatedTrade, tables, math);
 
     // Return the final result with updated state
     return {
@@ -62,9 +64,10 @@ export class TradeService {
 export async function performTrade(
   state: GameState,
   request: TradeRequest,
-  priceModel: PriceModel,
+  tables: PriceCurveTable,
+  math: PriceMath,
   goods: Record<GoodId, GoodConfig>,
   limits?: TradeLimits,
 ): Promise<TradeResult> {
-  return TradeService.performTrade(state, request, priceModel, goods, limits);
+  return TradeService.performTrade(state, request, tables, math, goods, limits);
 }

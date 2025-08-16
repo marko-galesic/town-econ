@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import type { GameState } from '../../types/GameState';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -39,7 +40,6 @@ describe('TurnController', () => {
     };
 
     controller = new TurnController(playerQueue, new UpdatePipeline(), {
-      priceModel: createSimpleLinearPriceModel(),
       goods: mockState.goods,
       aiProfiles: {
         greedy: {
@@ -51,6 +51,8 @@ describe('TurnController', () => {
         },
       },
       playerTownId: 'test-town',
+      priceCurves: loadPriceCurves(),
+      priceMath: createLogRatioPriceMath(),
     });
   });
 

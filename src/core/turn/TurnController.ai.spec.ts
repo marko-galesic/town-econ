@@ -3,7 +3,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { GREEDY, RANDOM } from '../ai/AiProfiles';
 import type { AiProfile } from '../ai/AiTypes';
 import { initGameState } from '../initGameState';
-import { createSimpleLinearPriceModel } from '../trade/PriceModel';
+import { loadPriceCurves } from '../pricing/Config';
+import { createLogRatioPriceMath } from '../pricing/Curves';
 
 import { PlayerActionQueue } from './PlayerActionQueue';
 import { TurnController } from './TurnController';
@@ -15,7 +16,7 @@ describe('TurnController - AI Actions', () => {
   let playerQ: PlayerActionQueue;
   let pipeline: UpdatePipeline;
   let gameState: ReturnType<typeof initGameState>;
-  let priceModel: ReturnType<typeof createSimpleLinearPriceModel>;
+
   let phaseLog: Array<{ phase: TurnPhase; detail?: unknown }>;
   let aiProfiles: Record<string, AiProfile>;
 
@@ -23,7 +24,6 @@ describe('TurnController - AI Actions', () => {
     gameState = initGameState({ rngSeed: 'deterministic-test-seed' });
     playerQ = new PlayerActionQueue();
     pipeline = new UpdatePipeline();
-    priceModel = createSimpleLinearPriceModel();
 
     // Create AI profiles for testing
     aiProfiles = {
@@ -37,11 +37,12 @@ describe('TurnController - AI Actions', () => {
     };
 
     controller = new TurnController(playerQ, pipeline, {
-      priceModel,
       goods: gameState.goods,
       aiProfiles,
       playerTownId: 'riverdale', // Riverdale is the player town
       onPhase,
+      priceCurves: loadPriceCurves(),
+      priceMath: createLogRatioPriceMath(),
     });
   });
 
@@ -328,13 +329,14 @@ describe('TurnController - AI Actions', () => {
 
       // Create controller with custom AI profiles
       const customController = new TurnController(playerQ, pipeline, {
-        priceModel,
         goods: gameState.goods,
         aiProfiles: customAiProfiles,
         playerTownId: 'riverdale',
         onPhase: (phase, detail) => {
           phaseLog.push({ phase, detail });
         },
+        priceCurves: loadPriceCurves(),
+        priceMath: createLogRatioPriceMath(),
       });
 
       // Run the turn

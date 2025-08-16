@@ -4,8 +4,9 @@ import { decideAiTrade } from '../ai/AiEngine';
 import type { AiProfile } from '../ai/AiTypes';
 import type { CooldownState } from '../ai/Cooldown';
 import { markCooldown, createCooldownKey, clearExpiredCooldowns } from '../ai/Cooldown';
+import type { PriceCurveTable } from '../pricing/Config';
+import type { PriceMath } from '../pricing/PriceCurve';
 import { advanceTurn } from '../stateApi';
-import type { PriceModel } from '../trade/PriceModel';
 import { performTrade } from '../trade/TradeService';
 
 import type { PlayerActionQueue } from './PlayerActionQueue';
@@ -31,14 +32,16 @@ export interface TurnControllerOptions {
   /** Optional callback for observing phase execution */
   // eslint-disable-next-line no-unused-vars
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
-  /** Price model for trade price adjustments */
-  priceModel: PriceModel;
   /** Configuration for all goods in the game */
   goods: Record<string, GoodConfig>;
   /** AI profiles for automated town behavior */
   aiProfiles: Record<string, AiProfile>;
   /** ID of the player's town (AI towns are all others) */
   playerTownId: string;
+  /** Price curve table for post-trade price adjustments */
+  priceCurves: PriceCurveTable;
+  /** Price math implementation for curve-based pricing */
+  priceMath: PriceMath;
 }
 
 /**
@@ -51,10 +54,11 @@ export interface TurnControllerOptions {
 export class TurnController {
   // eslint-disable-next-line no-unused-vars
   private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
-  private readonly priceModel: PriceModel;
   private readonly goods: Record<string, GoodConfig>;
   private readonly aiProfiles: Record<string, AiProfile>;
   private readonly playerTownId: string;
+  private readonly priceCurves: PriceCurveTable;
+  private readonly priceMath: PriceMath;
   private cooldownState: CooldownState = {};
 
   constructor(
@@ -69,9 +73,6 @@ export class TurnController {
     if (!updatePipeline) {
       throw new Error('UpdatePipeline is required');
     }
-    if (!options.priceModel) {
-      throw new Error('PriceModel is required');
-    }
     if (!options.goods) {
       throw new Error('Goods configuration is required');
     }
@@ -81,12 +82,19 @@ export class TurnController {
     if (!options.playerTownId) {
       throw new Error('Player town ID is required');
     }
+    if (!options.priceCurves) {
+      throw new Error('Price curves are required');
+    }
+    if (!options.priceMath) {
+      throw new Error('Price math is required');
+    }
 
     this.onPhase = options.onPhase || undefined;
-    this.priceModel = options.priceModel;
     this.goods = options.goods;
     this.aiProfiles = options.aiProfiles;
     this.playerTownId = options.playerTownId;
+    this.priceCurves = options.priceCurves;
+    this.priceMath = options.priceMath;
   }
   /**
    * Runs a complete game turn, executing all phases in sequence.
@@ -173,7 +181,13 @@ export class TurnController {
     switch (action.type) {
       case 'trade':
         try {
-          const tradeResult = await performTrade(s, action.payload, this.priceModel, this.goods);
+          const tradeResult = await performTrade(
+            s,
+            action.payload,
+            this.priceCurves,
+            this.priceMath,
+            this.goods,
+          );
           currentState = tradeResult.state;
           resultSummary = {
             action,
@@ -247,7 +261,8 @@ export class TurnController {
           const tradeResult = await performTrade(
             currentState,
             decision.request,
-            this.priceModel,
+            this.priceCurves,
+            this.priceMath,
             this.goods,
           );
           currentState = tradeResult.state;
