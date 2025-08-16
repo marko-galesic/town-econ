@@ -13,6 +13,16 @@ export type ProductionRates = Record<GoodId, number>;
 export type TownProductionMultiplier = Partial<Record<GoodId, number>>;
 
 /**
+ * Configuration for production variance (jitter).
+ */
+export interface ProductionVariance {
+  /** Whether variance is enabled */
+  enabled: boolean;
+  /** Magnitude of variance (defaults to 1 if not specified) */
+  magnitude?: 1 | 2;
+}
+
+/**
  * Configuration for the production system.
  */
 export interface ProductionConfig {
@@ -22,4 +32,6 @@ export interface ProductionConfig {
   townMultipliers?: Record<string, TownProductionMultiplier>;
   /** Optional per-good production caps (for future use) */
   maxPerGood?: Partial<ProductionRates>;
+  /** Optional production variance configuration */
+  variance?: ProductionVariance;
 }

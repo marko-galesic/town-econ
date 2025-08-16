@@ -43,7 +43,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 1155 tests passing)
+- `pnpm test` - Run test suite once (✅ 1163 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
 
@@ -73,8 +73,8 @@ town-econ/
 │   │   ├── production/   # Production system configuration and rates
 │   │   │   ├── Config.ts # Production configuration loader
 │   │   │   ├── Config.spec.ts # Production configuration test suite (7 tests)
-│   │   │   ├── ProductionSystem.ts # Production calculation and application system
-│   │   │   ├── ProductionSystem.spec.ts # Production system test suite (10 tests)
+  │   │   │   ├── ProductionSystem.ts # Production calculation and application system with variance
+  │   │   │   ├── ProductionSystem.spec.ts # Production system test suite (18 tests)
 │   │   │   └── index.ts # Production system exports
 │   │   ├── trade/        # Trade system types, error handling, validation,
 │   │   │                 # execution, and price modeling
@@ -111,7 +111,7 @@ town-econ/
 │   │   ├── GameState.ts  # Main game state interface
 │   │   ├── Town.ts       # Town entity interface with treasury system
 │   │   ├── Goods.ts      # Goods and resources interface
-│   │   ├── Production.ts # Production rates and town multipliers interface
+│   │   ├── Production.ts # Production rates, town multipliers, and variance interface
 │   │   └── Tiers.ts      # Military and prosperity tier types
 │   ├── data/             # Game data and configuration
 │   │   ├── goods.json    # Goods definitions and effects
@@ -197,6 +197,48 @@ console.log(config.townMultipliers); // {}
 #### Production Calculation
 
 The system calculates production using the formula: `floor(baseRate * townMultiplier)`
+
+#### Production Variance System
+
+The production system now supports optional variance (jitter) to add realistic unpredictability while maintaining deterministic behavior:
+
+- **Optional Variance**: Only applies when `cfg.variance.enabled = true`
+- **Configurable Magnitude**: Supports magnitude 1 (±1) or 2 (±2), defaults to 1
+- **Deterministic**: Same (rngSeed, townId, turn, good) always produces same variance
+- **Safe Application**: Variance applied AFTER base calculation and never creates negative production
+- **Backward Compatible**: Existing code continues to work unchanged
+
+**Variance Configuration:**
+
+```typescript
+import type { ProductionConfig, ProductionVariance } from './src/types/Production';
+
+// Enable variance with magnitude 1 (±1)
+const config: ProductionConfig = {
+  base: { fish: 3, wood: 2, ore: 1 },
+  variance: { enabled: true, magnitude: 1 },
+};
+
+// Enable variance with magnitude 2 (±2)
+const config2: ProductionConfig = {
+  base: { fish: 3, wood: 2, ore: 1 },
+  variance: { enabled: true, magnitude: 2 },
+};
+
+// Disable variance (default behavior)
+const config3: ProductionConfig = {
+  base: { fish: 3, wood: 2, ore: 1 },
+  variance: { enabled: false },
+};
+```
+
+**Variance Behavior:**
+
+- **Base Production**: fish = 3, wood = 2, ore = 1
+- **With Magnitude 1**: fish = 2-4, wood = 1-3, ore = 0-2 (clamped to ≥0)
+- **With Magnitude 2**: fish = 1-5, wood = 0-4, ore = 0-3 (clamped to ≥0)
+- **Deterministic**: Same game state always produces same variance results
+- **Safe**: Never reduces production below 0, even with negative jitter
 
 ```typescript
 import { applyProductionTurn } from './src/core/production/ProductionSystem';
@@ -1577,7 +1619,7 @@ try {
 
 ### Comprehensive Test Suite
 
-- **1155 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, **AI telemetry system**, **production system configuration**, and **production system implementation**
+- **1163 Tests**: Covering all core systems including state API, turn management, queue operations, update pipeline, TurnService factory, treasury system validation, price modeling, trade validation, trade execution, **trade integration in PlayerAction phase**, **trade limits enforcement**, **tier mapping system**, **fuzzy tier system**, **integrated stats update system**, **TurnService stats integration**, **AI trade valuation system**, **AI trade candidate generation system**, **AI trade selection policy system**, **AI actions phase integration**, **AI telemetry system**, **production system configuration**, **production system implementation**, and **production variance system**
 - **Table-Driven Tests**: Efficient testing of invariants across all functions
 - **Deep Freezing**: Prevents accidental mutations during testing
 - **100% Coverage**: All core functions fully tested
@@ -1639,6 +1681,9 @@ pnpm test src/core/production/Config.spec.ts
 
 # Run production system tests
 pnpm test src/core/production/ProductionSystem.spec.ts
+
+# Run production variance tests
+pnpm test src/core/production/ProductionSystem.spec.ts --grep "Production Variance"
 
 # Run tier mapping tests
 pnpm test src/core/stats/TierMap.spec.ts
