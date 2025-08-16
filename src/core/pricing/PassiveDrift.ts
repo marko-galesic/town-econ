@@ -5,6 +5,7 @@ import type { PriceCurveTable } from './Config';
 import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
 import { smoothPrice, DEFAULT_SMOOTH } from './Smoothing';
+import type { PriceChangeTracer } from './Telemetry';
 
 /**
  * Configuration options for passive price drift behavior.
@@ -30,6 +31,7 @@ export const DEFAULT_DRIFT: Required<DriftOptions> = { rate: 0.15 };
  * @param tables - Price curve configuration tables
  * @param math - Price math implementation for computing target prices
  * @param opts - Drift configuration options (defaults to DEFAULT_DRIFT)
+ * @param onTrace - Optional callback for price change telemetry
  * @returns New game state with updated prices
  */
 export function applyPassiveDrift(
@@ -37,6 +39,7 @@ export function applyPassiveDrift(
   tables: PriceCurveTable,
   math: PriceMath,
   opts: DriftOptions = DEFAULT_DRIFT,
+  onTrace?: PriceChangeTracer,
 ): GameState {
   const rate = opts.rate ?? DEFAULT_DRIFT.rate!;
 
@@ -83,6 +86,34 @@ export function applyPassiveDrift(
         curveConfig.minPrice ?? 1,
         curveConfig.maxPrice ?? 9999,
       );
+
+      // Emit telemetry if callback is provided and price actually changed
+      if (onTrace && adjustedPrice !== currentPrice) {
+        // Get prosperity factor for telemetry
+        const prosperityFactor =
+          town.revealed.prosperityTier === 'struggling'
+            ? 0.9
+            : town.revealed.prosperityTier === 'modest'
+              ? 1.0
+              : town.revealed.prosperityTier === 'prosperous'
+                ? 1.1
+                : 1.2;
+
+        onTrace({
+          townId: town.id,
+          goodId: goodIdTyped,
+          oldPrice: currentPrice,
+          curvePrice: targetPrice,
+          smoothed: smoothedPrice,
+          final: adjustedPrice,
+          stock: currentStock,
+          target: curveConfig.targetStock,
+          elasticity: curveConfig.elasticity,
+          prosperityTier: town.revealed.prosperityTier,
+          prosperityFactor,
+          cause: 'drift',
+        });
+      }
 
       updatedPrices[goodIdTyped] = adjustedPrice;
     }

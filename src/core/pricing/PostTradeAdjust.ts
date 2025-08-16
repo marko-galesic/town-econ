@@ -5,6 +5,7 @@ import type { PriceCurveTable } from './Config';
 import { applyProsperityAndScale } from './Multipliers';
 import type { PriceMath } from './PriceCurve';
 import { smoothPrice, DEFAULT_SMOOTH } from './Smoothing';
+import type { PriceChangeTracer } from './Telemetry';
 import { readTownPriceState, writeTownPrice } from './TownPriceIO';
 
 /**
@@ -38,6 +39,7 @@ function withTownsUpdated(state: GameState, updatedTowns: GameState['towns']): G
  * @param vt - Validated trade that was executed
  * @param tables - Price curve configuration tables
  * @param math - Price math implementation for computing next prices
+ * @param onTrace - Optional callback for price change telemetry
  * @returns Updated game state with adjusted prices
  */
 export function applyPostTradeCurve(
@@ -45,6 +47,7 @@ export function applyPostTradeCurve(
   vt: ValidatedTrade,
   tables: PriceCurveTable,
   math: PriceMath,
+  onTrace?: PriceChangeTracer,
 ): GameState {
   const { goodId, from, to } = vt;
 
@@ -84,6 +87,61 @@ export function applyPostTradeCurve(
     cfg.minPrice ?? 1,
     cfg.maxPrice ?? 9999,
   );
+
+  // Emit telemetry if callback is provided
+  if (onTrace) {
+    const fromTown = findTown(state, from.id);
+    const toTown = findTown(state, to.id);
+
+    // Get prosperity factor for telemetry
+    const fromProsperityFactor =
+      fromTown.revealed.prosperityTier === 'struggling'
+        ? 0.9
+        : fromTown.revealed.prosperityTier === 'modest'
+          ? 1.0
+          : fromTown.revealed.prosperityTier === 'prosperous'
+            ? 1.1
+            : 1.2;
+
+    const toProsperityFactor =
+      toTown.revealed.prosperityTier === 'struggling'
+        ? 0.9
+        : toTown.revealed.prosperityTier === 'modest'
+          ? 1.0
+          : toTown.revealed.prosperityTier === 'prosperous'
+            ? 1.1
+            : 1.2;
+
+    onTrace({
+      townId: from.id,
+      goodId,
+      oldPrice: t1State.price,
+      curvePrice: next1,
+      smoothed: smoothed1,
+      final: adjusted1,
+      stock: t1State.stock,
+      target: cfg.targetStock,
+      elasticity: cfg.elasticity,
+      prosperityTier: fromTown.revealed.prosperityTier,
+      prosperityFactor: fromProsperityFactor,
+      cause: 'post-trade',
+    });
+
+    onTrace({
+      townId: to.id,
+      goodId,
+      oldPrice: t2State.price,
+      curvePrice: next2,
+      smoothed: smoothed2,
+      final: adjusted2,
+      stock: t2State.stock,
+      target: cfg.targetStock,
+      elasticity: cfg.elasticity,
+      prosperityTier: toTown.revealed.prosperityTier,
+      prosperityFactor: toProsperityFactor,
+      cause: 'post-trade',
+    });
+  }
 
   // Update both towns with adjusted prices
   const updatedTowns = state.towns.map(town => {

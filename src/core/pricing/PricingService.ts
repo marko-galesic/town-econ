@@ -6,25 +6,27 @@ import * as config from './Config';
 import { createLogRatioPriceMath } from './Curves';
 import { applyPassiveDrift } from './PassiveDrift';
 import { applyPostTradeCurve } from './PostTradeAdjust';
+import type { PriceChangeTracer } from './Telemetry';
 
 export interface PricingOptions {
-  // Options can be added here in the future if needed
+  /** Optional callback for price change telemetry */
+  onTrace?: PriceChangeTracer;
 }
 
 export function createPricingService(): {
-  afterTrade: (state: GameState, vt: ValidatedTrade) => GameState;
-  perTurnDrift: (state: GameState) => GameState;
+  afterTrade: (state: GameState, vt: ValidatedTrade, options?: PricingOptions) => GameState;
+  perTurnDrift: (state: GameState, options?: PricingOptions) => GameState;
 } {
   const tables = config.loadPriceCurves();
   const math = createLogRatioPriceMath();
 
   return {
-    afterTrade: (state: GameState, vt: ValidatedTrade): GameState => {
-      return applyPostTradeCurve(state, vt, tables, math);
+    afterTrade: (state: GameState, vt: ValidatedTrade, options?: PricingOptions): GameState => {
+      return applyPostTradeCurve(state, vt, tables, math, options?.onTrace);
     },
 
-    perTurnDrift: (state: GameState): GameState => {
-      return applyPassiveDrift(state, tables, math);
+    perTurnDrift: (state: GameState, options?: PricingOptions): GameState => {
+      return applyPassiveDrift(state, tables, math, undefined, options?.onTrace);
     },
   };
 }
