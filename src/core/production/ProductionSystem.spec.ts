@@ -41,10 +41,14 @@ describe('ProductionSystem', () => {
     base: Partial<Record<GoodId, number>>,
     townMultipliers?: Record<string, Partial<Record<GoodId, number>>>,
     variance?: { enabled: boolean; magnitude?: 1 | 2 },
+    maxPerGood?: Partial<Record<GoodId, number>>,
+    globalMaxResource?: number,
   ): ProductionConfig => ({
     base: base as Record<GoodId, number>,
     ...(townMultipliers && { townMultipliers }),
     ...(variance && { variance }),
+    ...(maxPerGood && { maxPerGood }),
+    ...(globalMaxResource !== undefined && { globalMaxResource }),
   });
 
   describe('applyProductionTurn', () => {
@@ -436,6 +440,141 @@ describe('ProductionSystem', () => {
       expect(result.towns[0]!.resources.wood).toBeLessThanOrEqual(7);
       expect(result.towns[0]!.resources.ore).toBeGreaterThanOrEqual(4);
       expect(result.towns[0]!.resources.ore).toBeLessThanOrEqual(6);
+    });
+
+    describe('resource caps', () => {
+      it('enforces per-good caps when specified', () => {
+        const baseRates = { fish: 5, wood: 3, ore: 2 };
+        const maxPerGood = { fish: 15, wood: 20 }; // No cap for ore
+        const config = createProductionConfig(baseRates, undefined, undefined, maxPerGood);
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 12, wood: 18, ore: 8 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // fish: 12 + 5 = 17, but capped at 15
+        expect(result.towns[0]!.resources.fish).toBe(15);
+        // wood: 18 + 3 = 21, but capped at 20
+        expect(result.towns[0]!.resources.wood).toBe(20);
+        // ore: 8 + 2 = 10, no cap applied
+        expect(result.towns[0]!.resources.ore).toBe(10);
+      });
+
+      it('enforces global caps when specified', () => {
+        const baseRates = { fish: 5, wood: 3, ore: 2 };
+        const globalMaxResource = 25;
+        const config = createProductionConfig(
+          baseRates,
+          undefined,
+          undefined,
+          undefined,
+          globalMaxResource,
+        );
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 20, wood: 15, ore: 10 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // fish: 20 + 5 = 25, capped at 25
+        expect(result.towns[0]!.resources.fish).toBe(25);
+        // wood: 15 + 3 = 18, under cap
+        expect(result.towns[0]!.resources.wood).toBe(18);
+        // ore: 10 + 2 = 12, under cap
+        expect(result.towns[0]!.resources.ore).toBe(12);
+      });
+
+      it('per-good caps take precedence over global caps', () => {
+        const baseRates = { fish: 5, wood: 3, ore: 2 };
+        const maxPerGood = { fish: 20 }; // fish cap at 20
+        const globalMaxResource = 30; // global cap at 30
+        const config = createProductionConfig(
+          baseRates,
+          undefined,
+          undefined,
+          maxPerGood,
+          globalMaxResource,
+        );
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 18, wood: 25, ore: 28 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // fish: 18 + 5 = 23, but capped at per-good cap of 20
+        expect(result.towns[0]!.resources.fish).toBe(20);
+        // wood: 25 + 3 = 28, under global cap of 30
+        expect(result.towns[0]!.resources.wood).toBe(28);
+        // ore: 28 + 2 = 30, at global cap of 30
+        expect(result.towns[0]!.resources.ore).toBe(30);
+      });
+
+      it('allows unlimited accumulation when no caps are specified', () => {
+        const baseRates = { fish: 5, wood: 3, ore: 2 };
+        const config = createProductionConfig(baseRates); // No caps
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 100, wood: 200, ore: 300 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // All resources should accumulate normally without caps
+        expect(result.towns[0]!.resources.fish).toBe(105);
+        expect(result.towns[0]!.resources.wood).toBe(203);
+        expect(result.towns[0]!.resources.ore).toBe(302);
+      });
+
+      it('caps are applied after variance and other calculations', () => {
+        const baseRates = { fish: 3, wood: 2, ore: 1 };
+        const maxPerGood = { fish: 15, wood: 10 };
+        const config = createProductionConfig(
+          baseRates,
+          undefined,
+          { enabled: true, magnitude: 2 }, // Variance enabled
+          maxPerGood,
+        );
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 13, wood: 8, ore: 5 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // fish: 13 + 3 + variance, but capped at 15
+        expect(result.towns[0]!.resources.fish).toBeLessThanOrEqual(15);
+        // wood: 8 + 2 + variance, but capped at 10
+        expect(result.towns[0]!.resources.wood).toBeLessThanOrEqual(10);
+        // ore: 5 + 1 + variance, no cap - variance can be negative, so range is [4, 8]
+        expect(result.towns[0]!.resources.ore).toBeGreaterThanOrEqual(4);
+        expect(result.towns[0]!.resources.ore).toBeLessThanOrEqual(8);
+      });
+
+      it('caps work correctly with town multipliers', () => {
+        const baseRates = { fish: 3, wood: 2, ore: 1 };
+        const townMultipliers = {
+          town1: { fish: 2.0, wood: 1.5, ore: 1.0 },
+        };
+        const maxPerGood = { fish: 20, wood: 15 };
+        const config = createProductionConfig(baseRates, townMultipliers, undefined, maxPerGood);
+
+        const initialState = createMockGameState([
+          createMockTown('town1', { fish: 15, wood: 10, ore: 8 }),
+        ]);
+
+        const result = applyProductionTurn(initialState, config);
+
+        // fish: 15 + floor(3 * 2.0) = 15 + 6 = 21, but capped at 20
+        expect(result.towns[0]!.resources.fish).toBe(20);
+        // wood: 10 + floor(2 * 1.5) = 10 + 3 = 13, under cap
+        expect(result.towns[0]!.resources.wood).toBe(13);
+        // ore: 8 + floor(1 * 1.0) = 8 + 1 = 9, no cap
+        expect(result.towns[0]!.resources.ore).toBe(9);
+      });
     });
   });
 });

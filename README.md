@@ -43,9 +43,48 @@ The app will be available at [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
-- `pnpm test` - Run test suite once (✅ 1163 tests passing)
+- `pnpm test` - Run test suite once (✅ 1200 tests passing)
 - `pnpm test:watch` - Run tests in watch mode
 - `pnpm coverage` - Generate coverage report
+
+## 🎯 Resource Caps
+
+The production system now supports configurable resource caps to prevent unbounded accumulation:
+
+### Features
+
+- **Per-good caps**: Set individual limits for specific resources (e.g., fish ≤ 15, wood ≤ 20)
+- **Global caps**: Set a universal limit for all resources (e.g., all goods ≤ 25)
+- **Priority system**: Per-good caps take precedence over global caps
+- **Clamp behavior**: Resources are clamped to caps rather than throwing errors
+- **Variance support**: Caps are applied after production variance calculations
+
+### Usage Examples
+
+```typescript
+import { ProductionConfig } from './src/types/Production';
+
+// Per-good caps
+const config: ProductionConfig = {
+  base: { fish: 4, wood: 3, ore: 2 },
+  maxPerGood: { fish: 15, wood: 20 }, // fish capped at 15, wood at 20
+};
+
+// Global cap
+const globalConfig: ProductionConfig = {
+  base: { fish: 4, wood: 3, ore: 2 },
+  globalMaxResource: 25, // All goods capped at 25
+};
+
+// Mixed caps (per-good takes precedence)
+const mixedConfig: ProductionConfig = {
+  base: { fish: 4, wood: 3, ore: 2 },
+  maxPerGood: { fish: 18 }, // fish specifically capped at 18
+  globalMaxResource: 30, // others capped at 30
+};
+```
+
+See `src/core/production/ProductionSystem.example.ts` for complete examples.
 
 ## 🏗️ Project Structure
 
@@ -73,8 +112,9 @@ town-econ/
 │   │   ├── production/   # Production system configuration and rates
 │   │   │   ├── Config.ts # Production configuration loader
 │   │   │   ├── Config.spec.ts # Production configuration test suite (7 tests)
-  │   │   │   ├── ProductionSystem.ts # Production calculation and application system with variance
-  │   │   │   ├── ProductionSystem.spec.ts # Production system test suite (18 tests)
+│   │   │   ├── ProductionSystem.ts # Production calculation and application system with variance and resource caps
+│   │   │   ├── ProductionSystem.spec.ts # Production system test suite (24 tests)
+│   │   │   ├── ProductionSystem.example.ts # Resource caps usage examples
 │   │   │   └── index.ts # Production system exports
 │   │   ├── trade/        # Trade system types, error handling, validation,
 │   │   │                 # execution, and price modeling

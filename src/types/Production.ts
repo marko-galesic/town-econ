@@ -32,6 +32,8 @@ export interface ProductionConfig {
   townMultipliers?: Record<string, TownProductionMultiplier>;
   /** Optional per-good production caps (for future use) */
   maxPerGood?: Partial<ProductionRates>;
+  /** Optional global maximum resource cap for all goods */
+  globalMaxResource?: number;
   /** Optional production variance configuration */
   variance?: ProductionVariance;
 }

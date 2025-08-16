@@ -51,9 +51,12 @@ function deterministicJitter(
  * - Applies optional variance if enabled
  * - Adds production to existing resources
  * - Clamps to minimum value if specified
+ * - Applies resource caps: per-good cap takes precedence over global cap
+ *   - If cap is set, resources are clamped to cap (clamp behavior, not throw)
+ *   - If no cap is set, resources accumulate without limit
  *
  * @param state - The current game state
- * @param cfg - Production configuration with base rates and town multipliers
+ * @param cfg - Production configuration with base rates, town multipliers, and optional caps
  * @param opts - Optional production options (default: clampMin = 0)
  * @returns New game state with updated resources (input state is not mutated)
  */
@@ -83,7 +86,18 @@ export function applyProductionTurn(
       }
 
       const currentAmount = updatedResources[good] ?? 0; // Handle missing goods
-      const nextValue = Math.max(clampMin, currentAmount + delta);
+      let nextValue = Math.max(clampMin, currentAmount + delta);
+
+      // Apply resource caps: per-good cap takes precedence, then global cap, then no limit
+      const perGoodCap = cfg.maxPerGood?.[good];
+      const globalCap = cfg.globalMaxResource;
+      const cap = perGoodCap ?? globalCap ?? Infinity;
+
+      // Clamp to cap if one is specified
+      if (cap !== Infinity) {
+        nextValue = Math.min(cap, nextValue);
+      }
+
       updatedResources[good] = nextValue;
     }
 
