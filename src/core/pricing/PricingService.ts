@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import type { GameState } from '../../types/GameState';
 import type { ValidatedTrade } from '../trade/TradeValidator';
 

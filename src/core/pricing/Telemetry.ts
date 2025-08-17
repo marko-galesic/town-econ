@@ -47,5 +47,5 @@ export interface PriceChangeTrace {
  * Optional callback function for price change telemetry.
  * Called whenever a price changes with detailed trace information.
  */
-// eslint-disable-next-line no-unused-vars
+
 export type PriceChangeTracer = (trace: PriceChangeTrace) => void;

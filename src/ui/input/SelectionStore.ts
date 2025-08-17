@@ -6,7 +6,7 @@ export interface SelectionState {
 
 export class SelectionStore {
   private s: SelectionState = { selectedTownId: null };
-  // eslint-disable-next-line no-unused-vars
+
   private subs = new Set<(state: SelectionState) => void>();
 
   get(): SelectionState {
@@ -18,7 +18,6 @@ export class SelectionStore {
     this.emit();
   }
 
-  // eslint-disable-next-line no-unused-vars
   subscribe(fn: (state: SelectionState) => void): () => void {
     this.subs.add(fn);
     return () => this.subs.delete(fn);

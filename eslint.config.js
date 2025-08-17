@@ -38,6 +38,7 @@ export default [
       eqeqeq: ['error', 'always'],
       'prefer-const': 'error',
       'no-var': 'error',
+      'no-unused-vars': 'off', // Disabled in favor of @typescript-eslint/no-unused-vars
 
       // Import rules - temporarily relaxed for TypeScript resolver issues
       'import/no-unresolved': 'off', // Disabled due to TypeScript resolver issues

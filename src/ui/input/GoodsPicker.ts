@@ -3,7 +3,7 @@ export type GoodId = 'fish' | 'wood' | 'ore';
 export interface GoodsPickerOptions {
   container: HTMLElement;
   goods: GoodId[];
-  // eslint-disable-next-line no-unused-vars
+
   onChange: (good: GoodId) => void;
 }
 

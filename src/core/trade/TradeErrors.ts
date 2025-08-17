@@ -4,7 +4,6 @@
  */
 export class TradeValidationError extends Error {
   constructor(
-    // eslint-disable-next-line no-unused-vars
     public path: string,
     message: string,
   ) {
@@ -20,7 +19,7 @@ export class TradeValidationError extends Error {
 export class TradeExecutionError extends Error {
   constructor(
     message: string,
-    // eslint-disable-next-line no-unused-vars
+
     public override cause?: Error,
   ) {
     super(message);

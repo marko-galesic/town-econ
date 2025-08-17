@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trade UI Components Demo</title>
+    <link rel="stylesheet" href="../styles/preview.css" />
+    <link rel="stylesheet" href="../styles/picker.css" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .demo-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .demo-section {
+        margin-bottom: 30px;
+      }
+      .demo-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+      }
+      .demo-description {
+        color: #666;
+        margin-bottom: 15px;
+        line-height: 1.5;
+      }
+      .component-container {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 6px;
+        background: #fafafa;
+      }
+      .status {
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: monospace;
+      }
+      .status.info {
+        background: #e3f2fd;
+        color: #1976d2;
+        border: 1px solid #bbdefb;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Trade UI Components Demo</h1>
+
+    <div class="demo-container">
+      <div class="demo-section">
+        <div class="demo-title">Quantity Input Component</div>
+        <div class="demo-description">
+          A numeric quantity input with +/- buttons and keyboard support (arrow keys, home/end).
+          Clamps to integers ≥1 and calls onChange when quantity changes.
+        </div>
+        <div class="component-container">
+          <div id="quantity-input-container"></div>
+          <div class="status info" id="quantity-status">Quantity: 1</div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <div class="demo-title">Trade Preview Component</div>
+        <div class="demo-description">
+          Shows trade validation and total cost. Displays errors for insufficient stock/treasury.
+          Updates automatically when selections change.
+        </div>
+        <div class="component-container">
+          <div id="goods-picker-container"></div>
+          <div id="trade-mode-container"></div>
+          <div id="quantity-input-container-2"></div>
+          <div id="trade-preview-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { mountQuantityInput } from './QuantityInput.js';
+      import { mountTradePreview } from './TradePreview.js';
+      import { mountGoodsPicker } from './GoodsPicker.js';
+      import { mountTradeModeToggle } from './TradeModeToggle.js';
+      import { SelectionStore } from './SelectionStore.js';
+
+      // Mock game state for demo
+      const mockGameState = {
+        turn: 1,
+        version: 1,
+        rngSeed: 'demo-seed',
+        towns: [
+          {
+            id: 'player-town',
+            name: 'Player Town',
+            resources: { fish: 50, wood: 30, ore: 20 },
+            prices: { fish: 5, wood: 3, ore: 8 },
+            militaryRaw: 10,
+            prosperityRaw: 15,
+            treasury: 1000,
+            revealed: {
+              militaryTier: 'weak',
+              prosperityTier: 'modest',
+              lastUpdatedTurn: 1,
+            },
+          },
+          {
+            id: 'trade-town',
+            name: 'Trade Town',
+            resources: { fish: 25, wood: 40, ore: 15 },
+            prices: { fish: 6, wood: 4, ore: 10 },
+            militaryRaw: 8,
+            prosperityRaw: 12,
+            treasury: 800,
+            revealed: {
+              militaryTier: 'weak',
+              prosperityTier: 'modest',
+              lastUpdatedTurn: 1,
+            },
+          },
+        ],
+        goods: {
+          fish: { name: 'Fish', description: 'Fresh fish' },
+          wood: { name: 'Wood', description: 'Timber' },
+          ore: { name: 'Ore', description: 'Raw ore' },
+        },
+      };
+
+      // Demo 1: Simple Quantity Input
+      let currentQuantity = 1;
+      const quantityInput = mountQuantityInput(
+        document.getElementById('quantity-input-container'),
+        qty => {
+          currentQuantity = qty;
+          document.getElementById('quantity-status').textContent = `Quantity: ${qty}`;
+        },
+      );
+
+      // Demo 2: Full Trade Interface
+      const store = new SelectionStore();
+      let currentGood = 'fish';
+      let currentMode = 'buy';
+      let currentQty = 10;
+
+      // Mount components
+      const goodsPicker = mountGoodsPicker({
+        container: document.getElementById('goods-picker-container'),
+        goods: ['fish', 'wood', 'ore'],
+        onChange: good => {
+          currentGood = good;
+          console.log('Good selected:', good);
+        },
+      });
+
+      const tradeModeToggle = mountTradeModeToggle(
+        document.getElementById('trade-mode-container'),
+        mode => {
+          currentMode = mode;
+          console.log('Trade mode:', mode);
+        },
+      );
+
+      const quantityInput2 = mountQuantityInput(
+        document.getElementById('quantity-input-container-2'),
+        qty => {
+          currentQty = qty;
+          console.log('Quantity changed:', qty);
+        },
+      );
+
+      const tradePreview = mountTradePreview(
+        document.getElementById('trade-preview-container'),
+        store,
+        {
+          getState: () => mockGameState,
+          getGood: () => currentGood,
+          getMode: () => currentMode,
+          getQty: () => currentQty,
+        },
+      );
+
+      // Set initial town selection
+      store.setTown('trade-town');
+
+      // Log component status
+      console.log('Demo components mounted successfully');
+      console.log('Initial state:', { currentGood, currentMode, currentQty });
+    </script>
+  </body>
+</html>

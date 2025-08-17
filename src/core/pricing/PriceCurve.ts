@@ -35,6 +35,6 @@ export interface PriceMath {
    * @param cfg - Price curve configuration
    * @returns Next integer price
    */
-  // eslint-disable-next-line no-unused-vars
+
   nextPrice(state: TownPriceState, cfg: PriceCurveConfig): number;
 }

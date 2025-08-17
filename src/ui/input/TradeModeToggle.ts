@@ -2,7 +2,7 @@ export type TradeMode = 'buy' | 'sell';
 
 export function mountTradeModeToggle(
   container: HTMLElement,
-  // eslint-disable-next-line no-unused-vars
+
   onChange: (mode: TradeMode) => void,
 ): { destroy(): void } {
   // Create the toggle container

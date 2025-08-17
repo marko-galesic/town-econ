@@ -31,7 +31,7 @@ export interface TurnResult {
  */
 export interface TurnControllerOptions {
   /** Optional callback for observing phase execution */
-  // eslint-disable-next-line no-unused-vars
+
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
   /** Configuration for all goods in the game */
   goods: Record<string, GoodConfig>;
@@ -51,7 +51,6 @@ export interface TurnControllerOptions {
  * this may be changed to return shallow copies when state modifications are implemented.
  */
 export class TurnController {
-  // eslint-disable-next-line no-unused-vars
   private readonly onPhase: ((phase: TurnPhase, detail?: unknown) => void) | undefined;
   private readonly goods: Record<string, GoodConfig>;
   private readonly aiProfiles: Record<string, AiProfile>;

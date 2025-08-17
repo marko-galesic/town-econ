@@ -4,7 +4,7 @@ import { mountGoodsPicker } from './GoodsPicker';
 
 describe('GoodsPicker', () => {
   let container: HTMLElement;
-  // eslint-disable-next-line no-unused-vars
+
   let onChange: (good: 'fish' | 'wood' | 'ore') => void;
   let destroy: { destroy(): void } | undefined;
 

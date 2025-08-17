@@ -3,7 +3,7 @@ import type { GameState } from '../../types/GameState';
 /**
  * A system that can update game state during the UpdateStats phase
  */
-// eslint-disable-next-line no-unused-vars
+
 export type UpdateSystem = (s: GameState) => GameState;
 
 /**

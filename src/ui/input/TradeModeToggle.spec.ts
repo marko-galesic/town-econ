@@ -4,7 +4,7 @@ import { mountTradeModeToggle } from './TradeModeToggle';
 
 describe('TradeModeToggle', () => {
   let container: HTMLElement;
-  // eslint-disable-next-line no-unused-vars
+
   let onChange: (mode: 'buy' | 'sell') => void;
   let destroy: { destroy(): void } | undefined;
 

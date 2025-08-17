@@ -16,7 +16,7 @@ import { UpdatePipeline } from './UpdatePipeline';
  */
 export interface TurnServiceOptions {
   /** Optional callback for observing phase execution */
-  // eslint-disable-next-line no-unused-vars
+
   onPhase?: (phase: TurnPhase, detail?: unknown) => void;
   /** Optional AI profiles - if not provided, uses default profiles */
   aiProfiles?: Record<string, AiProfile>;

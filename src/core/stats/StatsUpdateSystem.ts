@@ -24,7 +24,7 @@ export interface StatsUpdateOptions {
  * @param seedAccessor - Optional function to extract seed from game state (defaults to rngSeed)
  * @returns A function that can be registered with UpdatePipeline
  */
-/* eslint-disable no-unused-vars */
+
 export function createStatsUpdateSystem(
   _opts?: StatsUpdateOptions,
   _seedAccessor?: (_gameState: GameState) => string,
@@ -46,4 +46,3 @@ export function createStatsUpdateSystem(
     return s2;
   };
 }
-/* eslint-enable no-unused-vars */

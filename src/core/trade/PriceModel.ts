@@ -17,7 +17,7 @@ export interface PriceModel {
    * @param good - The good to get the price for
    * @returns The current price per unit of the good
    */
-  // eslint-disable-next-line no-unused-vars
+
   quote(town: Town, good: GoodId): number;
 
   /**
@@ -28,7 +28,7 @@ export interface PriceModel {
    * @param quantityDelta - The change in inventory (negative = sold, positive = bought)
    * @returns A new town instance with updated prices
    */
-  // eslint-disable-next-line no-unused-vars
+
   applyTrade(town: Town, good: GoodId, quantityDelta: number): Town;
 }
 
