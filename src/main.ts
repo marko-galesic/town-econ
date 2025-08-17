@@ -11,7 +11,7 @@ import { bindConfirmTrade } from './ui/input/ConfirmTrade';
 import { mountGoodsPicker } from './ui/input/GoodsPicker';
 import { mountPriceReadout } from './ui/input/PriceReadout';
 import { mountTradeModeToggle } from './ui/input/TradeModeToggle';
-import { renderTowns } from './ui/town/renderer';
+import { mountTownView } from './ui/town/bindings';
 import './ui/styles/selection.css';
 import './ui/styles/picker.css';
 import './ui/styles/confirm.css';
@@ -60,9 +60,11 @@ const initApp = (): void => {
     },
   };
 
-  const townRenderer = renderTowns({
+  // Initialize the town view with selection binding
+  mountTownView({
     svg: townMap,
     getState: () => mockGameState,
+    selection: selectionStore,
   });
 
   // Wire up the selection system
@@ -182,7 +184,6 @@ const initApp = (): void => {
   window.addEventListener('beforeunload', () => {
     cleanupHitTest();
     cleanupKeyboard();
-    townRenderer.destroy();
     cleanupGoodsPicker.destroy();
     cleanupTradeModeToggle.destroy();
     cleanupPriceReadout.destroy();

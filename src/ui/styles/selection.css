@@ -1,10 +1,7 @@
 /* Town selection visual styles */
 .is-selected {
-  outline: 2px solid currentColor;
-  filter: drop-shadow(0 0 4px currentColor);
-  transition:
-    outline-color 0.2s ease,
-    filter 0.2s ease;
+  outline: 3px solid #66f;
+  filter: drop-shadow(0 0 6px rgba(102, 102, 255, 0.8));
 }
 
 /* Ensure towns have proper cursor and are interactive */

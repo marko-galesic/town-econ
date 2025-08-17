@@ -167,6 +167,12 @@
         outline: 2px solid #007bff;
         outline-offset: 2px;
       }
+
+      /* Selection highlighting */
+      .is-selected {
+        outline: 3px solid #66f;
+        filter: drop-shadow(0 0 6px rgba(102, 102, 255, 0.8));
+      }
     </style>
   </head>
   <body>
@@ -179,6 +185,7 @@
           <li><strong>Fixed Layout:</strong> Three towns positioned at hardcoded coordinates</li>
           <li><strong>Price Capsules:</strong> Each town shows ₲ prices for fish, wood, and ore</li>
           <li><strong>Tier Badges:</strong> Prosperity and military tier indicators</li>
+          <li><strong>Selection Highlighting:</strong> Click towns to see selection state</li>
           <li><strong>Accessibility:</strong> ARIA labels, focusable groups, semantic structure</li>
           <li><strong>Responsive Updates:</strong> Click buttons to see live updates</li>
         </ul>
@@ -188,6 +195,7 @@
         <button id="updatePrices">Update Prices</button>
         <button id="updateTiers">Update Tiers</button>
         <button id="resetState">Reset State</button>
+        <button id="clearSelection">Clear Selection</button>
       </div>
 
       <div class="svg-container" id="svgContainer">
@@ -195,10 +203,17 @@
       </div>
 
       <div class="info">
+        <h3>Current Selection:</h3>
+        <p id="selectionDisplay">No town selected</p>
+      </div>
+
+      <div class="info">
         <h3>Technical Details:</h3>
         <ul>
           <li><strong>ViewBox:</strong> 1000x1000 coordinate system for crisp scaling</li>
-          <li><strong>Pure Renderer:</strong> Takes (svg, state) and draws towns</li>
+          <li>
+            <strong>Selection Binding:</strong> Connects SelectionStore with town highlighting
+          </li>
           <li><strong>Efficient Updates:</strong> Patches existing DOM nodes without recreation</li>
           <li><strong>CSS Classes:</strong> Styled with semantic class names for theming</li>
         </ul>
@@ -218,6 +233,31 @@
     </div>
 
     <script>
+      // Simple SelectionStore implementation for the demo
+      class SelectionStore {
+        constructor() {
+          this.selectedTownId = null;
+          this.subscribers = [];
+        }
+
+        setTown(id) {
+          this.selectedTownId = id;
+          this.subscribers.forEach(callback => callback({ selectedTownId: id }));
+        }
+
+        subscribe(callback) {
+          this.subscribers.push(callback);
+          return () => {
+            const index = this.subscribers.indexOf(callback);
+            if (index > -1) this.subscribers.splice(index, 1);
+          };
+        }
+
+        get() {
+          return { selectedTownId: this.selectedTownId };
+        }
+      }
+
       // Mock data for the demo
       const mockGameState = {
         turn: 0,
@@ -285,6 +325,9 @@
       // Insert SVG into container
       document.getElementById('svgContainer').appendChild(svg);
 
+      // Create selection store
+      const selectionStore = new SelectionStore();
+
       // Simple town rendering function for the demo
       function renderTowns() {
         const townLayouts = {
@@ -302,6 +345,11 @@
           group.setAttribute('role', 'group');
           group.setAttribute('tabindex', '0');
           group.classList.add('town-group');
+
+          // Add click handler for selection
+          group.addEventListener('click', () => {
+            selectionStore.setTown(town.id);
+          });
 
           // Town node (circle)
           const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -385,6 +433,36 @@
         });
       }
 
+      // Selection highlighting function
+      function updateSelection(selectedTownId) {
+        // Remove selection from all towns
+        document.querySelectorAll('.town-group').forEach(group => {
+          group.classList.remove('is-selected');
+        });
+
+        // Add selection to selected town
+        if (selectedTownId) {
+          const selectedGroup = document.querySelector(`[data-town-id="${selectedTownId}"]`);
+          if (selectedGroup) {
+            selectedGroup.classList.add('is-selected');
+          }
+        }
+      }
+
+      // Subscribe to selection changes
+      selectionStore.subscribe(state => {
+        updateSelection(state.selectedTownId);
+
+        // Update selection display
+        const selectionDisplay = document.getElementById('selectionDisplay');
+        if (state.selectedTownId) {
+          const town = mockGameState.towns.find(t => t.id === state.selectedTownId);
+          selectionDisplay.textContent = `Selected: ${town ? town.name : state.selectedTownId}`;
+        } else {
+          selectionDisplay.textContent = 'No town selected';
+        }
+      });
+
       // Initial render
       renderTowns();
 
@@ -400,6 +478,9 @@
         // Clear and re-render
         svg.innerHTML = '';
         renderTowns();
+
+        // Re-apply current selection
+        updateSelection(selectionStore.get().selectedTownId);
       });
 
       document.getElementById('updateTiers').addEventListener('click', () => {
@@ -417,6 +498,9 @@
         // Clear and re-render
         svg.innerHTML = '';
         renderTowns();
+
+        // Re-apply current selection
+        updateSelection(selectionStore.get().selectedTownId);
       });
 
       document.getElementById('resetState').addEventListener('click', () => {
@@ -445,6 +529,13 @@
         // Clear and re-render
         svg.innerHTML = '';
         renderTowns();
+
+        // Re-apply current selection
+        updateSelection(selectionStore.get().selectedTownId);
+      });
+
+      document.getElementById('clearSelection').addEventListener('click', () => {
+        selectionStore.setTown(null);
       });
     </script>
   </body>
