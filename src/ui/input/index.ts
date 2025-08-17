@@ -3,3 +3,4 @@ export { bindTownHitTest } from './TownHitTest';
 export { bindTownKeyboardShortcuts } from './KeyboardTownSelect';
 export { mountQuantityInput } from './QuantityInput';
 export { mountTradePreview, type PreviewDeps } from './TradePreview';
+export { bindConfirmTrade, type ConfirmDeps } from './ConfirmTrade';

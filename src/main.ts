@@ -1,16 +1,27 @@
+import { PlayerActionQueue } from './core/turn/PlayerActionQueue';
 import townsData from './data/towns.json';
 import type { GameState } from './types/GameState';
-import { SelectionStore, bindTownHitTest, bindTownKeyboardShortcuts } from './ui/input';
+import {
+  SelectionStore,
+  bindTownHitTest,
+  bindTownKeyboardShortcuts,
+  mountQuantityInput,
+} from './ui/input';
+import { bindConfirmTrade } from './ui/input/ConfirmTrade';
 import { mountGoodsPicker } from './ui/input/GoodsPicker';
 import { mountPriceReadout } from './ui/input/PriceReadout';
 import { mountTradeModeToggle } from './ui/input/TradeModeToggle';
 import './ui/styles/selection.css';
 import './ui/styles/picker.css';
+import './ui/styles/confirm.css';
 
 // Main entry point for the Town Econ application
 
 // Create selection store
 const selectionStore = new SelectionStore();
+
+// Create player action queue
+const playerActionQueue = new PlayerActionQueue();
 
 // Create SVG map with towns
 const createTownMap = (): SVGSVGElement => {
@@ -150,6 +161,39 @@ const initApp = (): void => {
     () => selectedMode,
   );
 
+  // Add quantity input
+  const cleanupQuantityInput = mountQuantityInput(tradingInterface, () => {
+    // Quantity changes will trigger preview updates
+  });
+
+  // Add confirm trade button
+  const confirmButton = document.createElement('button');
+  confirmButton.className = 'confirm-trade-button';
+  confirmButton.textContent = 'Confirm Trade';
+  tradingInterface.appendChild(confirmButton);
+
+  // Bind confirm trade functionality
+  const cleanupConfirmTrade = bindConfirmTrade({
+    button: confirmButton,
+    store: selectionStore,
+    getState: () => ({
+      towns: townsData as unknown as GameState['towns'],
+      turn: 0,
+      version: 1,
+      rngSeed: 'test',
+      goods: {
+        fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 1, militaryDelta: 0 } },
+        wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 1 } },
+        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: -1, militaryDelta: 2 } },
+      },
+    }),
+    getGood: () => selectedGood,
+    getMode: () => selectedMode,
+    getQty: () => cleanupQuantityInput.get(),
+    playerTownId: 'riverdale', // Assuming riverdale is the player town
+    queue: playerActionQueue,
+  });
+
   // Subscribe to selection changes to update display
   selectionStore.subscribe(state => {
     if (state.selectedTownId) {
@@ -173,6 +217,8 @@ const initApp = (): void => {
     cleanupGoodsPicker.destroy();
     cleanupTradeModeToggle.destroy();
     cleanupPriceReadout.destroy();
+    cleanupQuantityInput.destroy();
+    cleanupConfirmTrade.destroy();
   });
 };
 
