@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Town Renderer Demo</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .svg-container {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+
+      .controls {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .info {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+
+      .info h3 {
+        margin-top: 0;
+        color: #495057;
+      }
+
+      .info ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .info li {
+        margin: 5px 0;
+      }
+
+      /* Town Renderer Styles */
+      .town-node {
+        fill: #222;
+        stroke: #444;
+        stroke-width: 2;
+        cursor: pointer;
+        transition: fill 0.2s ease;
+      }
+
+      .town-node:hover {
+        fill: #333;
+      }
+
+      .town-name {
+        fill: #333;
+        font-size: 16px;
+        font-weight: bold;
+        text-anchor: middle;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .price-pill {
+        fill: #f8f9fa;
+        stroke: #dee2e6;
+        stroke-width: 1;
+        rx: 12;
+        ry: 12;
+        cursor: pointer;
+        transition: fill 0.2s ease;
+      }
+
+      .price-pill:hover {
+        fill: #e9ecef;
+      }
+
+      .price-pill-text {
+        fill: #495057;
+        font-size: 14px;
+        font-weight: 500;
+        text-anchor: middle;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .badge {
+        fill: #6c757d;
+        stroke: #495057;
+        stroke-width: 1;
+        rx: 10;
+        ry: 10;
+      }
+
+      .badge-prosperity {
+        fill: #28a745;
+        stroke: #1e7e34;
+      }
+
+      .badge-military {
+        fill: #dc3545;
+        stroke: #c82333;
+      }
+
+      .badge-text {
+        fill: white;
+        font-size: 11px;
+        font-weight: 600;
+        text-anchor: middle;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .town-group {
+        cursor: pointer;
+        transition: transform 0.1s ease;
+      }
+
+      .town-group:hover {
+        transform: scale(1.02);
+      }
+
+      .town-group:focus {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-container">
+      <h1>Town Renderer Demo</h1>
+
+      <div class="info">
+        <h3>Features Demonstrated:</h3>
+        <ul>
+          <li><strong>Fixed Layout:</strong> Three towns positioned at hardcoded coordinates</li>
+          <li><strong>Price Capsules:</strong> Each town shows ₲ prices for fish, wood, and ore</li>
+          <li><strong>Tier Badges:</strong> Prosperity and military tier indicators</li>
+          <li><strong>Accessibility:</strong> ARIA labels, focusable groups, semantic structure</li>
+          <li><strong>Responsive Updates:</strong> Click buttons to see live updates</li>
+        </ul>
+      </div>
+
+      <div class="controls">
+        <button id="updatePrices">Update Prices</button>
+        <button id="updateTiers">Update Tiers</button>
+        <button id="resetState">Reset State</button>
+      </div>
+
+      <div class="svg-container" id="svgContainer">
+        <!-- SVG will be inserted here -->
+      </div>
+
+      <div class="info">
+        <h3>Technical Details:</h3>
+        <ul>
+          <li><strong>ViewBox:</strong> 1000x1000 coordinate system for crisp scaling</li>
+          <li><strong>Pure Renderer:</strong> Takes (svg, state) and draws towns</li>
+          <li><strong>Efficient Updates:</strong> Patches existing DOM nodes without recreation</li>
+          <li><strong>CSS Classes:</strong> Styled with semantic class names for theming</li>
+        </ul>
+      </div>
+
+      <div class="info">
+        <h3>Access the Full Demo:</h3>
+        <p>
+          This is a simplified demo. For the full interactive experience with the actual town
+          renderer:
+        </p>
+        <ul>
+          <li>Go to <a href="/" target="_blank">http://localhost:5176/</a> (main app)</li>
+          <li>Or run <code>pnpm dev</code> and navigate to the main page</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Mock data for the demo
+      const mockGameState = {
+        turn: 0,
+        version: 1,
+        rngSeed: 'demo-seed',
+        towns: [
+          {
+            id: 'riverdale',
+            name: 'Riverdale',
+            resources: { fish: 100, wood: 50, ore: 25 },
+            prices: { fish: 15, wood: 20, ore: 30 },
+            militaryRaw: 5,
+            prosperityRaw: 3,
+            treasury: 1000,
+            revealed: {
+              militaryTier: 'garrison',
+              prosperityTier: 'modest',
+              lastUpdatedTurn: 0,
+            },
+          },
+          {
+            id: 'forestburg',
+            name: 'Forestburg',
+            resources: { fish: 75, wood: 150, ore: 10 },
+            prices: { fish: 18, wood: 12, ore: 35 },
+            militaryRaw: 2,
+            prosperityRaw: 1,
+            treasury: 800,
+            revealed: {
+              militaryTier: 'militia',
+              prosperityTier: 'struggling',
+              lastUpdatedTurn: 0,
+            },
+          },
+          {
+            id: 'ironforge',
+            name: 'Ironforge',
+            resources: { fish: 25, wood: 30, ore: 200 },
+            prices: { fish: 20, wood: 25, ore: 15 },
+            militaryRaw: 8,
+            prosperityRaw: 6,
+            treasury: 1200,
+            revealed: {
+              militaryTier: 'formidable',
+              prosperityTier: 'prosperous',
+              lastUpdatedTurn: 0,
+            },
+          },
+        ],
+        goods: {
+          fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 1, militaryDelta: 0 } },
+          wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 1 } },
+          ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: -1, militaryDelta: 2 } },
+        },
+      };
+
+      // Create SVG element
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', '800');
+      svg.setAttribute('height', '600');
+      svg.setAttribute('viewBox', '0 0 1000 1000');
+      svg.style.border = '1px solid #ccc';
+      svg.style.backgroundColor = '#f5f5f5';
+
+      // Insert SVG into container
+      document.getElementById('svgContainer').appendChild(svg);
+
+      // Simple town rendering function for the demo
+      function renderTowns() {
+        const townLayouts = {
+          riverdale: { x: 500, y: 580 },
+          forestburg: { x: 250, y: 250 },
+          ironforge: { x: 750, y: 750 },
+        };
+
+        mockGameState.towns.forEach(town => {
+          const layout = townLayouts[town.id];
+          if (!layout) return;
+
+          const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          group.setAttribute('data-town-id', town.id);
+          group.setAttribute('role', 'group');
+          group.setAttribute('tabindex', '0');
+          group.classList.add('town-group');
+
+          // Town node (circle)
+          const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          node.setAttribute('cx', layout.x.toString());
+          node.setAttribute('cy', layout.y.toString());
+          node.setAttribute('r', '35');
+          node.classList.add('town-node');
+
+          // Town name
+          const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          name.setAttribute('x', layout.x.toString());
+          name.setAttribute('y', (layout.y + 55).toString());
+          name.classList.add('town-name');
+          name.textContent = town.name;
+
+          // Price pills
+          const pillPositions = [
+            { x: layout.x - 60, y: layout.y - 20 },
+            { x: layout.x, y: layout.y - 20 },
+            { x: layout.x + 60, y: layout.y - 20 },
+          ];
+
+          pillPositions.forEach((pos, index) => {
+            const pillGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+            const pill = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            pill.setAttribute('x', (pos.x - 25).toString());
+            pill.setAttribute('y', (pos.y - 15).toString());
+            pill.setAttribute('width', '50');
+            pill.setAttribute('height', '30');
+            pill.classList.add('price-pill');
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', pos.x.toString());
+            text.setAttribute('y', (pos.y + 5).toString());
+            text.classList.add('price-pill-text');
+
+            const goodIds = ['fish', 'wood', 'ore'];
+            text.textContent = `₲${town.prices[goodIds[index]]}`;
+
+            pillGroup.appendChild(pill);
+            pillGroup.appendChild(text);
+            group.appendChild(pillGroup);
+          });
+
+          // Tier badges
+          const prosperityBadge = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          prosperityBadge.setAttribute('x', (layout.x - 80).toString());
+          prosperityBadge.setAttribute('y', (layout.y + 20).toString());
+          prosperityBadge.setAttribute('width', '80');
+          prosperityBadge.setAttribute('height', '20');
+          prosperityBadge.classList.add('badge', 'badge-prosperity');
+
+          const prosperityText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          prosperityText.setAttribute('x', (layout.x - 40).toString());
+          prosperityText.setAttribute('y', (layout.y + 33).toString());
+          prosperityText.classList.add('badge-text');
+          prosperityText.textContent = town.revealed.prosperityTier;
+
+          const militaryBadge = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          militaryBadge.setAttribute('x', layout.x.toString());
+          militaryBadge.setAttribute('y', (layout.y + 20).toString());
+          militaryBadge.setAttribute('width', '80');
+          militaryBadge.setAttribute('height', '20');
+          militaryBadge.classList.add('badge', 'badge-military');
+
+          const militaryText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          militaryText.setAttribute('x', (layout.x + 40).toString());
+          militaryText.setAttribute('y', (layout.y + 33).toString());
+          militaryText.classList.add('badge-text');
+          militaryText.textContent = town.revealed.militaryTier;
+
+          group.appendChild(node);
+          group.appendChild(name);
+          group.appendChild(prosperityBadge);
+          group.appendChild(prosperityText);
+          group.appendChild(militaryBadge);
+          group.appendChild(militaryText);
+
+          svg.appendChild(group);
+        });
+      }
+
+      // Initial render
+      renderTowns();
+
+      // Button event handlers
+      document.getElementById('updatePrices').addEventListener('click', () => {
+        // Randomly update some prices
+        mockGameState.towns.forEach(town => {
+          town.prices.fish = Math.floor(Math.random() * 50) + 10;
+          town.prices.wood = Math.floor(Math.random() * 40) + 10;
+          town.prices.ore = Math.floor(Math.random() * 60) + 10;
+        });
+
+        // Clear and re-render
+        svg.innerHTML = '';
+        renderTowns();
+      });
+
+      document.getElementById('updateTiers').addEventListener('click', () => {
+        // Cycle through some tier combinations
+        const prosperityTiers = ['struggling', 'modest', 'prosperous', 'opulent'];
+        const militaryTiers = ['militia', 'garrison', 'formidable', 'host'];
+
+        mockGameState.towns.forEach((town, index) => {
+          town.revealed.prosperityTier =
+            prosperityTiers[(index + Math.floor(Date.now() / 1000)) % prosperityTiers.length];
+          town.revealed.militaryTier =
+            militaryTiers[(index + Math.floor(Date.now() / 1000)) % militaryTiers.length];
+        });
+
+        // Clear and re-render
+        svg.innerHTML = '';
+        renderTowns();
+      });
+
+      document.getElementById('resetState').addEventListener('click', () => {
+        // Reset to original state
+        mockGameState.towns[0].prices = { fish: 15, wood: 20, ore: 30 };
+        mockGameState.towns[0].revealed = {
+          militaryTier: 'garrison',
+          prosperityTier: 'modest',
+          lastUpdatedTurn: 0,
+        };
+
+        mockGameState.towns[1].prices = { fish: 18, wood: 12, ore: 35 };
+        mockGameState.towns[1].revealed = {
+          militaryTier: 'militia',
+          prosperityTier: 'struggling',
+          lastUpdatedTurn: 0,
+        };
+
+        mockGameState.towns[2].prices = { fish: 20, wood: 25, ore: 15 };
+        mockGameState.towns[2].revealed = {
+          militaryTier: 'formidable',
+          prosperityTier: 'prosperous',
+          lastUpdatedTurn: 0,
+        };
+
+        // Clear and re-render
+        svg.innerHTML = '';
+        renderTowns();
+      });
+    </script>
+  </body>
+</html>

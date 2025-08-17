@@ -1,0 +1,127 @@
+/* Town Renderer Styles */
+
+/* Town node - the main visual representation of a town */
+.town-node {
+  fill: #222;
+  stroke: #444;
+  stroke-width: 2;
+  cursor: pointer;
+  transition: fill 0.2s ease;
+}
+
+.town-node:hover {
+  fill: #333;
+}
+
+.town-node.selected {
+  fill: #4a90e2;
+  stroke: #2c5aa0;
+}
+
+/* Town name text */
+.town-name {
+  fill: #333;
+  font-size: 16px;
+  font-weight: bold;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Price capsules - rounded rectangles for each good's price */
+.price-pill {
+  fill: #f8f9fa;
+  stroke: #dee2e6;
+  stroke-width: 1;
+  rx: 12;
+  ry: 12;
+  cursor: pointer;
+  transition: fill 0.2s ease;
+}
+
+.price-pill:hover {
+  fill: #e9ecef;
+}
+
+.price-pill-text {
+  fill: #495057;
+  font-size: 14px;
+  font-weight: 500;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Tier badges - small pills showing prosperity and military tiers */
+.badge {
+  fill: #6c757d;
+  stroke: #495057;
+  stroke-width: 1;
+  rx: 10;
+  ry: 10;
+}
+
+.badge-prosperity {
+  fill: #28a745;
+  stroke: #1e7e34;
+}
+
+.badge-military {
+  fill: #dc3545;
+  stroke: #c82333;
+}
+
+.badge-text {
+  fill: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Town group container */
+.town-group {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.town-group:hover {
+  transform: scale(1.02);
+}
+
+.town-group:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Ensure good contrast for accessibility */
+.town-group[aria-selected='true'] .town-node {
+  fill: #007bff;
+  stroke: #0056b3;
+}
+
+.town-group[aria-selected='true'] .town-name {
+  fill: #007bff;
+}
+
+/* Dark theme support via CSS custom properties */
+@media (prefers-color-scheme: dark) {
+  .town-node {
+    fill: #e9ecef;
+    stroke: #adb5bd;
+  }
+
+  .town-name {
+    fill: #f8f9fa;
+  }
+
+  .price-pill {
+    fill: #495057;
+    stroke: #6c757d;
+  }
+
+  .price-pill-text {
+    fill: #f8f9fa;
+  }
+}

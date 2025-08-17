@@ -11,9 +11,11 @@ import { bindConfirmTrade } from './ui/input/ConfirmTrade';
 import { mountGoodsPicker } from './ui/input/GoodsPicker';
 import { mountPriceReadout } from './ui/input/PriceReadout';
 import { mountTradeModeToggle } from './ui/input/TradeModeToggle';
+import { renderTowns } from './ui/town/renderer';
 import './ui/styles/selection.css';
 import './ui/styles/picker.css';
 import './ui/styles/confirm.css';
+import './ui/styles/town.css';
 
 // Main entry point for the Town Econ application
 
@@ -23,66 +25,14 @@ const selectionStore = new SelectionStore();
 // Create player action queue
 const playerActionQueue = new PlayerActionQueue();
 
-// Create SVG map with towns
+// Create SVG map with towns using the new renderer
 const createTownMap = (): SVGSVGElement => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '800');
   svg.setAttribute('height', '600');
-  svg.setAttribute('viewBox', '0 0 800 600');
+  svg.setAttribute('viewBox', '0 0 1000 1000');
   svg.style.border = '1px solid #ccc';
   svg.style.backgroundColor = '#f5f5f5';
-
-  // Create town groups with visual representation
-  const townPositions = [
-    { x: 200, y: 150, id: 'riverdale' },
-    { x: 400, y: 300, id: 'forestburg' },
-    { x: 600, y: 450, id: 'ironforge' },
-  ];
-
-  townPositions.forEach((pos, index) => {
-    const town = townsData.find(t => t.id === pos.id);
-    if (!town) return;
-
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    group.setAttribute('data-town-id', pos.id);
-    group.setAttribute('role', 'group');
-    group.setAttribute('aria-selected', 'false');
-    group.setAttribute('tabindex', '0');
-    group.setAttribute('aria-label', `Town: ${town.name}`);
-
-    // Town circle
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', pos.x.toString());
-    circle.setAttribute('cy', pos.y.toString());
-    circle.setAttribute('r', '40');
-    circle.setAttribute('fill', '#4a90e2');
-    circle.setAttribute('stroke', '#2c5aa0');
-    circle.setAttribute('stroke-width', '2');
-
-    // Town label
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', pos.x.toString());
-    text.setAttribute('y', (pos.y + 60).toString());
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('fill', '#333');
-    text.setAttribute('font-size', '14');
-    text.setAttribute('font-weight', 'bold');
-    text.textContent = town.name;
-
-    // Number label for keyboard shortcuts
-    const numberLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    numberLabel.setAttribute('x', (pos.x - 25).toString());
-    numberLabel.setAttribute('y', (pos.y - 25).toString());
-    numberLabel.setAttribute('fill', '#fff');
-    numberLabel.setAttribute('font-size', '16');
-    numberLabel.setAttribute('font-weight', 'bold');
-    numberLabel.textContent = (index + 1).toString();
-
-    group.appendChild(circle);
-    group.appendChild(text);
-    group.appendChild(numberLabel);
-    svg.appendChild(group);
-  });
 
   return svg;
 };
@@ -96,6 +46,24 @@ const initApp = (): void => {
   const townMap = createTownMap();
   appElement.innerHTML = '';
   appElement.appendChild(townMap);
+
+  // Initialize the town renderer
+  const mockGameState: GameState = {
+    towns: townsData as unknown as GameState['towns'],
+    turn: 0,
+    version: 1,
+    rngSeed: 'test',
+    goods: {
+      fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 1, militaryDelta: 0 } },
+      wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 1 } },
+      ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: -1, militaryDelta: 2 } },
+    },
+  };
+
+  const townRenderer = renderTowns({
+    svg: townMap,
+    getState: () => mockGameState,
+  });
 
   // Wire up the selection system
   const cleanupHitTest = bindTownHitTest(townMap, selectionStore);
@@ -214,6 +182,7 @@ const initApp = (): void => {
   window.addEventListener('beforeunload', () => {
     cleanupHitTest();
     cleanupKeyboard();
+    townRenderer.destroy();
     cleanupGoodsPicker.destroy();
     cleanupTradeModeToggle.destroy();
     cleanupPriceReadout.destroy();
