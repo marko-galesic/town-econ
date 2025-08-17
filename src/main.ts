@@ -1,6 +1,11 @@
 import townsData from './data/towns.json';
+import type { GameState } from './types/GameState';
 import { SelectionStore, bindTownHitTest, bindTownKeyboardShortcuts } from './ui/input';
+import { mountGoodsPicker } from './ui/input/GoodsPicker';
+import { mountPriceReadout } from './ui/input/PriceReadout';
+import { mountTradeModeToggle } from './ui/input/TradeModeToggle';
 import './ui/styles/selection.css';
+import './ui/styles/picker.css';
 
 // Main entry point for the Town Econ application
 
@@ -96,6 +101,55 @@ const initApp = (): void => {
   selectionDisplay.style.borderRadius = '4px';
   appElement.appendChild(selectionDisplay);
 
+  // Add trading interface
+  const tradingInterface = document.createElement('div');
+  tradingInterface.style.marginTop = '20px';
+  tradingInterface.style.padding = '20px';
+  tradingInterface.style.backgroundColor = 'white';
+  tradingInterface.style.border = '1px solid #ddd';
+  tradingInterface.style.borderRadius = '8px';
+  tradingInterface.style.maxWidth = '400px';
+  appElement.appendChild(tradingInterface);
+
+  // Local state for selected good and trade mode
+  let selectedGood: 'fish' | 'wood' | 'ore' = 'fish';
+  let selectedMode: 'buy' | 'sell' = 'buy';
+
+  // Mount the trading components
+  const cleanupGoodsPicker = mountGoodsPicker({
+    container: tradingInterface,
+    goods: ['fish', 'wood', 'ore'],
+    onChange: good => {
+      selectedGood = good;
+      // Trigger price readout update by updating store
+      selectionStore.setTown(selectionStore.get().selectedTownId);
+    },
+  });
+
+  const cleanupTradeModeToggle = mountTradeModeToggle(tradingInterface, mode => {
+    selectedMode = mode;
+    // Trigger price readout update by updating store
+    selectionStore.setTown(selectionStore.get().selectedTownId);
+  });
+
+  const cleanupPriceReadout = mountPriceReadout(
+    tradingInterface,
+    selectionStore,
+    () => ({
+      towns: townsData as unknown as GameState['towns'],
+      turn: 0,
+      version: 1,
+      rngSeed: 'test',
+      goods: {
+        fish: { id: 'fish', name: 'Fish', effects: { prosperityDelta: 1, militaryDelta: 0 } },
+        wood: { id: 'wood', name: 'Wood', effects: { prosperityDelta: 0, militaryDelta: 1 } },
+        ore: { id: 'ore', name: 'Ore', effects: { prosperityDelta: -1, militaryDelta: 2 } },
+      },
+    }), // Mock GameState
+    () => selectedGood,
+    () => selectedMode,
+  );
+
   // Subscribe to selection changes to update display
   selectionStore.subscribe(state => {
     if (state.selectedTownId) {
@@ -116,6 +170,9 @@ const initApp = (): void => {
   window.addEventListener('beforeunload', () => {
     cleanupHitTest();
     cleanupKeyboard();
+    cleanupGoodsPicker.destroy();
+    cleanupTradeModeToggle.destroy();
+    cleanupPriceReadout.destroy();
   });
 };
 
