@@ -1,0 +1,24 @@
+/* Town selection visual styles */
+.is-selected {
+  outline: 2px solid currentColor;
+  filter: drop-shadow(0 0 4px currentColor);
+  transition:
+    outline-color 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* Ensure towns have proper cursor and are interactive */
+[data-town-id] {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+[data-town-id]:hover {
+  filter: brightness(1.1);
+}
+
+/* Focus styles for keyboard navigation */
+[data-town-id]:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
