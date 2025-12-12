@@ -25,6 +25,15 @@ pnpm dev
 
 The app will be available at [http://localhost:5173](http://localhost:5173)
 
+## ☁️ Deployment to Render
+
+Deployments are managed with Terraform and run automatically via GitHub Actions on pushes to `main`.
+
+1. Configure repository secrets `RENDER_API_KEY` and `RENDER_OWNER_ID` with credentials from Render.
+2. The workflow at `.github/workflows/render-deploy.yml` runs `terraform apply` from `infra/render`, provisioning a Render static site that builds with `pnpm install --frozen-lockfile && pnpm run build` and publishes the `dist` directory.
+3. The repository URL and branch are passed automatically from the GitHub context; override defaults by setting Terraform variables (see `infra/render/variables.tf`).
+4. To run Terraform manually, follow the commands in `infra/render/README.md`.
+
 ## 📚 Available Scripts
 
 ### Development
